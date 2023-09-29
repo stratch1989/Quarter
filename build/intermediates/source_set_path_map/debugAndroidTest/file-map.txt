@@ -1,0 +1,4 @@
+com.example.quarter.android.test.Quarter-androidTest-0 /Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/generated/res/resValues/androidTest/debug
+com.example.quarter.android.test.Quarter-mergeDebugAndroidTestResources-1 /Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+com.example.quarter.android.test.Quarter-mergeDebugAndroidTestResources-2 /Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+com.example.quarter.android.test.Quarter-merged_res-3 /Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/merged_res/debugAndroidTest
