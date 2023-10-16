@@ -1,0 +1,134 @@
+[
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_cancel_button.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/cancel_button.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_save_button.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/save_button.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border3.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border3.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_test.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/test.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_back.jpg.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/back.jpg"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_png.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/png.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_rounded_corners.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/rounded_corners.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border5.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border5.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_list_item_day.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/list_item_day.xml"
+    },
+    {
+        "merged": "com.example.quarter.android.Quarter-merged_res-66:/layout_activity_main.xml.flat",
+        "source": "com.example.quarter.android.Quarter-main-68:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_fragment_blank.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_activity_settings.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_rounded_corners2.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/rounded_corners2.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/font_average.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/font/average.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border6.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border6.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/xml_root_preferences.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/xml/root_preferences.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_fragment_blank2.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank2.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_calendar.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/calendar.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_grey_image.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/grey_image.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border4.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border4.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/anim_fade_out.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/anim/fade_out.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/anim_slide_up_out.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/anim/slide_up_out.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_backgr.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/backgr.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_ruble.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/ruble.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/anim_slide_up_in.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/anim/slide_up_in.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/anim_fade_in.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/anim/fade_in.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/font_bebas_neue.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/font/bebas_neue.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_back_background.png.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/back_background.png"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_rounded_corners3.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/rounded_corners3.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_fragment_blank3.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank3.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_activity_main.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_button_border2.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/button_border2.xml"
+    }
+]

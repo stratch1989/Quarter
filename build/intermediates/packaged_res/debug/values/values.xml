@@ -37,6 +37,7 @@
     <string name="attachment_title">Download incoming attachments</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="messages_header">Messages</string>
     <string name="reply_title">Default reply action</string>
     <string name="signature_title">Your signature</string>

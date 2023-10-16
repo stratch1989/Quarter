@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.quarter.android.Quarter-mergeDebugResources-57:/values-ldrtl-v17/values-ldrtl-v17.xml",
+            "outputFile": "com.example.quarter.android.Quarter-mergeDebugResources-64:/values-ldrtl-v17/values-ldrtl-v17.xml",
             "map": [
                 {
                     "source": "/Users/stan2ex/.gradle/caches/transforms-3/61463753ca9941b8562292085a0b6c7a/transformed/material-1.9.0/res/values-ldrtl-v17/values-ldrtl-v17.xml",

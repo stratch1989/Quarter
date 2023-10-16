@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/activity_main.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/activity_settings.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_blank.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_blank3.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank3.xml"
+    },
+    {
+        "merged": "com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/activity_main.xml",
+        "source": "com.example.quarter.android.Quarter-main-68:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_blank2.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank2.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/test.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/test.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/list_item_day.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/list_item_day.xml"
+    }
+]

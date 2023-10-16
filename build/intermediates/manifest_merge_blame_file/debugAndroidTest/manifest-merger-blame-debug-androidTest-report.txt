@@ -1,0 +1,34 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.quarter.android.test" >
+4
+5    <uses-sdk
+5-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:5:5-74
+6        android:minSdkVersion="29"
+6-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:5:15-41
+7        android:targetSdkVersion="33" />
+7-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:5:42-71
+8
+9    <instrumentation
+9-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:11:5-15:77
+10        android:name="android.test.InstrumentationTestRunner"
+10-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:11:22-75
+11        android:functionalTest="false"
+11-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:14:22-52
+12        android:handleProfiling="false"
+12-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:13:22-53
+13        android:label="Tests for com.example.quarter.android"
+13-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:15:22-75
+14        android:targetPackage="com.example.quarter.android" />
+14-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:12:22-73
+15
+16    <application
+16-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:7:5-9:19
+17        android:debuggable="true"
+18        android:extractNativeLibs="false" >
+19        <uses-library android:name="android.test.runner" />
+19-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:8:9-60
+19-->/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/tmp/manifest/androidTest/debug/tempFile1ProcessTestManifest16460071129159950463.xml:8:23-57
+20    </application>
+21
+22</manifest>

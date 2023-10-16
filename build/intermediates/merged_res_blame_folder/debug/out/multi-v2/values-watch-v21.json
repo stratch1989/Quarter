@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.quarter.android.Quarter-mergeDebugResources-57:/values-watch-v21/values-watch-v21.xml",
+            "outputFile": "com.example.quarter.android.Quarter-mergeDebugResources-64:/values-watch-v21/values-watch-v21.xml",
             "map": [
                 {
                     "source": "/Users/stan2ex/.gradle/caches/transforms-3/6fba4b8498b1234b1332f23b1cf47c76/transformed/appcompat-1.6.1/res/values-watch-v21/values-watch-v21.xml",

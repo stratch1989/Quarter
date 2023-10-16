@@ -1,0 +1,4 @@
+#Mon Oct 09 15:25:34 YEKT 2023
+base.0=/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/0/classes.dex
+path.0=0/classes.dex
+renamed.0=classes.dex
