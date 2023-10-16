@@ -15,9 +15,6 @@ public class DataModel : ViewModel() {
     val dateFull: MutableLiveData<LocalDate> by lazy {
         MutableLiveData<LocalDate>()
     }
-    val numberOfDays: MutableLiveData<Int> by lazy {
-        MutableLiveData<Int>()
-    }
     val dayLimit: MutableLiveData<Float> by lazy {
         MutableLiveData<Float>()
     }

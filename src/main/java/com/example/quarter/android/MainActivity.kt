@@ -60,10 +60,12 @@ class  MainActivity : FragmentActivity() {
         var dayLimit = 0.0f
         var todayLimit = 0.0f
         var avarageDailyValue = 0.0f
+        var numberOfDays = 0L
+
 
         dataModel.dateFull.observe(this) {
             dateFull = it
-            val numberOfDays: Long = ChronoUnit.DAYS.between(today, dateFull)
+            numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
             dataModel.money.observe(this) {
                 howMany = it
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
@@ -76,35 +78,42 @@ class  MainActivity : FragmentActivity() {
             howMany = it
             dataModel.dateFull.observe(this) {
                 dateFull = it
-                val numberOfDays: Long = ChronoUnit.DAYS.between(today, dateFull)
+                numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
                 avarageDailyValue = (howMany / numberOfDays).toFloat()
                 binding.result.text = todayLimit.toString()
             }
         }
-        todayLimit = avarageDailyValue
 
 
-        // Запустить повторяющуюся задачу
+        // Эксперементриую с решением бага связанным со сменой даты/денег
+        dataModel.dateFull.observe(this) {
+            if (howMany != 0.0f){
+                binding.buttonEnter.text = "bla"
+            }
+        }
+
         dataModel.dayLimit.observe(this){
             dayLimit = it
         }
         dataModel.todayLimit.observe(this) {
             todayLimit = it
         }
+
         val runnable = object : Runnable {
             override fun run() {
                 today = LocalDate.now()
                 // Проверить дату
-                if ((today != lastDate) && (avarageDailyValue != 0.toFloat())) {
+                if ((today != lastDate) && (avarageDailyValue != 0.0f)) {
                     // нужно дописать supportFragmentManager
-                    var numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
+                    val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
                     todayLimit += (avarageDailyValue * numberOfDays).toInt()
                     binding.result.text = todayLimit.toString()
                     lastDate = today
                 }
-                else{
-                }
+
+                // баг, если изменить дату или сумму, то в текущем дне ничего не меняется
+
 
                 // Запустить задачу снова через заданный интервал
                 handler.postDelayed(this, interval)
