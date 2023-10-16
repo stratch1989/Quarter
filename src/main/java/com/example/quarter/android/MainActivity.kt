@@ -37,7 +37,7 @@ class  MainActivity : FragmentActivity() {
     private var fictionalValue = ""
     //private var fictionalResult = 0.0
     private val handler = Handler()
-    private val interval: Long = 60 * 1000
+    private val interval: Long = 1000
 
 
 
@@ -58,7 +58,7 @@ class  MainActivity : FragmentActivity() {
         //Получение текущего значения всего кол-ва денег
         var dateFull = LocalDate.now()
         var dayLimit = 0.0f
-        var todayLimit = 0.0f        // нужно единоразово получить после выставления суммы
+        var todayLimit = 0.0f
         var avarageDailyValue = 0.0f
 
         dataModel.dateFull.observe(this) {
@@ -96,10 +96,10 @@ class  MainActivity : FragmentActivity() {
             override fun run() {
                 today = LocalDate.now()
                 // Проверить дату
-                if (today != lastDate) {
+                if ((today != lastDate) && (avarageDailyValue != 0.toFloat())) {
                     // нужно дописать supportFragmentManager
                     var numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
-                    todayLimit += (avarageDailyValue * numberOfDays).toInt()     // 3000 поменять на среднесуточную
+                    todayLimit += (avarageDailyValue * numberOfDays).toInt()
                     binding.result.text = todayLimit.toString()
                     lastDate = today
                 }
