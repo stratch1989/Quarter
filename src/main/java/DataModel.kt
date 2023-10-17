@@ -24,4 +24,7 @@ public class DataModel : ViewModel() {
     val lastDate: MutableLiveData<LocalDate> by lazy {
         MutableLiveData<LocalDate>()
     }
+    val saveClick: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>()
+    }
 }

@@ -1,4 +1,4 @@
-#Tue Oct 17 01:44:25 YEKT 2023
+#Wed Oct 18 01:45:12 YEKT 2023
 base.0=/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/dex/debug/mergeLibDexDebug/15/classes.dex
 base.2=/Users/stan2ex/AndroidStudioProjects/Quarter/Quarter/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex

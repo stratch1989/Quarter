@@ -56,11 +56,13 @@ class  MainActivity : FragmentActivity() {
 
 
         //Получение текущего значения всего кол-ва денег
-        var dateFull = LocalDate.now()
+        var dateFull = LocalDate.now().minusDays(1)
         var dayLimit = 0.0f
         var todayLimit = 0.0f
         var avarageDailyValue = 0.0f
         var numberOfDays = 0L
+        var saveClick = false
+        val result: TextView = findViewById(R.id.result)
 
 
         dataModel.dateFull.observe(this) {
@@ -90,6 +92,11 @@ class  MainActivity : FragmentActivity() {
         dataModel.dateFull.observe(this) {
             if (howMany != 0.0f){
                 binding.buttonEnter.text = "bla"
+                //val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
+                todayLimit = 0.0f
+                todayLimit += (avarageDailyValue).toInt()
+                binding.result.text = todayLimit.toString()
+                lastDate = today
             }
         }
 
@@ -182,20 +189,45 @@ class  MainActivity : FragmentActivity() {
             }
         }
 
+        fun ButtonEnter(fictionalDigit: Float) {
+            todayLimit -= fictionalDigit
+            todayLimit = (Math.round(todayLimit * 100.0) / 100.0).toFloat()
+            result.text = "$todayLimit"
+            dataModel.money.value = howMany - fictionalDigit
+            dataModel.todayLimit.value = todayLimit.toFloat()
+        }
+
         // Обработка кнопки enter
-        val result: TextView = findViewById(R.id.result)
         buttonEnter.setOnClickListener {
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
+                saveClick = false
                 val fictionalDigit = fictionalValue.toFloat()
-                todayLimit -= fictionalDigit
-                todayLimit = (Math.round(todayLimit.toFloat() * 100.0) / 100.0).toFloat()
-                result.text = "$todayLimit"
-                dataModel.money.value = howMany - fictionalDigit
-                dataModel.todayLimit.value = todayLimit.toFloat()
+                ButtonEnter(fictionalDigit)
                 fictionalValue = ""
                 value.text = ""
             }
         }
+
+        dataModel.saveClick.observe(this) {
+            saveClick = it
+        }
+
+        // баг После каждой траты сумма на сегодня меняется на среднесуточную
+        dataModel.money.observe(this) {
+            if ((dateFull != LocalDate.now().minusDays(1)) && (saveClick == true)){
+                saveClick = false
+                binding.buttonEnter.text = "ggg"
+                //val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
+                todayLimit = 0.0f
+                todayLimit += (avarageDailyValue).toInt()
+                binding.result.text = todayLimit.toString()
+
+                //ButtonEnter(1f)
+            } // можно сделать костыль с автообновлением значения
+        }     // в данный момент после нажатия на ентер в первый раз убавляется среднесуточная, а во второй уже дневная
+        // нужно добавить какое-то условие
+
+        // после первого нажатия на ентер с новой суммой исполняется этот метод
     }
 }
 

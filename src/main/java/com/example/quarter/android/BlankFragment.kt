@@ -42,6 +42,7 @@ class BlankFragment : Fragment() {
         binding.save.setOnClickListener {
             if (binding.howMany.text != ".") {
                 dataModel.money.value = "$howMany".toFloat()
+                dataModel.saveClick.value = true
                 activity?.onBackPressed()
             }
         }
