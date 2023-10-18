@@ -19,6 +19,7 @@ package com.example.quarter.android
 
 import DataModel
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -57,6 +58,8 @@ class  MainActivity : FragmentActivity() {
     private var fictionalValue = ""
     private val handler = Handler()
     private val interval: Long = 1000
+
+    lateinit var sTodayLimit: SharedPreferences
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
