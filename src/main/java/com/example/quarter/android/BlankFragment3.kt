@@ -86,6 +86,8 @@ class BlankFragment3 : Fragment() {
         }
         recyclerView.adapter = adapter
 
+
+
     }
     companion object {
         @JvmStatic

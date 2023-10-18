@@ -1,5 +1,22 @@
 package com.example.quarter.android
 
+/*
+    Возможные варианты проверки приложения:
+
+    1. назначить сумму и дату и вычесть произвольную сумму
+    2. назначить дату и сумму и вычесть произвольную сумму
+
+    3. назначить сумму и выбрать день сегодня
+    4. выбрать сегодня и назначить сумму
+
+    5. сменить дату и вычесть произвольную сумму
+    6. сменить сумму и вычесть произвольную сумму
+
+    7. изменить текущий день, с помощью сис настроек устройства
+            должна прибавиться среднесуточная
+    8. сделать вычет из суммы на текущий день, а затем сменить дату
+ */
+
 import DataModel
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -35,11 +52,8 @@ class  MainActivity : FragmentActivity() {
     lateinit var binding: ActivityMainBinding
     private val dataModel: DataModel by viewModels()
     private var fictionalValue = ""
-    //private var fictionalResult = 0.0
     private val handler = Handler()
     private val interval: Long = 1000
-
-
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,16 +66,11 @@ class  MainActivity : FragmentActivity() {
         var lastDate = LocalDate.now()
         var howMany = 0.0f
 
-
-
-
         //Получение текущего значения всего кол-ва денег
         var dateFull = LocalDate.now().minusDays(1)
-        var dayLimit = 0.0f
         var todayLimit = 0.0f
         var avarageDailyValue = 0.0f
         var numberOfDays = 0L
-        var saveClick = false
         val result: TextView = findViewById(R.id.result)
 
 
@@ -71,18 +80,15 @@ class  MainActivity : FragmentActivity() {
             dataModel.money.observe(this) {
                 howMany = it
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                avarageDailyValue = (howMany / numberOfDays).toFloat()
+                // баг с numberOfDays? значение не меняется
+                avarageDailyValue = (howMany / numberOfDays)
                 binding.result.text = todayLimit.toString()
             }
         }
 
-
-
-        // Эксперементриую с решением бага связанным со сменой даты/денег
+        // Эксперементриую с решением бага связанным со сменой даты
         dataModel.dateFull.observe(this) {
             if (howMany != 0.0f){
-                binding.buttonEnter.text = "bla"
-                //val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
                 todayLimit = 0.0f
                 todayLimit += (avarageDailyValue).toInt()
                 binding.result.text = todayLimit.toString()
@@ -90,25 +96,23 @@ class  MainActivity : FragmentActivity() {
             }
         }
 
-        dataModel.dayLimit.observe(this){
-            dayLimit = it
-        }
-        dataModel.todayLimit.observe(this) {
-            todayLimit = it                         // не нужно
-        }
-
+        // проверка на смену суток
         val runnable = object : Runnable {
             override fun run() {
                 today = LocalDate.now()
                 // Проверить дату
                 if ((today != lastDate) && (avarageDailyValue != 0.0f)) {
                     // нужно дописать supportFragmentManager
-                    val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
-                    todayLimit += (avarageDailyValue * numberOfDays).toInt()
+                    val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
+// заменил averageDailyValue для того что бы после смены суток добавлялась обновленная дневная сумма
+                    avarageDailyValue = (howMany / (numberOfDays-1))
+                    todayLimit += (avarageDailyValue * days).toInt()
                     binding.result.text = todayLimit.toString()
                     lastDate = today
+                    numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
+                    binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
                 }
-                handler.postDelayed(this, interval)
+                handler.postDelayed(this, interval) //интервал - каждая секнда
             }
         }
 
