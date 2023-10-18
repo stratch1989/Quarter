@@ -49,7 +49,7 @@ class  MainActivity : FragmentActivity() {
         setContentView(binding.root)
 
         var today = LocalDate.now()
-        var lastDate = LocalDate.now().minusDays(1)
+        var lastDate = LocalDate.now()
         var howMany = 0.0f
 
 
@@ -76,16 +76,6 @@ class  MainActivity : FragmentActivity() {
             }
         }
 
-        dataModel.money.observe(this) {
-            howMany = it
-            dataModel.dateFull.observe(this) {
-                dateFull = it
-                numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-                binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                avarageDailyValue = (howMany / numberOfDays).toFloat()
-                binding.result.text = todayLimit.toString()
-            }
-        }
 
 
         // Эксперементриую с решением бага связанным со сменой даты/денег
@@ -104,7 +94,7 @@ class  MainActivity : FragmentActivity() {
             dayLimit = it
         }
         dataModel.todayLimit.observe(this) {
-            todayLimit = it
+            todayLimit = it                         // не нужно
         }
 
         val runnable = object : Runnable {
@@ -118,11 +108,6 @@ class  MainActivity : FragmentActivity() {
                     binding.result.text = todayLimit.toString()
                     lastDate = today
                 }
-
-                // баг, если изменить дату или сумму, то в текущем дне ничего не меняется
-
-
-                // Запустить задачу снова через заданный интервал
                 handler.postDelayed(this, interval)
             }
         }
@@ -131,7 +116,7 @@ class  MainActivity : FragmentActivity() {
 
 
 
-                // Фрагмент Settings
+        // Фрагмент Settings
         binding.settings.setOnClickListener {
             supportFragmentManager
                 .beginTransaction()
@@ -200,7 +185,6 @@ class  MainActivity : FragmentActivity() {
         // Обработка кнопки enter
         buttonEnter.setOnClickListener {
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
-                saveClick = false
                 val fictionalDigit = fictionalValue.toFloat()
                 ButtonEnter(fictionalDigit)
                 fictionalValue = ""
@@ -209,25 +193,13 @@ class  MainActivity : FragmentActivity() {
         }
 
         dataModel.saveClick.observe(this) {
-            saveClick = it
+            // суть этой штуки в том, что бы заполнялось поле дневного лимита в первый день
+            // после выставления деняк, а так же закрывает баг с неизменяющимся дневным лимитом
+            // после смены денег
+            todayLimit = 0.0f
+            todayLimit += ((avarageDailyValue).toInt())
+            result.text = todayLimit.toString()
         }
-
-        // баг После каждой траты сумма на сегодня меняется на среднесуточную
-        dataModel.money.observe(this) {
-            if ((dateFull != LocalDate.now().minusDays(1)) && (saveClick == true)){
-                saveClick = false
-                binding.buttonEnter.text = "ggg"
-                //val numberOfDays: Long = ChronoUnit.DAYS.between(lastDate, today)
-                todayLimit = 0.0f
-                todayLimit += (avarageDailyValue).toInt()
-                binding.result.text = todayLimit.toString()
-
-                //ButtonEnter(1f)
-            } // можно сделать костыль с автообновлением значения
-        }     // в данный момент после нажатия на ентер в первый раз убавляется среднесуточная, а во второй уже дневная
-        // нужно добавить какое-то условие
-
-        // после первого нажатия на ентер с новой суммой исполняется этот метод
     }
 }
 
