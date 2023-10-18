@@ -37,8 +37,10 @@ drawable ruble
 drawable save_button
 font average
 font bebas_neue
+id button
 id button0
 id button1
+id button10
 id button2
 id button3
 id button4
@@ -85,6 +87,7 @@ layout activity_settings
 layout fragment_blank
 layout fragment_blank2
 layout fragment_blank3
+layout fragment_every_day_question
 layout list_item_day
 layout test
 string attachment_summary_off

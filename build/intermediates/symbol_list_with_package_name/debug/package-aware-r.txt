@@ -3251,8 +3251,10 @@ id bounce
 id bounceBoth
 id bounceEnd
 id bounceStart
+id button
 id button0
 id button1
+id button10
 id button2
 id button3
 id button4
@@ -3851,6 +3853,7 @@ layout expand_button
 layout fragment_blank
 layout fragment_blank2
 layout fragment_blank3
+layout fragment_every_day_question
 layout image_frame
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity

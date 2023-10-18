@@ -38,6 +38,9 @@ import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import com.example.quarter.android.databinding.ActivityMainBinding
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -204,6 +207,36 @@ class  MainActivity : FragmentActivity() {
             todayLimit += ((avarageDailyValue).toInt())
             result.text = todayLimit.toString()
         }
+
+
+        val viewModel: DayChangeViewModel by viewModels()
+
+        viewModel.dayChanged.observe(this) { dayChanged ->
+            if (dayChanged) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.place_holder, EveryDayQuestion.newInstance())
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
+
     }
+
+    // ViewModel
+    class DayChangeViewModel : ViewModel() {
+        private val _dayChanged = MutableLiveData<Boolean>()
+        val dayChanged: LiveData<Boolean>
+            get() = _dayChanged
+
+        fun notifyDayChanged() {
+            _dayChanged.value = true
+        }
+
+        fun resetDayChanged() {
+            _dayChanged.value = false
+        }
+    }
+
 }
 
