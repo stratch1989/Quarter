@@ -61,12 +61,16 @@ class  MainActivity : FragmentActivity() {
     private val handler = Handler()
     private val interval: Long = 1000
 
-    var todayLimit = 0.0f
-    var avarageDailyValue = 0.0f
+    var todayLimit = 0f // сумма на день
+    var avarageDailyValue = 0f // среднесуточное
     var resulta = ""
-    var howMany = 0.0f
+    var howMany = 0f
     var numberOfDays = 0L
     var dateFull = LocalDate.now().minusDays(1)
+
+    var keyTodayLimit = 0f
+
+    var lAvarageDailyValue = -0.001f
 
 
     @Override
@@ -90,18 +94,21 @@ class  MainActivity : FragmentActivity() {
             dataModel.money.observe(this) {
                 howMany = it
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                // баг с numberOfDays значение не меняется
                 avarageDailyValue = (howMany / numberOfDays)
-                binding.result.text = todayLimit.toString()
-
+                //binding.result.text = todayLimit.toString()
             }
         }
 
         // Эксперементриую с решением бага связанным со сменой даты
+        // !!!!!!!!! Тут нашелся косяк !!!!!!!!!!!!
         dataModel.dateFull.observe(this) {
             if (howMany != 0.0f){
                 todayLimit = 0.0f
                 todayLimit += (avarageDailyValue).toInt()
+                if (keyTodayLimit != 0f) {
+                    todayLimit = keyTodayLimit
+                    keyTodayLimit = 0f
+                }
                 binding.result.text = todayLimit.toString()
                 lastDate = today
             }
@@ -117,8 +124,11 @@ class  MainActivity : FragmentActivity() {
                     val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
 // заменил averageDailyValue для того что бы после смены суток добавлялась обновленная дневная сумма
                     avarageDailyValue = (howMany / (numberOfDays-1))
+
                     todayLimit += (avarageDailyValue * days).toInt()
                     binding.result.text = todayLimit.toString()
+
+
                     lastDate = today
                     numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
                     binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
@@ -229,19 +239,16 @@ class  MainActivity : FragmentActivity() {
 
         val result: String = binding.result.text.toString()        /////
         val sHowMany: Float = howMany
-
-        //var dateFull = LocalDate.now().minusDays(1)
-
-
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
+        val dateFull = dateFull.toString()
 
         editor.putString("STRING_KEY", result)    // result
 
         editor.putFloat("HOW_MANY", sHowMany)      // какой-то жесткий баг
         editor.putLong("NUMBER_OF_DAYS", numberOfDays)
+        editor.putFloat("AVARAGE_DAILY_VALUE", avarageDailyValue)  // по сути не нужно
 
-        val dateFull = dateFull.toString()
         editor.putString("DATE_FULL", dateFull)
 
         editor.apply()
@@ -251,9 +258,12 @@ class  MainActivity : FragmentActivity() {
     private fun loadData() {
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
 
-
+        val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
+        binding.result.text = result
+        keyTodayLimit = result!!.toFloat()
 
         numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 456L)
+        lAvarageDailyValue = sharedPreferences.getFloat("AVARAGE_DAILY_VALUE", 0f)
 
         val dateFullString = sharedPreferences.getString("DATE_FULL", "")
         if (dateFullString!!.isNotEmpty()) {
@@ -265,16 +275,9 @@ class  MainActivity : FragmentActivity() {
         //binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
 
 
-
-
         val sHowMany = sharedPreferences.getFloat("HOW_MANY", 123f)
         dataModel.money.value = sHowMany
         howMany = sHowMany
-        
-
-        val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
-        binding.result.text = result
-        todayLimit = result!!.toFloat()
     }
 
 
