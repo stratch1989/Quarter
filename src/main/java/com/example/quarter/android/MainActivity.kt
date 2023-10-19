@@ -47,6 +47,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import android.content.Context
+
 
 
 private var fictionalValue = ""
@@ -59,7 +61,13 @@ class  MainActivity : FragmentActivity() {
     private val handler = Handler()
     private val interval: Long = 1000
 
-    lateinit var sTodayLimit: SharedPreferences
+    var todayLimit = 0.0f
+    var avarageDailyValue = 0.0f
+    var resulta = ""
+    var howMany = 0.0f
+    var numberOfDays = 0L
+    var dateFull = LocalDate.now().minusDays(1)
+
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,16 +76,12 @@ class  MainActivity : FragmentActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        loadData()
+
         var today = LocalDate.now()
         var lastDate = LocalDate.now()
-        var howMany = 0.0f
-
-        //Получение текущего значения всего кол-ва денег
-        var dateFull = LocalDate.now().minusDays(1)
-        var todayLimit = 0.0f
-        var avarageDailyValue = 0.0f
-        var numberOfDays = 0L
         val result: TextView = findViewById(R.id.result)
+
 
 
         dataModel.dateFull.observe(this) {
@@ -86,9 +90,10 @@ class  MainActivity : FragmentActivity() {
             dataModel.money.observe(this) {
                 howMany = it
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                // баг с numberOfDays? значение не меняется
+                // баг с numberOfDays значение не меняется
                 avarageDailyValue = (howMany / numberOfDays)
                 binding.result.text = todayLimit.toString()
+
             }
         }
 
@@ -119,6 +124,7 @@ class  MainActivity : FragmentActivity() {
                     binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
                 }
                 handler.postDelayed(this, interval) //интервал - каждая секнда
+                saveData()
             }
         }
 
@@ -211,35 +217,66 @@ class  MainActivity : FragmentActivity() {
             result.text = todayLimit.toString()
         }
 
-
-        val viewModel: DayChangeViewModel by viewModels()
-
-        viewModel.dayChanged.observe(this) { dayChanged ->
-            if (dayChanged) {
-                supportFragmentManager
-                    .beginTransaction()
-                    .replace(R.id.place_holder, EveryDayQuestion.newInstance())
-                    .addToBackStack(null)
-                    .commit()
-            }
-        }
-
     }
 
-    // ViewModel
-    class DayChangeViewModel : ViewModel() {
-        private val _dayChanged = MutableLiveData<Boolean>()
-        val dayChanged: LiveData<Boolean>
-            get() = _dayChanged
 
-        fun notifyDayChanged() {
-            _dayChanged.value = true
-        }
+    // Функция сохранения данных в SharedPreferences
+    private fun saveData() {
 
-        fun resetDayChanged() {
-            _dayChanged.value = false
-        }
+        // result howMany numberOfDays dateFull
+        // возможно проблема в val
+
+
+        val result: String = binding.result.text.toString()        /////
+        val sHowMany: Float = howMany
+
+        //var dateFull = LocalDate.now().minusDays(1)
+
+
+        val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        editor.putString("STRING_KEY", result)    // result
+
+        editor.putFloat("HOW_MANY", sHowMany)      // какой-то жесткий баг
+        editor.putLong("NUMBER_OF_DAYS", numberOfDays)
+
+        val dateFull = dateFull.toString()
+        editor.putString("DATE_FULL", dateFull)
+
+        editor.apply()
     }
+
+    // Функция восстановления данных из SharedPreferences
+    private fun loadData() {
+        val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+
+
+
+        numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 456L)
+
+        val dateFullString = sharedPreferences.getString("DATE_FULL", "")
+        if (dateFullString!!.isNotEmpty()) {
+            dateFull = LocalDate.parse(dateFullString) // Преобразуем строку обратно в LocalDate
+            dataModel.dateFull.value = dateFull
+        } else {
+            LocalDate.now()
+        }
+        //binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+
+
+
+
+        val sHowMany = sharedPreferences.getFloat("HOW_MANY", 123f)
+        dataModel.money.value = sHowMany
+        howMany = sHowMany
+        
+
+        val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
+        binding.result.text = result
+        todayLimit = result!!.toFloat()
+    }
+
 
 }
 
