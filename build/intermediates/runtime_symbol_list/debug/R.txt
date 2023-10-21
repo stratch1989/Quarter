@@ -3039,6 +3039,7 @@ int drawable button_border3 0x7f080086
 int drawable button_border4 0x7f080087
 int drawable button_border5 0x7f080088
 int drawable button_border6 0x7f080089
+int drawable button_border7 0x7f0800f7
 int drawable calendar 0x7f08008a
 int drawable cancel_button 0x7f08008b
 int drawable design_fab_background 0x7f08008c
@@ -3066,6 +3067,7 @@ int drawable ic_mtrl_chip_checked_black 0x7f0800a1
 int drawable ic_mtrl_chip_checked_circle 0x7f0800a2
 int drawable ic_mtrl_chip_close_circle 0x7f0800a3
 int drawable ic_search_black_24 0x7f0800a4
+int drawable ico_for_quest 0x7f0800f8
 int drawable m3_appbar_background 0x7f0800a5
 int drawable m3_avd_hide_password 0x7f0800a6
 int drawable m3_avd_show_password 0x7f0800a7
@@ -3225,6 +3227,7 @@ int id alertTitle 0x7f0a0047
 int id aligned 0x7f0a0048
 int id all 0x7f0a0049
 int id allStates 0x7f0a004a
+int id all_today 0x7f0a023b
 int id always 0x7f0a004b
 int id androidx_compose_ui_view_composition_context 0x7f0a004c
 int id androidx_window_activity_scope 0x7f0a004d
@@ -3239,6 +3242,7 @@ int id auto 0x7f0a0055
 int id autoComplete 0x7f0a0056
 int id autoCompleteToEnd 0x7f0a0057
 int id autoCompleteToStart 0x7f0a0058
+int id avarage_day_lim 0x7f0a023c
 int id barrier 0x7f0a0059
 int id baseline 0x7f0a005a
 int id beginOnFirstDraw 0x7f0a005b
@@ -3406,6 +3410,7 @@ int id ignoreRequest 0x7f0a00fe
 int id image 0x7f0a00ff
 int id imageView 0x7f0a0100
 int id imageView1 0x7f0a0101
+int id imageView2 0x7f0a0239
 int id immediateStop 0x7f0a0102
 int id included 0x7f0a0103
 int id indeterminate 0x7f0a0104
@@ -3657,6 +3662,7 @@ int id tag_unhandled_key_listeners 0x7f0a01f7
 int id tag_window_insets_animation_callback 0x7f0a01f8
 int id testet 0x7f0a01f9
 int id text 0x7f0a01fa
+int id text1 0x7f0a023a
 int id text2 0x7f0a01fb
 int id textEnd 0x7f0a01fc
 int id textSpacerNoButtons 0x7f0a01fd

@@ -18,9 +18,9 @@ tools:context=".EveryDayQuestion">
 
     <FrameLayout
         android:id="@+id/frameForMetrics"
-        android:background="@drawable/rounded_corners"
-        android:layout_width="350dp"
-        android:layout_height="510dp"
+        android:background="#1c1c1e"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clickable="true"
         android:gravity="center">
 
@@ -31,18 +31,115 @@ tools:context=".EveryDayQuestion">
             android:gravity="center"
             android:orientation="vertical">
 
-            <Button
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="130dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ico_for_quest" />
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Вау!"
+                android:textStyle="bold"
+                android:textColor="@android:color/background_light"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display3" />
+            <TextView
+                android:id="@+id/day_limit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Вчера вы сэкономили 1059"
+                android:textSize="17sp"
+                android:textColor="@android:color/background_light"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Осталось решить, что делать"
+                android:textSize="17sp"
+                android:textColor="@android:color/background_light"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="с деньгами"
+                android:textSize="17sp"
+                android:textColor="@android:color/background_light"/>
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+            <FrameLayout
                 android:id="@+id/option1"
-                android:gravity="center"
+                android:background="@drawable/button_border7"
+                android:layout_width="320dp"
+                android:layout_height="80dp"
+                android:clickable="true">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center|left"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp">
+                    <TextView
+                        android:id="@+id/text1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center|bottom"
+                        android:textSize="16sp"
+                        android:textColor="#fea00a"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+                        android:text="Потратить всё сегодня"/>
+                    <TextView
+                        android:id="@+id/all_today"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@android:color/background_light"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+                        android:textSize="16sp"
+                        android:gravity="center|top"
+                        android:text="2059 вместо 1000 на сегодня" />
+                </LinearLayout>
+            </FrameLayout>
+            <Space
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="option 1" />
-
-            <Button
+                android:layout_height="10dp"/>
+            <FrameLayout
                 android:id="@+id/option2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="option 2" />
+                android:background="@drawable/button_border7"
+                android:layout_width="320dp"
+                android:layout_height="80dp"
+                android:clickable="true">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center|left"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp">
+                    <TextView
+                        android:id="@+id/text2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center|bottom"
+                        android:textSize="16sp"
+                        android:textColor="#fea00a"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+                        android:text="Увеличить дневной бюджет"/>
+                    <TextView
+                        android:id="@+id/avarage_day_lim"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@android:color/background_light"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+                        android:textSize="16sp"
+                        android:gravity="center|top"
+                        android:text="Получится 1039 вместо 1000 в день" />
+                </LinearLayout>
+            </FrameLayout>
+
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

@@ -4,8 +4,9 @@ package com.example.quarter.android.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
@@ -20,25 +21,51 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
   private final FrameLayout rootView;
 
   @NonNull
+  public final TextView allToday;
+
+  @NonNull
+  public final TextView avarageDayLim;
+
+  @NonNull
   public final FrameLayout clickableBackground;
+
+  @NonNull
+  public final TextView dayLimit;
 
   @NonNull
   public final FrameLayout frameForMetrics;
 
   @NonNull
-  public final Button option1;
+  public final ImageView imageView2;
 
   @NonNull
-  public final Button option2;
+  public final FrameLayout option1;
 
-  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView,
-      @NonNull FrameLayout clickableBackground, @NonNull FrameLayout frameForMetrics,
-      @NonNull Button option1, @NonNull Button option2) {
+  @NonNull
+  public final FrameLayout option2;
+
+  @NonNull
+  public final TextView text1;
+
+  @NonNull
+  public final TextView text2;
+
+  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView, @NonNull TextView allToday,
+      @NonNull TextView avarageDayLim, @NonNull FrameLayout clickableBackground,
+      @NonNull TextView dayLimit, @NonNull FrameLayout frameForMetrics,
+      @NonNull ImageView imageView2, @NonNull FrameLayout option1, @NonNull FrameLayout option2,
+      @NonNull TextView text1, @NonNull TextView text2) {
     this.rootView = rootView;
+    this.allToday = allToday;
+    this.avarageDayLim = avarageDayLim;
     this.clickableBackground = clickableBackground;
+    this.dayLimit = dayLimit;
     this.frameForMetrics = frameForMetrics;
+    this.imageView2 = imageView2;
     this.option1 = option1;
     this.option2 = option2;
+    this.text1 = text1;
+    this.text2 = text2;
   }
 
   @Override
@@ -68,7 +95,25 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.all_today;
+      TextView allToday = ViewBindings.findChildViewById(rootView, id);
+      if (allToday == null) {
+        break missingId;
+      }
+
+      id = R.id.avarage_day_lim;
+      TextView avarageDayLim = ViewBindings.findChildViewById(rootView, id);
+      if (avarageDayLim == null) {
+        break missingId;
+      }
+
       FrameLayout clickableBackground = (FrameLayout) rootView;
+
+      id = R.id.day_limit;
+      TextView dayLimit = ViewBindings.findChildViewById(rootView, id);
+      if (dayLimit == null) {
+        break missingId;
+      }
 
       id = R.id.frameForMetrics;
       FrameLayout frameForMetrics = ViewBindings.findChildViewById(rootView, id);
@@ -76,20 +121,39 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.imageView2;
+      ImageView imageView2 = ViewBindings.findChildViewById(rootView, id);
+      if (imageView2 == null) {
+        break missingId;
+      }
+
       id = R.id.option1;
-      Button option1 = ViewBindings.findChildViewById(rootView, id);
+      FrameLayout option1 = ViewBindings.findChildViewById(rootView, id);
       if (option1 == null) {
         break missingId;
       }
 
       id = R.id.option2;
-      Button option2 = ViewBindings.findChildViewById(rootView, id);
+      FrameLayout option2 = ViewBindings.findChildViewById(rootView, id);
       if (option2 == null) {
         break missingId;
       }
 
-      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, clickableBackground,
-          frameForMetrics, option1, option2);
+      id = R.id.text1;
+      TextView text1 = ViewBindings.findChildViewById(rootView, id);
+      if (text1 == null) {
+        break missingId;
+      }
+
+      id = R.id.text2;
+      TextView text2 = ViewBindings.findChildViewById(rootView, id);
+      if (text2 == null) {
+        break missingId;
+      }
+
+      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, allToday, avarageDayLim,
+          clickableBackground, dayLimit, frameForMetrics, imageView2, option1, option2, text1,
+          text2);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

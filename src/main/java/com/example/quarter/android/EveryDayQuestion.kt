@@ -29,37 +29,54 @@ class EveryDayQuestion : Fragment() {
             activity?.onBackPressed()
         }
 
+        var avarageDailyValueFirstOption = 0f
+        var avarageDailyValueSecondOption = 0f
+        var keyTodayLimitFirstOption = 0f
+        var keyTodayLimitSecondOption = 0f
+        dataModel.keyTodayLimitFirstOption.observe(activity as LifecycleOwner){
+            keyTodayLimitFirstOption = it
+            var keyTodayLimit = 0f
+            dataModel.keyTodayLimit.observe(activity as LifecycleOwner){
+                keyTodayLimit = it
+                binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()}"
+                binding.allToday.text =
+                    "${keyTodayLimitFirstOption.toInt()} вместо ${keyTodayLimit.toInt()} на сегодня"
+            }
+        }
+        dataModel.avarageDailyValueFirstOption.observe(activity as LifecycleOwner){
+            avarageDailyValueFirstOption = it
+        }
+
+
+        dataModel.avarageDailyValueSecondOption.observe(activity as LifecycleOwner){
+            avarageDailyValueSecondOption = it
+            var keyTodayLimit = 0f
+            dataModel.keyTodayLimit.observe(activity as LifecycleOwner) {
+                keyTodayLimit = it
+                binding.avarageDayLim.text =
+                    "Получится ${avarageDailyValueSecondOption.toInt()} вместо ${keyTodayLimit.toInt()} в день"
+            }
+        }
+        dataModel.avarageDailyValue.value = avarageDailyValueSecondOption
+        dataModel.keyTodayLimitSecondOption.observe(activity as LifecycleOwner){
+            keyTodayLimitSecondOption = it
+        }
+
+
 
         binding.option1.setOnClickListener {
-            var avarageDailyValueFirstOption = 0f
-            dataModel.avarageDailyValueFirstOption.observe(activity as LifecycleOwner){
-                avarageDailyValueFirstOption = it
-            }
             dataModel.avarageDailyValue.value = avarageDailyValueFirstOption
 
-            var keyTodayLimitFirstOption = 0f
-            dataModel.keyTodayLimitFirstOption.observe(activity as LifecycleOwner){
-                keyTodayLimitFirstOption = it
-            }
             dataModel.keyTodayLimit.value = keyTodayLimitFirstOption
             (requireActivity() as MainActivity).onFragmentClosed()
             activity?.onBackPressed()
         }
         binding.option2.setOnClickListener {
-            var avarageDailyValueSecondOption = 0f
-            dataModel.avarageDailyValueSecondOption.observe(activity as LifecycleOwner){
-                avarageDailyValueSecondOption = it
-            }
-            dataModel.avarageDailyValue.value = avarageDailyValueSecondOption
-
-            var keyTodayLimitSecondOption = 0f
-            dataModel.keyTodayLimitSecondOption.observe(activity as LifecycleOwner){
-                keyTodayLimitSecondOption = it
-            }
             dataModel.keyTodayLimit.value = keyTodayLimitSecondOption
             (requireActivity() as MainActivity).onFragmentClosed()
             activity?.onBackPressed()
         }
+
     }
 
 

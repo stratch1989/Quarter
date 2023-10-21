@@ -3040,6 +3040,7 @@ drawable button_border3
 drawable button_border4
 drawable button_border5
 drawable button_border6
+drawable button_border7
 drawable calendar
 drawable cancel_button
 drawable design_fab_background
@@ -3067,6 +3068,7 @@ drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
 drawable ic_search_black_24
+drawable ico_for_quest
 drawable m3_appbar_background
 drawable m3_avd_hide_password
 drawable m3_avd_show_password
@@ -3226,6 +3228,7 @@ id alertTitle
 id aligned
 id all
 id allStates
+id all_today
 id always
 id androidx_compose_ui_view_composition_context
 id androidx_window_activity_scope
@@ -3240,6 +3243,7 @@ id auto
 id autoComplete
 id autoCompleteToEnd
 id autoCompleteToStart
+id avarage_day_lim
 id barrier
 id baseline
 id beginOnFirstDraw
@@ -3407,6 +3411,7 @@ id ignoreRequest
 id image
 id imageView
 id imageView1
+id imageView2
 id immediateStop
 id included
 id indeterminate
@@ -3658,6 +3663,7 @@ id tag_unhandled_key_listeners
 id tag_window_insets_animation_callback
 id testet
 id text
+id text1
 id text2
 id textEnd
 id textSpacerNoButtons

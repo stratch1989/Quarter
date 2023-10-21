@@ -26,9 +26,11 @@ drawable button_border3
 drawable button_border4
 drawable button_border5
 drawable button_border6
+drawable button_border7
 drawable calendar
 drawable cancel_button
 drawable grey_image
+drawable ico_for_quest
 drawable png
 drawable rounded_corners
 drawable rounded_corners2
@@ -37,6 +39,8 @@ drawable ruble
 drawable save_button
 font average
 font bebas_neue
+id all_today
+id avarage_day_lim
 id button0
 id button1
 id button2
@@ -68,6 +72,7 @@ id history
 id how_many
 id imageView
 id imageView1
+id imageView2
 id linearLayout
 id myImageView
 id option1
@@ -79,6 +84,8 @@ id save
 id save_button
 id settings
 id testet
+id text1
+id text2
 id textView
 id textView2
 id value

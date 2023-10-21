@@ -257,6 +257,7 @@ class  MainActivity : FragmentActivity() {
 
         val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
         keyTodayLimit = result!!.toFloat()
+        dataModel.keyTodayLimit.value = keyTodayLimit
 
         numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 0L)
         lAvarageDailyValue = sharedPreferences.getFloat("AVARAGE_DAILY_VALUE", 0f)
