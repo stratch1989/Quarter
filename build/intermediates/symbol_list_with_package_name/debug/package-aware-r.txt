@@ -3251,10 +3251,8 @@ id bounce
 id bounceBoth
 id bounceEnd
 id bounceStart
-id button
 id button0
 id button1
-id button10
 id button2
 id button3
 id button4
@@ -3518,6 +3516,8 @@ id notification_main_column_container
 id off
 id on
 id onInterceptTouchReturnSwipe
+id option1
+id option2
 id outline
 id outward
 id overshoot

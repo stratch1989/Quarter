@@ -1,5 +1,9 @@
 [
     {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_every_day_question.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_every_day_question.xml"
+    },
+    {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/activity_main.xml",
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/activity_main.xml"
     },

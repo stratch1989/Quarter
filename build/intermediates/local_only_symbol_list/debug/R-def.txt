@@ -37,10 +37,8 @@ drawable ruble
 drawable save_button
 font average
 font bebas_neue
-id button
 id button0
 id button1
-id button10
 id button2
 id button3
 id button4
@@ -72,6 +70,8 @@ id imageView
 id imageView1
 id linearLayout
 id myImageView
+id option1
+id option2
 id place_holder
 id recyclerView
 id result

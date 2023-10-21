@@ -76,6 +76,10 @@
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/calendar.png"
     },
     {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/layout_fragment_every_day_question.xml.flat",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_every_day_question.xml"
+    },
+    {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-merged_res-66:/drawable_grey_image.png.flat",
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/drawable/grey_image.png"
     },

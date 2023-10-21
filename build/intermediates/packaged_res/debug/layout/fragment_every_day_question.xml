@@ -32,17 +32,17 @@ tools:context=".EveryDayQuestion">
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/option1"
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:text="option 1" />
 
             <Button
-                android:id="@+id/button10"
+                android:id="@+id/option2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:text="option 2" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

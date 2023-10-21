@@ -20,25 +20,25 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
   private final FrameLayout rootView;
 
   @NonNull
-  public final Button button;
-
-  @NonNull
-  public final Button button10;
-
-  @NonNull
   public final FrameLayout clickableBackground;
 
   @NonNull
   public final FrameLayout frameForMetrics;
 
-  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView, @NonNull Button button,
-      @NonNull Button button10, @NonNull FrameLayout clickableBackground,
-      @NonNull FrameLayout frameForMetrics) {
+  @NonNull
+  public final Button option1;
+
+  @NonNull
+  public final Button option2;
+
+  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView,
+      @NonNull FrameLayout clickableBackground, @NonNull FrameLayout frameForMetrics,
+      @NonNull Button option1, @NonNull Button option2) {
     this.rootView = rootView;
-    this.button = button;
-    this.button10 = button10;
     this.clickableBackground = clickableBackground;
     this.frameForMetrics = frameForMetrics;
+    this.option1 = option1;
+    this.option2 = option2;
   }
 
   @Override
@@ -68,18 +68,6 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.button;
-      Button button = ViewBindings.findChildViewById(rootView, id);
-      if (button == null) {
-        break missingId;
-      }
-
-      id = R.id.button10;
-      Button button10 = ViewBindings.findChildViewById(rootView, id);
-      if (button10 == null) {
-        break missingId;
-      }
-
       FrameLayout clickableBackground = (FrameLayout) rootView;
 
       id = R.id.frameForMetrics;
@@ -88,8 +76,20 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, button, button10,
-          clickableBackground, frameForMetrics);
+      id = R.id.option1;
+      Button option1 = ViewBindings.findChildViewById(rootView, id);
+      if (option1 == null) {
+        break missingId;
+      }
+
+      id = R.id.option2;
+      Button option2 = ViewBindings.findChildViewById(rootView, id);
+      if (option2 == null) {
+        break missingId;
+      }
+
+      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, clickableBackground,
+          frameForMetrics, option1, option2);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

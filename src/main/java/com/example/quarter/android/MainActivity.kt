@@ -17,6 +17,15 @@ package com.example.quarter.android
     8. сделать вычет из суммы на текущий день, а затем сменить дату
  */
 
+/*
+    Памятка
+
+    Нужно округлить получаемые значения
+    поправить размеры фрагментов
+    !!!!!  со второго раза срабатывает смена даты при варианте 2 после смены дня   !!!!!
+            бывает даже с третьего
+ */
+
 import DataModel
 import android.content.Intent
 import android.content.SharedPreferences
@@ -48,6 +57,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import android.content.Context
+import androidx.lifecycle.observe
 
 
 
@@ -105,41 +115,22 @@ class  MainActivity : FragmentActivity() {
             if (howMany != 0.0f){
                 todayLimit = 0.0f
                 todayLimit += (avarageDailyValue).toInt()
-                if (keyTodayLimit != 0f) {
-                    todayLimit = keyTodayLimit
-                    keyTodayLimit = 0f
-                }
+                //if (keyTodayLimit != 0f) {
+                //    todayLimit = keyTodayLimit
+                //    keyTodayLimit = 0f
+                //}
                 binding.result.text = todayLimit.toString()
                 lastDate = today
             }
         }
 
-        // проверка на смену суток
+        // сохранение данных
         val runnable = object : Runnable {
             override fun run() {
-                today = LocalDate.now()
-                // Проверить дату
-                /*
-                if ((today != lastDate) && (avarageDailyValue != 0.0f)) {
-                    // нужно дописать supportFragmentManager
-                    val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
-// заменил averageDailyValue для того что бы после смены суток добавлялась обновленная дневная сумма
-                    avarageDailyValue = (howMany / (numberOfDays-1))
-
-                    todayLimit += (avarageDailyValue * days).toInt()
-                    binding.result.text = todayLimit.toString()
-
-
-                    lastDate = today
-                    numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-                    binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                }
-                 */
                 handler.postDelayed(this, interval) //интервал - каждая секнда
                 saveData()
             }
         }
-
         handler.post(runnable)
 
 
@@ -154,7 +145,6 @@ class  MainActivity : FragmentActivity() {
         }
 
         val value: TextView = findViewById(R.id.value)
-        //val result: TextView = findViewById(R.id.result)
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
         // Изменения размеров кнопок
@@ -300,14 +290,44 @@ class  MainActivity : FragmentActivity() {
         if (today != lastDate) {
             // нужно дописать supportFragmentManager
             val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
-            avarageDailyValue = (howMany / (numberOfDays-1))
-            keyTodayLimit += (avarageDailyValue * days).toInt()
-            binding.result.text = todayLimit.toString()
-            binding.history.text = "$keyTodayLimit"
-            lastDate = today
-            numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-            binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+
+            //два среднесуточных значения для выбора
+            val avarageDailyValueFirstOption = ((howMany-keyTodayLimit+avarageDailyValue) / (numberOfDays-1))
+            dataModel.avarageDailyValueFirstOption.value = avarageDailyValueFirstOption
+            val avarageDailyValueSecondOption = howMany/(numberOfDays-1).toInt().toFloat()
+            dataModel.avarageDailyValueSecondOption.value = avarageDailyValueSecondOption
+
+            //два варианта для дневного лимита
+            val keyTodayLimitFirstOption = keyTodayLimit+(avarageDailyValueFirstOption*days).toInt()
+            dataModel.keyTodayLimitFirstOption.value = keyTodayLimitFirstOption
+            dataModel.keyTodayLimitSecondOption.value = avarageDailyValueSecondOption //это второй варик
+
+            supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.place_holder, EveryDayQuestion.newInstance())
+                .addToBackStack(null)
+                .commit()
         }
+
+    }
+
+    fun onFragmentClosed() {
+        dataModel.avarageDailyValue.observe(this){
+            avarageDailyValue = it
+        }
+        dataModel.keyTodayLimit.observe(this){
+            keyTodayLimit = it
+        }
+
+        todayLimit = keyTodayLimit
+        dataModel.todayLimit.value = todayLimit
+
+        binding.result.text = todayLimit.toString()
+        binding.history.text = "$keyTodayLimit"
+        lastDate = today
+        numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
+
+        binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
     }
 }
 

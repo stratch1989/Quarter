@@ -27,4 +27,26 @@ public class DataModel : ViewModel() {
     val saveClick: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>()
     }
+
+    //два среднесуточных значения для выбора
+    val avarageDailyValue: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
+    val avarageDailyValueFirstOption: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
+    val avarageDailyValueSecondOption: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
+
+    //два варианта для дневного лимита
+    val keyTodayLimit: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
+    val keyTodayLimitFirstOption: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
+    val keyTodayLimitSecondOption: MutableLiveData<Float> by lazy {
+        MutableLiveData<Float>()
+    }
 }

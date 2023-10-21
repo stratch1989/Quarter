@@ -3250,10 +3250,8 @@ int id bounce 0x7f0a0060
 int id bounceBoth 0x7f0a0061
 int id bounceEnd 0x7f0a0062
 int id bounceStart 0x7f0a0063
-int id button 0x7f0a0064
 int id button0 0x7f0a0065
 int id button1 0x7f0a0066
-int id button10 0x7f0a0067
 int id button2 0x7f0a0068
 int id button3 0x7f0a0069
 int id button4 0x7f0a006a
@@ -3517,6 +3515,8 @@ int id notification_main_column_container 0x7f0a016b
 int id off 0x7f0a016c
 int id on 0x7f0a016d
 int id onInterceptTouchReturnSwipe 0x7f0a016e
+int id option1 0x7f0a0235
+int id option2 0x7f0a0236
 int id outline 0x7f0a016f
 int id outward 0x7f0a0170
 int id overshoot 0x7f0a0171
