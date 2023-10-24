@@ -1,5 +1,9 @@
 [
     {
+        "merged": "com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_history.xml",
+        "source": "com.example.quarter.android.Quarter-main-68:/layout/fragment_history.xml"
+    },
+    {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_every_day_question.xml",
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_every_day_question.xml"
     },
@@ -16,10 +20,6 @@
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank.xml"
     },
     {
-        "merged": "com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_every_day_question.xml",
-        "source": "com.example.quarter.android.Quarter-main-68:/layout/fragment_every_day_question.xml"
-    },
-    {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_blank3.xml",
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_blank3.xml"
     },
@@ -30,6 +30,10 @@
     {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/test.xml",
         "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/test.xml"
+    },
+    {
+        "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/fragment_about.xml",
+        "source": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-main-68:/layout/fragment_about.xml"
     },
     {
         "merged": "/Users/stan2ex/.gradle/daemon/8.0/com.example.quarter.android.Quarter-mergeDebugResources-65:/layout/list_item_day.xml",

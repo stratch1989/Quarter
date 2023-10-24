@@ -38,9 +38,9 @@ class EveryDayQuestion : Fragment() {
             var keyTodayLimit = 0f
             dataModel.keyTodayLimit.observe(activity as LifecycleOwner){
                 keyTodayLimit = it
-                binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()}"
-                binding.allToday.text =
-                    "${keyTodayLimitFirstOption.toInt()} вместо ${keyTodayLimit.toInt()} на сегодня"
+                binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()} ₽"
+                //binding.allToday.text =
+                //    "${keyTodayLimitFirstOption.toInt()} вместо ${keyTodayLimit.toInt()} на сегодня"
             }
         }
         dataModel.avarageDailyValueFirstOption.observe(activity as LifecycleOwner){
@@ -53,8 +53,8 @@ class EveryDayQuestion : Fragment() {
             var keyTodayLimit = 0f
             dataModel.keyTodayLimit.observe(activity as LifecycleOwner) {
                 keyTodayLimit = it
-                binding.avarageDayLim.text =
-                    "Получится ${avarageDailyValueSecondOption.toInt()} вместо ${keyTodayLimit.toInt()} в день"
+                //binding.avarageDayLim.text =
+                //    "Получится ${avarageDailyValueSecondOption.toInt()} вместо ${keyTodayLimit.toInt()} в день"
             }
         }
         dataModel.avarageDailyValue.value = avarageDailyValueSecondOption

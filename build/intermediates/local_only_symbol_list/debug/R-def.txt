@@ -39,8 +39,6 @@ drawable ruble
 drawable save_button
 font average
 font bebas_neue
-id all_today
-id avarage_day_lim
 id button0
 id button1
 id button2
@@ -91,10 +89,12 @@ id textView2
 id value
 layout activity_main
 layout activity_settings
+layout fragment_about
 layout fragment_blank
 layout fragment_blank2
 layout fragment_blank3
 layout fragment_every_day_question
+layout fragment_history
 layout list_item_day
 layout test
 string attachment_summary_off

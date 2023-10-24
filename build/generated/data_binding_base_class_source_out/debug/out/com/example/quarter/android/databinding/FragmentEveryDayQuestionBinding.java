@@ -21,12 +21,6 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
   private final FrameLayout rootView;
 
   @NonNull
-  public final TextView allToday;
-
-  @NonNull
-  public final TextView avarageDayLim;
-
-  @NonNull
   public final FrameLayout clickableBackground;
 
   @NonNull
@@ -50,14 +44,12 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
   @NonNull
   public final TextView text2;
 
-  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView, @NonNull TextView allToday,
-      @NonNull TextView avarageDayLim, @NonNull FrameLayout clickableBackground,
-      @NonNull TextView dayLimit, @NonNull FrameLayout frameForMetrics,
-      @NonNull ImageView imageView2, @NonNull FrameLayout option1, @NonNull FrameLayout option2,
-      @NonNull TextView text1, @NonNull TextView text2) {
+  private FragmentEveryDayQuestionBinding(@NonNull FrameLayout rootView,
+      @NonNull FrameLayout clickableBackground, @NonNull TextView dayLimit,
+      @NonNull FrameLayout frameForMetrics, @NonNull ImageView imageView2,
+      @NonNull FrameLayout option1, @NonNull FrameLayout option2, @NonNull TextView text1,
+      @NonNull TextView text2) {
     this.rootView = rootView;
-    this.allToday = allToday;
-    this.avarageDayLim = avarageDayLim;
     this.clickableBackground = clickableBackground;
     this.dayLimit = dayLimit;
     this.frameForMetrics = frameForMetrics;
@@ -95,18 +87,6 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.all_today;
-      TextView allToday = ViewBindings.findChildViewById(rootView, id);
-      if (allToday == null) {
-        break missingId;
-      }
-
-      id = R.id.avarage_day_lim;
-      TextView avarageDayLim = ViewBindings.findChildViewById(rootView, id);
-      if (avarageDayLim == null) {
-        break missingId;
-      }
-
       FrameLayout clickableBackground = (FrameLayout) rootView;
 
       id = R.id.day_limit;
@@ -151,9 +131,8 @@ public final class FragmentEveryDayQuestionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, allToday, avarageDayLim,
-          clickableBackground, dayLimit, frameForMetrics, imageView2, option1, option2, text1,
-          text2);
+      return new FragmentEveryDayQuestionBinding((FrameLayout) rootView, clickableBackground,
+          dayLimit, frameForMetrics, imageView2, option1, option2, text1, text2);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

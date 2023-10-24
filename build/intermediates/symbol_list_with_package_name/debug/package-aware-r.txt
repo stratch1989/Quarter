@@ -3228,7 +3228,6 @@ id alertTitle
 id aligned
 id all
 id allStates
-id all_today
 id always
 id androidx_compose_ui_view_composition_context
 id androidx_window_activity_scope
@@ -3243,7 +3242,6 @@ id auto
 id autoComplete
 id autoCompleteToEnd
 id autoCompleteToStart
-id avarage_day_lim
 id barrier
 id baseline
 id beginOnFirstDraw
@@ -3856,10 +3854,12 @@ layout design_navigation_menu_item
 layout design_text_input_end_icon
 layout design_text_input_start_icon
 layout expand_button
+layout fragment_about
 layout fragment_blank
 layout fragment_blank2
 layout fragment_blank3
 layout fragment_every_day_question
+layout fragment_history
 layout image_frame
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity

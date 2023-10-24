@@ -59,10 +59,7 @@ import java.util.Locale
 import android.content.Context
 import androidx.lifecycle.observe
 
-
-
 private var fictionalValue = ""
-
 
 class  MainActivity : FragmentActivity() {
     lateinit var binding: ActivityMainBinding
@@ -73,15 +70,11 @@ class  MainActivity : FragmentActivity() {
 
     var todayLimit = 0f // сумма на день
     var avarageDailyValue = 0f // среднесуточное
-    //var resulta = ""
-    var howMany = 0f
-    var numberOfDays = 0L
+    var howMany = 0f // вся сумма
+    var numberOfDays = 0L // кол-во дней
     var dateFull = LocalDate.now().minusDays(1)
-
     var keyTodayLimit = 0f
-
     var lAvarageDailyValue = -0.001f
-
     var today = LocalDate.now()
     var lastDate = LocalDate.now()
 
@@ -92,7 +85,6 @@ class  MainActivity : FragmentActivity() {
         setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         loadData()
 
         val result: TextView = findViewById(R.id.result)
@@ -101,24 +93,26 @@ class  MainActivity : FragmentActivity() {
             dateFull = it
             numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
             dataModel.money.observe(this) {
-                howMany = it
+                howMany = (Math.round(it * 100.0) / 100.0).toFloat()
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
                 avarageDailyValue = (howMany / numberOfDays)
             }
         }
 
-        // Эксперементриую с решением бага связанным со сменой даты
-        // !!!!!!!!! Тут нашелся косяк !!!!!!!!!!!!
-        // Если трачу не весь дневной лимит, то сумма остается прежней
-        // Можно сделать проверку дня не в ежесекундном режиме, а в сохранении
+        dataModel.keyTodayLimit.observe(this) {
+            keyTodayLimit = it
+        }
+
         dataModel.dateFull.observe(this) {
             if (howMany != 0.0f){
                 todayLimit = 0.0f
                 todayLimit += (avarageDailyValue).toInt()
-                //if (keyTodayLimit != 0f) {
-                //    todayLimit = keyTodayLimit
-                //    keyTodayLimit = 0f
-                //}
+                binding.history.text = "qwertyuiop[]"
+                if (keyTodayLimit != 0f) {
+                    todayLimit = keyTodayLimit
+                    keyTodayLimit = 0f
+                    binding.history.text = "${numberOfDays}"
+                }
                 binding.result.text = todayLimit.toString()
                 lastDate = today
             }
@@ -132,8 +126,6 @@ class  MainActivity : FragmentActivity() {
             }
         }
         handler.post(runnable)
-
-
 
         // Фрагмент Settings
         binding.settings.setOnClickListener {
@@ -221,32 +213,20 @@ class  MainActivity : FragmentActivity() {
 
     }
 
-
     // Функция сохранения данных в SharedPreferences
     private fun saveData() {
-
-        // result howMany numberOfDays dateFull
-        // возможно проблема в val
-
-
-        val result: String = binding.result.text.toString()        /////
+        val result: String = binding.result.text.toString()
         val sHowMany: Float = howMany
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-
         val dateFull = dateFull.toString()
         val sLastDate = lastDate.toString()
-
-        editor.putString("STRING_KEY", result)    // result
-
+        editor.putString("STRING_KEY", result)
         editor.putFloat("HOW_MANY", sHowMany)      // какой-то жесткий баг
         editor.putLong("NUMBER_OF_DAYS", numberOfDays)
-        editor.putFloat("AVARAGE_DAILY_VALUE", avarageDailyValue)  // по сути не нужно
-
+        editor.putFloat("AVARAGE_DAILY_VALUE", avarageDailyValue)
         editor.putString("DATE_FULL", dateFull)
         editor.putString("LAST_DATE", sLastDate)
-
-
 
         editor.apply()
     }
@@ -254,11 +234,9 @@ class  MainActivity : FragmentActivity() {
     // Функция восстановления данных из SharedPreferences
     private fun loadData() {
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-
         val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
         keyTodayLimit = result!!.toFloat()
         dataModel.keyTodayLimit.value = keyTodayLimit
-
         numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 0L)
         lAvarageDailyValue = sharedPreferences.getFloat("AVARAGE_DAILY_VALUE", 0f)
 
@@ -283,13 +261,10 @@ class  MainActivity : FragmentActivity() {
         //howMany
         val sHowMany = sharedPreferences.getFloat("HOW_MANY", 0f)
         dataModel.money.value = sHowMany
-        howMany = sHowMany
-
-        binding.history.text = "$lastDate $today"
+        howMany = (Math.round(sHowMany * 100.0) / 100.0).toFloat()
 
         // новый день
         if (today != lastDate) {
-            // нужно дописать supportFragmentManager
             val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
 
             //два среднесуточных значения для выбора
@@ -320,14 +295,11 @@ class  MainActivity : FragmentActivity() {
             keyTodayLimit = it
         }
 
-        todayLimit = keyTodayLimit
+        todayLimit = (Math.round(keyTodayLimit * 100.0) / 100.0).toFloat()
         dataModel.todayLimit.value = todayLimit
-
         binding.result.text = todayLimit.toString()
-        binding.history.text = "$keyTodayLimit"
         lastDate = today
         numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-
         binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
     }
 }

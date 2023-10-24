@@ -37,7 +37,7 @@ class BlankFragment2 : Fragment() {
 
         // Получение актуального кол-ва денег на весь срок
         dataModel.money.observe(activity as LifecycleOwner) {
-            binding.howMany.text = it.toString()
+            binding.howMany.text = (Math.round(it * 100.0) / 100.0).toString()
             dayLimit = it.toInt()
             howMany = binding.howMany.text.toString()
         }

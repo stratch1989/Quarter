@@ -3227,7 +3227,6 @@ int id alertTitle 0x7f0a0047
 int id aligned 0x7f0a0048
 int id all 0x7f0a0049
 int id allStates 0x7f0a004a
-int id all_today 0x7f0a023b
 int id always 0x7f0a004b
 int id androidx_compose_ui_view_composition_context 0x7f0a004c
 int id androidx_window_activity_scope 0x7f0a004d
@@ -3242,7 +3241,6 @@ int id auto 0x7f0a0055
 int id autoComplete 0x7f0a0056
 int id autoCompleteToEnd 0x7f0a0057
 int id autoCompleteToStart 0x7f0a0058
-int id avarage_day_lim 0x7f0a023c
 int id barrier 0x7f0a0059
 int id baseline 0x7f0a005a
 int id beginOnFirstDraw 0x7f0a005b
@@ -3855,10 +3853,12 @@ int layout design_navigation_menu_item 0x7f0d002b
 int layout design_text_input_end_icon 0x7f0d002c
 int layout design_text_input_start_icon 0x7f0d002d
 int layout expand_button 0x7f0d002e
+int layout fragment_about 0x7f0d0085
 int layout fragment_blank 0x7f0d002f
 int layout fragment_blank2 0x7f0d0030
 int layout fragment_blank3 0x7f0d0031
 int layout fragment_every_day_question 0x7f0d0032
+int layout fragment_history 0x7f0d0086
 int layout image_frame 0x7f0d0033
 int layout ime_base_split_test_activity 0x7f0d0034
 int layout ime_secondary_split_test_activity 0x7f0d0035
