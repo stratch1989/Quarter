@@ -152,17 +152,24 @@ class MainActivity : FragmentActivity() {
                     result.setTextColor(Color.parseColor("#FF4444"))
                     binding.textView2.text = "Новый бюджет"
                     binding.textView2.setTextColor(Color.parseColor("#FF4444"))
+                    binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
+                    binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
                 } else {
+                    val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
                     result.text = preview.toString()
                     result.setTextColor(Color.WHITE)
                     binding.textView2.text = "На сегодня"
                     binding.textView2.setTextColor(Color.WHITE)
+                    binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
+                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
                 }
             } else {
                 result.text = todayLimit.toString()
                 result.setTextColor(Color.WHITE)
                 binding.textView2.text = "На сегодня"
                 binding.textView2.setTextColor(Color.WHITE)
+                updateDayLimitText()
+                binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
         }
 
@@ -225,6 +232,8 @@ class MainActivity : FragmentActivity() {
                 result.setTextColor(Color.WHITE)
                 binding.textView2.text = "На сегодня"
                 binding.textView2.setTextColor(Color.WHITE)
+                updateDayLimitText()
+                binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
         }
 

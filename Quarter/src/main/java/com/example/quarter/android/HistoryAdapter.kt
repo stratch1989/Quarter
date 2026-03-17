@@ -3,6 +3,7 @@ package com.example.quarter.android
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.time.LocalDate
@@ -40,7 +41,7 @@ class HistoryAdapter(
     class EntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val amount: TextView = itemView.findViewById(R.id.historyAmount)
         val date: TextView = itemView.findViewById(R.id.historyDate)
-        val deleteButton: TextView = itemView.findViewById(R.id.deleteButton)
+        val deleteButton: ImageButton = itemView.findViewById(R.id.deleteButton)
     }
 
     class DividerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
