@@ -30,17 +30,33 @@ class History : Fragment() {
         }
 
         val historyManager = HistoryManager(requireContext())
-        val entries = historyManager.loadEntries().toMutableList()
+        val allEntries = historyManager.loadEntries()
+        val periodTs = historyManager.getPeriodStartTimestamp()
 
-        if (entries.isEmpty()) {
+        val currentEntries = allEntries.filter { it.timestamp >= periodTs }
+        val oldEntries = allEntries.filter { it.timestamp < periodTs }
+
+        // Собираем список элементов для адаптера
+        val items = mutableListOf<HistoryItem>()
+        currentEntries.forEachIndexed { index, entry ->
+            items.add(HistoryItem.Current(entry, index))
+        }
+        if (currentEntries.isNotEmpty() && oldEntries.isNotEmpty()) {
+            items.add(HistoryItem.Divider)
+        }
+        oldEntries.forEach { entry ->
+            items.add(HistoryItem.Old(entry))
+        }
+
+        if (items.isEmpty()) {
             binding.emptyText.visibility = View.VISIBLE
             binding.historyRecyclerView.visibility = View.GONE
         } else {
             binding.emptyText.visibility = View.GONE
             binding.historyRecyclerView.visibility = View.VISIBLE
             binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            binding.historyRecyclerView.adapter = HistoryAdapter(entries) { position ->
-                val removed = historyManager.removeEntry(position)
+            binding.historyRecyclerView.adapter = HistoryAdapter(items) { currentIndex ->
+                val removed = historyManager.removeCurrentEntry(currentIndex)
                 if (removed != null) {
                     // Возврат в общий бюджет
                     val currentMoney = dataModel.money.value ?: 0.0
@@ -50,18 +66,12 @@ class History : Fragment() {
                     val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
                     val isToday = removed.date == LocalDate.now().toString()
                     if (isToday) {
-                        // За сегодня — возвращаем целиком
                         dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + removed.amount)
                     } else {
-                        // За прошлые дни — размазываем на оставшиеся дни
                         val days = dataModel.numberOfDays.value ?: 1L
                         val perDay = if (days > 0) removed.amount / days else removed.amount
                         dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + perDay)
                     }
-                }
-                if (entries.isEmpty()) {
-                    binding.emptyText.visibility = View.VISIBLE
-                    binding.historyRecyclerView.visibility = View.GONE
                 }
             }
         }
