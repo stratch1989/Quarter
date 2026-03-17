@@ -6,7 +6,7 @@
     android:id="@+id/clickable_background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E1494949"
+    android:background="#000000"
     android:clickable="true"
     tools:context=".History">
 
@@ -19,46 +19,47 @@
 
         <FrameLayout
             android:id="@+id/frameForMetrics"
-            android:background="#1c1c1e"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="#000000"
             android:gravity="center">
+
             <ImageButton
                 android:id="@+id/close_button"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_gravity="top|start"
-                android:layout_marginTop="12dp"
                 android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/circle_button_bg"
-                android:src="@drawable/ic_close"
-                android:scaleType="centerInside"
+                android:contentDescription="Закрыть"
                 android:padding="10dp"
-                android:contentDescription="Закрыть" />
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_close" />
 
             <LinearLayout
-                android:padding="15dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:padding="15dp">
 
                 <TextView
                     android:id="@+id/historyTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
                     android:text="История трат"
-                    android:textSize="20sp"
                     android:textColor="@android:color/white"
-                    android:layout_marginBottom="4dp" />
+                    android:textSize="20sp" />
 
                 <TextView
                     android:id="@+id/periodTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="15sp"
-                    android:textColor="#fea00a"
                     android:layout_marginBottom="12dp"
+                    android:textColor="#fea00a"
+                    android:textSize="15sp"
                     android:visibility="gone" />
 
                 <TextView
@@ -66,8 +67,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Траты за текущий период появятся здесь"
-                    android:textSize="16sp"
                     android:textColor="@android:color/darker_gray"
+                    android:textSize="16sp"
                     android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView

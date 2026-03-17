@@ -48,6 +48,7 @@ class MainActivity : FragmentActivity() {
     var lastDate = LocalDate.now()
     private var hasUnsavedChanges = false
     private var lastSpendAmount: Double? = null
+    private var isAddMode = false
 
 
     @Override
@@ -138,36 +139,44 @@ class MainActivity : FragmentActivity() {
             button.layoutParams = layoutParams
         }
 
-        // Превью вычитания при вводе цифр
+        // Превью при вводе цифр
         fun updatePreview() {
             if (fictionalValue.isNotEmpty() && fictionalValue != ".") {
                 val inputAmount = fictionalValue.toDoubleOrNull() ?: 0.0
-                val preview = dataModel.roundMoney(todayLimit - inputAmount)
-                if (preview < 0) {
-                    // Новый бюджет = (общий бюджет - трата) / оставшиеся дни
-                    val remainingBudget = howMany - inputAmount
-                    val days = if (numberOfDays > 1) numberOfDays else 1L
-                    val newDaily = dataModel.roundMoney(remainingBudget / days)
-                    result.text = newDaily.toString()
-                    result.setTextColor(Color.parseColor("#FF4444"))
-                    binding.textView2.text = "Новый бюджет"
-                    binding.textView2.setTextColor(Color.parseColor("#FF4444"))
-                    binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
-                    binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
-                } else {
-                    val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
+                if (isAddMode) {
+                    val preview = dataModel.roundMoney(todayLimit + inputAmount)
+                    val newBudget = dataModel.roundMoney(howMany + inputAmount)
                     result.text = preview.toString()
-                    result.setTextColor(Color.WHITE)
-                    binding.textView2.text = "На сегодня"
-                    binding.textView2.setTextColor(Color.WHITE)
-                    binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
-                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                    result.setTextColor(Color.parseColor("#4CAF50"))
+                    binding.dayLimit.text = "${newBudget} на ${numberOfDays} дней"
+                } else {
+                    val preview = dataModel.roundMoney(todayLimit - inputAmount)
+                    if (preview < 0) {
+                        val remainingBudget = howMany - inputAmount
+                        val days = if (numberOfDays > 1) numberOfDays else 1L
+                        val newDaily = dataModel.roundMoney(remainingBudget / days)
+                        result.text = newDaily.toString()
+                        result.setTextColor(Color.parseColor("#FF4444"))
+                        binding.textView2.text = "Новый бюджет"
+                        binding.textView2.setTextColor(Color.parseColor("#FF4444"))
+                        binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
+                        if (remainingBudget < 0) binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
+                        else binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                    } else {
+                        val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
+                        result.text = preview.toString()
+                        result.setTextColor(Color.WHITE)
+                        binding.textView2.text = "На сегодня"
+                        binding.textView2.setTextColor(Color.WHITE)
+                        binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
+                        binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                    }
                 }
             } else {
                 result.text = todayLimit.toString()
                 result.setTextColor(Color.WHITE)
-                binding.textView2.text = "На сегодня"
-                binding.textView2.setTextColor(Color.WHITE)
+                binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
+                binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
                 updateDayLimitText()
                 binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
@@ -219,19 +228,29 @@ class MainActivity : FragmentActivity() {
         buttonEnter.setOnClickListener {
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
                 val fictionalDigit = fictionalValue.toDouble()
-                val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
-                todayLimit = spendResult.newTodayLimit
-                howMany = spendResult.newBudget
-                result.text = "$todayLimit"
-                historyManager.addEntry(fictionalDigit)
-                lastSpendAmount = fictionalDigit
-                lastOperation.text = "- ${fictionalDigit} ₽"
+                if (isAddMode) {
+                    todayLimit = dataModel.roundMoney(todayLimit + fictionalDigit)
+                    howMany = dataModel.roundMoney(howMany + fictionalDigit)
+                    dataModel.money.value = howMany
+                    dataModel.todayLimit.value = todayLimit
+                    result.text = "$todayLimit"
+                    lastSpendAmount = null
+                    lastOperation.text = "+ ${fictionalDigit} ₽"
+                } else {
+                    val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
+                    todayLimit = spendResult.newTodayLimit
+                    howMany = spendResult.newBudget
+                    result.text = "$todayLimit"
+                    historyManager.addEntry(fictionalDigit)
+                    lastSpendAmount = fictionalDigit
+                    lastOperation.text = "- ${fictionalDigit} ₽"
+                }
                 hasUnsavedChanges = true
                 fictionalValue = ""
                 value.text = ""
                 result.setTextColor(Color.WHITE)
-                binding.textView2.text = "На сегодня"
-                binding.textView2.setTextColor(Color.WHITE)
+                binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
+                binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
                 updateDayLimitText()
                 binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
@@ -252,11 +271,15 @@ class MainActivity : FragmentActivity() {
             hasUnsavedChanges = true
         }
 
-        // Обработка кнопки смены языка
-        val butGlobe: ImageButton = findViewById(R.id.button_globe)
-        buttonMetrics(butGlobe)
-        butGlobe.setOnClickListener {
-            // TODO: реализовать переключение языка
+        // Обработка кнопки +/-
+        val butPlusMinus: Button = findViewById(R.id.button_plus_minus)
+        buttonMetrics(butPlusMinus)
+        butPlusMinus.setOnClickListener {
+            isAddMode = !isAddMode
+            binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
+            binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
+            lastOperation.text = ""
+            updatePreview()
         }
 
         dataModel.saveClick.observe(this) {
