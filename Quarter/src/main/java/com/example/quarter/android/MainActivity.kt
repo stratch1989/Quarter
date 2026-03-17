@@ -142,7 +142,6 @@ class  MainActivity : FragmentActivity() {
         }
 
         val value: TextView = findViewById(R.id.value)
-        //val result: TextView = findViewById(R.id.result)
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
         // Изменения размеров кнопок
