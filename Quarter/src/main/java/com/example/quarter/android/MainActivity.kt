@@ -19,7 +19,9 @@ package com.example.quarter.android
 
 import DataModel
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
@@ -126,7 +128,7 @@ class MainActivity : FragmentActivity() {
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
         // Изменения размеров кнопок
-        fun buttonMetrics(button: Button): Unit {
+        fun buttonMetrics(button: View): Unit {
             val layoutParams = button.layoutParams
             layoutParams.width = displayMetrics.toInt()
             layoutParams.height = displayMetrics.toInt()
@@ -145,7 +147,7 @@ class MainActivity : FragmentActivity() {
 
         // Обьявили все кнопки
         val buttonEnter: Button = findViewById(R.id.button_enter)
-        val butDelete: Button = findViewById(R.id.button_del)
+        val butDelete: ImageButton = findViewById(R.id.button_del)
         val buttons = listOf(
             R.id.button0, R.id.button1, R.id.button2, R.id.button3,
             R.id.button4, R.id.button5, R.id.button6, R.id.button7,

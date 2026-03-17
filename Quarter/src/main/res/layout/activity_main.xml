@@ -174,16 +174,17 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <Button
+            <ImageButton
                 android:id="@+id/button_del"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
                 android:layout_margin="0dp"
                 android:layout_weight="0"
                 android:background="@drawable/button_border2"
-                android:padding="0dp"
-                android:text="DEL"
-                android:textSize="25sp" />
+                android:padding="28dp"
+                android:src="@drawable/ic_backspace"
+                android:scaleType="fitCenter"
+                android:contentDescription="Удалить" />
 
             <Button
                 android:id="@+id/button_enter"

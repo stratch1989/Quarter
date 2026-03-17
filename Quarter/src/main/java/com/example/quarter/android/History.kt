@@ -36,16 +36,34 @@ class History : Fragment() {
         val currentEntries = allEntries.filter { it.timestamp >= periodTs }
         val oldEntries = allEntries.filter { it.timestamp < periodTs }
 
-        // Собираем список элементов для адаптера
+        // Итого за текущий период
+        val totalMoney = dataModel.money.value ?: 0.0
+        val currentTotal = currentEntries.sumOf { it.amount }
+        if (currentEntries.isNotEmpty()) {
+            binding.periodTotal.visibility = View.VISIBLE
+            binding.periodTotal.text = "Потрачено: ${dataModel.roundMoney(currentTotal)} ₽ из ${dataModel.roundMoney(totalMoney + currentTotal)} ₽"
+        }
+
+        // Группировка по дням
         val items = mutableListOf<HistoryItem>()
-        currentEntries.forEachIndexed { index, entry ->
-            items.add(HistoryItem.Current(entry, index))
+        groupByDay(currentEntries).forEach { (date, entries) ->
+            val dayTotal = dataModel.roundMoney(entries.sumOf { it.amount })
+            items.add(HistoryItem.DayHeader(date, dayTotal))
+            entries.forEach { entry ->
+                val currentIndex = currentEntries.indexOf(entry)
+                items.add(HistoryItem.Current(entry, currentIndex))
+            }
         }
-        if (currentEntries.isNotEmpty() && oldEntries.isNotEmpty()) {
-            items.add(HistoryItem.Divider)
-        }
-        oldEntries.forEach { entry ->
-            items.add(HistoryItem.Old(entry))
+
+        if (oldEntries.isNotEmpty()) {
+            items.add(HistoryItem.PeriodDivider)
+            groupByDay(oldEntries).forEach { (date, entries) ->
+                val dayTotal = dataModel.roundMoney(entries.sumOf { it.amount })
+                items.add(HistoryItem.DayHeader(date, dayTotal))
+                entries.forEach { entry ->
+                    items.add(HistoryItem.Old(entry))
+                }
+            }
         }
 
         if (items.isEmpty()) {
@@ -62,6 +80,11 @@ class History : Fragment() {
                     val currentMoney = dataModel.money.value ?: 0.0
                     dataModel.money.value = dataModel.roundMoney(currentMoney + removed.amount)
 
+                    // Обновляем итого
+                    val newCurrentTotal = dataModel.roundMoney(currentTotal - removed.amount)
+                    val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + newCurrentTotal)
+                    binding.periodTotal.text = "Потрачено: ${newCurrentTotal} ₽ из ${newTotalBudget} ₽"
+
                     // Возврат в дневной лимит
                     val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
                     val isToday = removed.date == LocalDate.now().toString()
@@ -75,6 +98,10 @@ class History : Fragment() {
                 }
             }
         }
+    }
+
+    private fun groupByDay(entries: List<HistoryEntry>): Map<String, List<HistoryEntry>> {
+        return entries.groupBy { it.date }.toSortedMap(compareByDescending { it })
     }
 
     companion object {

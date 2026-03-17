@@ -52,13 +52,22 @@
                     android:text="История трат"
                     android:textSize="20sp"
                     android:textColor="@android:color/white"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/periodTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:textColor="#fea00a"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/emptyText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Пока нет трат"
+                    android:text="Траты за текущий период появятся здесь"
                     android:textSize="16sp"
                     android:textColor="@android:color/darker_gray"
                     android:visibility="gone" />
