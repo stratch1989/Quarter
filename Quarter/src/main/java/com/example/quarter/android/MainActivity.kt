@@ -95,6 +95,12 @@ class MainActivity : FragmentActivity() {
             hasUnsavedChanges = true
         }
 
+        dataModel.todayLimit.observe(this) {
+            todayLimit = it
+            binding.result.text = todayLimit.toString()
+            hasUnsavedChanges = true
+        }
+
         // Фрагмент Settings
         binding.settings.setOnClickListener {
             supportFragmentManager

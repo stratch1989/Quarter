@@ -10,7 +10,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class HistoryAdapter(
-    private val entries: List<HistoryEntry>
+    private val entries: MutableList<HistoryEntry>,
+    private val onDelete: (Int) -> Unit
 ) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
 
     private val dateFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale("ru"))
@@ -18,6 +19,7 @@ class HistoryAdapter(
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val amount: TextView = itemView.findViewById(R.id.historyAmount)
         val date: TextView = itemView.findViewById(R.id.historyDate)
+        val deleteButton: TextView = itemView.findViewById(R.id.deleteButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,6 +32,14 @@ class HistoryAdapter(
         val entry = entries[position]
         holder.amount.text = "- ${entry.amount}"
         holder.date.text = LocalDate.parse(entry.date).format(dateFormatter)
+        holder.deleteButton.setOnClickListener {
+            val pos = holder.adapterPosition
+            if (pos != RecyclerView.NO_POSITION) {
+                onDelete(pos)
+                entries.removeAt(pos)
+                notifyItemRemoved(pos)
+            }
+        }
     }
 
     override fun getItemCount() = entries.size

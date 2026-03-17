@@ -28,6 +28,14 @@ class HistoryManager(context: Context) {
         return list
     }
 
+    fun removeEntry(index: Int): HistoryEntry? {
+        val entries = loadEntries().toMutableList()
+        if (index < 0 || index >= entries.size) return null
+        val removed = entries.removeAt(index)
+        saveEntries(entries)
+        return removed
+    }
+
     private fun saveEntries(entries: List<HistoryEntry>) {
         val array = JSONArray()
         for (entry in entries) {
