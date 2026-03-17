@@ -30,6 +30,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import android.content.Context
+import android.graphics.Color
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
@@ -46,6 +47,7 @@ class MainActivity : FragmentActivity() {
     var today = LocalDate.now()
     var lastDate = LocalDate.now()
     private var hasUnsavedChanges = false
+    private var lastSpendAmount: Double? = null
 
 
     @Override
@@ -56,6 +58,7 @@ class MainActivity : FragmentActivity() {
         loadData()
 
         val result: TextView = findViewById(R.id.result)
+        val lastOperation: TextView = findViewById(R.id.last_operation)
 
         fun updateDayLimitText() {
             val hasBudget = howMany != 0.0
@@ -135,6 +138,34 @@ class MainActivity : FragmentActivity() {
             button.layoutParams = layoutParams
         }
 
+        // Превью вычитания при вводе цифр
+        fun updatePreview() {
+            if (fictionalValue.isNotEmpty() && fictionalValue != ".") {
+                val inputAmount = fictionalValue.toDoubleOrNull() ?: 0.0
+                val preview = dataModel.roundMoney(todayLimit - inputAmount)
+                if (preview < 0) {
+                    // Новый бюджет = (общий бюджет - трата) / оставшиеся дни
+                    val remainingBudget = howMany - inputAmount
+                    val days = if (numberOfDays > 1) numberOfDays else 1L
+                    val newDaily = dataModel.roundMoney(remainingBudget / days)
+                    result.text = newDaily.toString()
+                    result.setTextColor(Color.parseColor("#FF4444"))
+                    binding.textView2.text = "Новый бюджет"
+                    binding.textView2.setTextColor(Color.parseColor("#FF4444"))
+                } else {
+                    result.text = preview.toString()
+                    result.setTextColor(Color.WHITE)
+                    binding.textView2.text = "На сегодня"
+                    binding.textView2.setTextColor(Color.WHITE)
+                }
+            } else {
+                result.text = todayLimit.toString()
+                result.setTextColor(Color.WHITE)
+                binding.textView2.text = "На сегодня"
+                binding.textView2.setTextColor(Color.WHITE)
+            }
+        }
+
         // Обработка нажатия на цифры
         fun buttonBinding(variable: String): Unit {
             if ((variable == "." && fictionalValue.contains("."))
@@ -142,12 +173,14 @@ class MainActivity : FragmentActivity() {
             else {
                 fictionalValue += variable
                 value.text = fictionalValue
+                updatePreview()
             }
         }
 
         // Обьявили все кнопки
         val buttonEnter: Button = findViewById(R.id.button_enter)
         val butDelete: ImageButton = findViewById(R.id.button_del)
+        val butUndo: ImageButton = findViewById(R.id.button_undo)
         val buttons = listOf(
             R.id.button0, R.id.button1, R.id.button2, R.id.button3,
             R.id.button4, R.id.button5, R.id.button6, R.id.button7,
@@ -163,12 +196,14 @@ class MainActivity : FragmentActivity() {
         }
         buttonMetrics(buttonEnter)
         buttonMetrics(butDelete)
+        buttonMetrics(butUndo)
 
         // Обработка кнопки удалить
         butDelete.setOnClickListener {
             if (fictionalValue.isNotEmpty()) {
                 fictionalValue = fictionalValue.substring(0, fictionalValue.length - 1)
                 value.text = fictionalValue
+                updatePreview()
             }
         }
 
@@ -182,10 +217,37 @@ class MainActivity : FragmentActivity() {
                 howMany = spendResult.newBudget
                 result.text = "$todayLimit"
                 historyManager.addEntry(fictionalDigit)
+                lastSpendAmount = fictionalDigit
+                lastOperation.text = "- ${fictionalDigit} ₽"
                 hasUnsavedChanges = true
                 fictionalValue = ""
                 value.text = ""
+                result.setTextColor(Color.WHITE)
+                binding.textView2.text = "На сегодня"
+                binding.textView2.setTextColor(Color.WHITE)
             }
+        }
+
+        // Обработка кнопки отмены последней траты
+        butUndo.setOnClickListener {
+            val amount = lastSpendAmount ?: return@setOnClickListener
+            todayLimit = dataModel.roundMoney(todayLimit + amount)
+            howMany = dataModel.roundMoney(howMany + amount)
+            dataModel.money.value = howMany
+            dataModel.todayLimit.value = todayLimit
+            result.text = "$todayLimit"
+            // Удаляем последнюю запись из истории (первая в списке = последняя добавленная)
+            historyManager.removeCurrentEntry(0)
+            lastSpendAmount = null
+            lastOperation.text = ""
+            hasUnsavedChanges = true
+        }
+
+        // Обработка кнопки смены языка
+        val butGlobe: ImageButton = findViewById(R.id.button_globe)
+        buttonMetrics(butGlobe)
+        butGlobe.setOnClickListener {
+            // TODO: реализовать переключение языка
         }
 
         dataModel.saveClick.observe(this) {
