@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Ручка крышки -->
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M9,3h6v2H9z" />
+    <!-- Крышка -->
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:pathData="M4,6h16" />
+    <!-- Тело корзины -->
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M5,6l1,13c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2l1,-13" />
+    <!-- Вертикальные линии внутри -->
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:pathData="M10,10v7" />
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:pathData="M14,10v7" />
+</vector>
