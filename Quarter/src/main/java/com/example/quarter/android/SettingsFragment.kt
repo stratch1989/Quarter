@@ -8,23 +8,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LifecycleOwner
-import com.example.quarter.android.databinding.FragmentBlank2Binding
+import com.example.quarter.android.databinding.FragmentSettingsBinding
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 
-class BlankFragment2 : Fragment() {
+class SettingsFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentBlank2Binding
+    lateinit var binding: FragmentSettingsBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_blank2, container, false)
-        view.requestFocus()
-        binding = FragmentBlank2Binding.inflate(inflater)
+    ): View {
+        binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        binding.root.requestFocus()
         return binding.root
     }
 
@@ -59,31 +56,31 @@ class BlankFragment2 : Fragment() {
         if (numberOfDays.toInt() != 0){
             dayLimit = dayLimit/numberOfDays.toInt()
         }
-        dataModel.dayLimit.value = dayLimit.toFloat()
+        dataModel.dayLimit.value = dayLimit.toDouble()
         binding.dayLimit.text = "${dayLimit} в день"
 
 
         // Обратка фона на вызов метода выхода из фрагмента
         binding.clickableBackground.setOnClickListener {
-            activity?.onBackPressed()
+            parentFragmentManager.popBackStack()
         }
 
         binding.frameMoney.setOnClickListener {
-            fragmentManager?.beginTransaction()
-                ?.replace(R.id.place_holder, BlankFragment.newInstance())
-                ?.addToBackStack(null)
-                ?.commit()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.place_holder, BudgetInputFragment.newInstance())
+                .addToBackStack(null)
+                .commit()
         }
         binding.frameCalendar.setOnClickListener {
-            fragmentManager?.beginTransaction()
-                ?.replace(R.id.place_holder, BlankFragment3.newInstance())
-                ?.addToBackStack(null)
-                ?.commit()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.place_holder, DatePickerFragment.newInstance())
+                .addToBackStack(null)
+                .commit()
         }
     }
 
     companion object {
         @JvmStatic
-        fun newInstance() = BlankFragment2()
+        fun newInstance() = SettingsFragment()
     }
 }

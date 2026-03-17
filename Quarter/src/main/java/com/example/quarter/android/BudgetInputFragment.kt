@@ -1,31 +1,25 @@
 package com.example.quarter.android
 
 import DataModel
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LifecycleOwner
-import com.example.quarter.android.databinding.FragmentBlankBinding
+import com.example.quarter.android.databinding.FragmentBudgetInputBinding
 
-class BlankFragment : Fragment() {
+class BudgetInputFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentBlankBinding
+    lateinit var binding: FragmentBudgetInputBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_blank, container, false)
-        view.requestFocus()
-        binding = FragmentBlankBinding.inflate(inflater)
+    ): View {
+        binding = FragmentBudgetInputBinding.inflate(inflater, container, false)
+        binding.root.requestFocus()
         return binding.root
     }
 
@@ -41,15 +35,15 @@ class BlankFragment : Fragment() {
         // Обработка кнопки save (применяет новое значение)
         binding.save.setOnClickListener {
             if (binding.howMany.text != ".") {
-                dataModel.money.value = "$howMany".toFloat()
+                dataModel.money.value = "$howMany".toDouble()
                 dataModel.saveClick.value = true
-                activity?.onBackPressed()
+                parentFragmentManager.popBackStack()
             }
         }
 
         // Обратка фона на вызов метода выхода из фрагмента
         binding.clickableBackground.setOnClickListener {
-            activity?.onBackPressed()
+            parentFragmentManager.popBackStack()
         }
 
         // Обработка кнопки стереть
@@ -101,6 +95,6 @@ class BlankFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() = BlankFragment()
+        fun newInstance() = BudgetInputFragment()
     }
 }

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :Quarter:compileDebugKotlin)",
+      "Bash(mv fragment_blank.xml fragment_budget_input.xml)",
+      "Bash(mv fragment_blank2.xml fragment_settings.xml)",
+      "Bash(mv fragment_blank3.xml fragment_date_picker.xml)",
+      "Bash(mv BlankFragment.kt BudgetInputFragment.kt)",
+      "Bash(mv BlankFragment2.kt SettingsFragment.kt)",
+      "Bash(mv BlankFragment3.kt DatePickerFragment.kt)",
+      "Bash(./gradlew :Quarter:assembleDebug)",
+      "Read(//c/Program Files/Java//**)",
+      "Read(//c/Program Files/Android/Android Studio/jbr//**)",
+      "Read(//c/Users/ruslan/Desktop/Quarter/$LOCALAPPDATA/**)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" ./gradlew :Quarter:assembleDebug)",
+      "Bash(adb logcat:*)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" logcat:*)",
+      "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat:*)"
+    ]
+  }
+}

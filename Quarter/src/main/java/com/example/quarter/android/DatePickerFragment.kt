@@ -12,33 +12,29 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.quarter.android.databinding.FragmentBlank2Binding
-import com.example.quarter.android.databinding.FragmentBlank3Binding
+import com.example.quarter.android.databinding.FragmentDatePickerBinding
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
-import java.util.Locale
-import java.time.format.DateTimeFormatter
 
-class BlankFragment3 : Fragment() {
+class DatePickerFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentBlank3Binding
+    lateinit var binding: FragmentDatePickerBinding
 
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_blank3, container, false)
-        view.requestFocus()
-        binding = FragmentBlank3Binding.inflate(inflater)
+    ): View {
+        binding = FragmentDatePickerBinding.inflate(inflater, container, false)
+        binding.root.requestFocus()
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         // Обратка фона на вызов метода выхода из фрагмента
         binding.clickableBackground.setOnClickListener {
-            activity?.onBackPressed()
+            parentFragmentManager.popBackStack()
         }
 
         var numberOfDay = 0
@@ -68,7 +64,7 @@ class BlankFragment3 : Fragment() {
             return dayList
         }
 
-        var money = 0f
+        var money = 0.0
         dataModel.money.observe(activity as LifecycleOwner) {
             money = it
         }
@@ -83,17 +79,17 @@ class BlankFragment3 : Fragment() {
             val dateFull = dayList[position].dateFull
             binding.save.setOnClickListener {
                 dataModel.dayNumber.value = selectedNumberOfDay
-                dataModel.keyTodayLimit.value = (Math.round((money/selectedNumberOfDay) * 100.0) / 100.0).toFloat()
+                dataModel.keyTodayLimit.value = Math.round((money/selectedNumberOfDay) * 100.0) / 100.0
                 dataModel.dayText.value = selectedDay
                 dataModel.dateFull.value = dateFull
                 dataModel.lastDate.value = LocalDate.now()
-                activity?.onBackPressed()
+                parentFragmentManager.popBackStack()
             }
         }
         recyclerView.adapter = adapter
     }
     companion object {
         @JvmStatic
-        fun newInstance() = BlankFragment3()
+        fun newInstance() = DatePickerFragment()
     }
 }
