@@ -34,9 +34,11 @@ class SettingsFragment : Fragment() {
 
         // Получение актуального кол-ва денег на весь срок
         dataModel.money.observe(activity as LifecycleOwner) {
-            binding.howMany.text = (Math.round(it * 100.0) / 100.0).toString()
-            dayLimit = it.toInt()
-            howMany = binding.howMany.text.toString()
+            if (it != 0.0) {
+                binding.howMany.text = (Math.round(it * 100.0) / 100.0).toString()
+                dayLimit = it.toInt()
+                howMany = binding.howMany.text.toString()
+            }
         }
 
         //Получение актуальной даты

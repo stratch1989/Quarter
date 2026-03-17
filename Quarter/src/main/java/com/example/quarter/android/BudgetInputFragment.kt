@@ -24,17 +24,21 @@ class BudgetInputFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        var howMany = binding.howMany.text.toString()
+        var howMany = ""
+        var isPlaceholder = true
 
         // Получение актуального кол-ва денег на весь срок
         dataModel.money.observe(activity as LifecycleOwner) {
-            binding.howMany.text = it.toString()
-            howMany = binding.howMany.text.toString()
+            if (it != 0.0) {
+                binding.howMany.text = it.toString()
+                howMany = it.toString()
+                isPlaceholder = false
+            }
         }
 
         // Обработка кнопки save (применяет новое значение)
         binding.save.setOnClickListener {
-            if (binding.howMany.text != ".") {
+            if (!isPlaceholder && howMany.isNotEmpty() && howMany != ".") {
                 dataModel.money.value = "$howMany".toDouble()
                 dataModel.saveClick.value = true
                 parentFragmentManager.popBackStack()
@@ -48,7 +52,7 @@ class BudgetInputFragment : Fragment() {
 
         // Обработка кнопки стереть
         binding.buttondel.setOnClickListener {
-            if (howMany.isNotEmpty()) {
+            if (!isPlaceholder && howMany.isNotEmpty()) {
                 howMany = howMany.substring(0, howMany.length - 1)
                 binding.howMany.text = howMany
             }
@@ -69,6 +73,10 @@ class BudgetInputFragment : Fragment() {
             if ((variable == "." && howMany.contains("."))
                 || (variable == "0" && howMany.isEmpty())) {}
             else {
+                if (isPlaceholder) {
+                    howMany = ""
+                    isPlaceholder = false
+                }
                 howMany += variable
                 binding.howMany.text = howMany
             }

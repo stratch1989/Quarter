@@ -53,10 +53,21 @@ class MainActivity : FragmentActivity() {
 
         val result: TextView = findViewById(R.id.result)
 
+        fun updateDayLimitText() {
+            val hasBudget = howMany != 0.0
+            val hasDate = numberOfDays > 0
+            binding.dayLimit.text = when {
+                hasBudget && hasDate -> "${howMany} на ${numberOfDays} дней"
+                hasBudget && !hasDate -> "Укажите дату в настройках"
+                !hasBudget && hasDate -> "Укажите бюджет в настройках"
+                else -> "Введите дату и сумму в настройках"
+            }
+        }
+
         dataModel.money.observe(this) {
             howMany = dataModel.roundMoney(it)
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
-            binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+            updateDayLimitText()
             hasUnsavedChanges = true
         }
 
@@ -64,7 +75,7 @@ class MainActivity : FragmentActivity() {
             dateFull = it
             numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
-            binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+            updateDayLimitText()
 
             if (howMany != 0.0) {
                 todayLimit = 0.0

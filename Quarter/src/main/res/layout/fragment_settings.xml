@@ -63,7 +63,7 @@ tools:context=".BlankFragment2">
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:gravity="center|bottom"
-                        android:text="30000" />
+                        android:text="Бюджет не задан" />
                     <TextView
                         android:id="@+id/day_limit"
                         android:layout_width="match_parent"
@@ -72,7 +72,7 @@ tools:context=".BlankFragment2">
                         android:textColor="#646464"
                         android:textSize="12sp"
                         android:gravity="center|top"
-                        android:text="1000 в день" />
+                        android:text="" />
                 </LinearLayout>
             </FrameLayout>
             <Space
