@@ -68,6 +68,11 @@ class BlankFragment3 : Fragment() {
             return dayList
         }
 
+        var money = 0f
+        dataModel.money.observe(activity as LifecycleOwner) {
+            money = it
+        }
+
         val recyclerView: RecyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         val dayList = generateDays()
@@ -78,16 +83,14 @@ class BlankFragment3 : Fragment() {
             val dateFull = dayList[position].dateFull
             binding.save.setOnClickListener {
                 dataModel.dayNumber.value = selectedNumberOfDay
+                dataModel.keyTodayLimit.value = (Math.round((money/selectedNumberOfDay) * 100.0) / 100.0).toFloat()
                 dataModel.dayText.value = selectedDay
-                dataModel.dateFull.value = dateFull                         ///// <------------
+                dataModel.dateFull.value = dateFull
                 dataModel.lastDate.value = LocalDate.now()
                 activity?.onBackPressed()
             }
         }
         recyclerView.adapter = adapter
-
-
-
     }
     companion object {
         @JvmStatic

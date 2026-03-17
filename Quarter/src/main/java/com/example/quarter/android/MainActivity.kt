@@ -17,6 +17,15 @@ package com.example.quarter.android
     8. сделать вычет из суммы на текущий день, а затем сменить дату
  */
 
+/*
+    Памятка
+
+    Нужно округлить получаемые значения
+    поправить размеры фрагментов
+    !!!!!  со второго раза срабатывает смена даты при варианте 2 после смены дня   !!!!!
+            бывает даже с третьего
+ */
+
 import DataModel
 import android.content.Intent
 import android.content.SharedPreferences
@@ -48,11 +57,9 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import android.content.Context
-
-
+import androidx.lifecycle.observe
 
 private var fictionalValue = ""
-
 
 class  MainActivity : FragmentActivity() {
     lateinit var binding: ActivityMainBinding
@@ -61,12 +68,15 @@ class  MainActivity : FragmentActivity() {
     private val handler = Handler()
     private val interval: Long = 1000
 
-    var todayLimit = 0.0f
-    var avarageDailyValue = 0.0f
-    var resulta = ""
-    var howMany = 0.0f
-    var numberOfDays = 0L
+    var todayLimit = 0f // сумма на день
+    var avarageDailyValue = 0f // среднесуточное
+    var howMany = 0f // вся сумма
+    var numberOfDays = 0L // кол-во дней
     var dateFull = LocalDate.now().minusDays(1)
+    var keyTodayLimit = 0f
+    var lAvarageDailyValue = -0.001f
+    var today = LocalDate.now()
+    var lastDate = LocalDate.now()
 
 
     @Override
@@ -75,68 +85,60 @@ class  MainActivity : FragmentActivity() {
         setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         loadData()
 
-        var today = LocalDate.now()
-        var lastDate = LocalDate.now()
         val result: TextView = findViewById(R.id.result)
-
-
 
         dataModel.dateFull.observe(this) {
             dateFull = it
             numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
             dataModel.money.observe(this) {
-                howMany = it
+                howMany = (Math.round(it * 100.0) / 100.0).toFloat()
                 binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                // баг с numberOfDays значение не меняется
                 avarageDailyValue = (howMany / numberOfDays)
-                binding.result.text = todayLimit.toString()
             }
         }
 
-        // Эксперементриую с решением бага связанным со сменой даты
+        dataModel.keyTodayLimit.observe(this) {
+            keyTodayLimit = it
+        }
+
         dataModel.dateFull.observe(this) {
             if (howMany != 0.0f){
                 todayLimit = 0.0f
                 todayLimit += (avarageDailyValue).toInt()
+                if (keyTodayLimit != 0f) {
+                    todayLimit = keyTodayLimit
+                    keyTodayLimit = 0f
+                }
                 binding.result.text = todayLimit.toString()
                 lastDate = today
             }
         }
 
-        // проверка на смену суток
+        // сохранение данных
         val runnable = object : Runnable {
             override fun run() {
-                today = LocalDate.now()
-                // Проверить дату
-                if ((today != lastDate) && (avarageDailyValue != 0.0f)) {
-                    // нужно дописать supportFragmentManager
-                    val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
-// заменил averageDailyValue для того что бы после смены суток добавлялась обновленная дневная сумма
-                    avarageDailyValue = (howMany / (numberOfDays-1))
-                    todayLimit += (avarageDailyValue * days).toInt()
-                    binding.result.text = todayLimit.toString()
-                    lastDate = today
-                    numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-                    binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
-                }
                 handler.postDelayed(this, interval) //интервал - каждая секнда
-                resulta = binding.result.text.toString()
                 saveData()
             }
         }
-
         handler.post(runnable)
-
-
 
         // Фрагмент Settings
         binding.settings.setOnClickListener {
             supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.place_holder, BlankFragment2.newInstance())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // Фрагмент History
+        binding.history.setOnClickListener {
+            supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.place_holder, History.newInstance())
                 .addToBackStack(null)
                 .commit()
         }
@@ -218,28 +220,20 @@ class  MainActivity : FragmentActivity() {
 
     }
 
-
     // Функция сохранения данных в SharedPreferences
     private fun saveData() {
-
-        // result howMany numberOfDays dateFull
-        // возможно проблема в val
-
-
-        val result: String = binding.result.text.toString()        /////
-
-        //var dateFull = LocalDate.now().minusDays(1)
-
-
+        val result: String = binding.result.text.toString()
+        val sHowMany: Float = howMany
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-
-        editor.putString("STRING_KEY", result)    // result
-        editor.putFloat("HOW_MANY", howMany)      // какой-то жесткий баг
-        editor.putLong("NUMBER_OF_DAYS", numberOfDays)
-
         val dateFull = dateFull.toString()
+        val sLastDate = lastDate.toString()
+        editor.putString("STRING_KEY", result)
+        editor.putFloat("HOW_MANY", sHowMany)      // какой-то жесткий баг
+        editor.putLong("NUMBER_OF_DAYS", numberOfDays)
+        editor.putFloat("AVARAGE_DAILY_VALUE", avarageDailyValue)
         editor.putString("DATE_FULL", dateFull)
+        editor.putString("LAST_DATE", sLastDate)
 
         editor.apply()
     }
@@ -247,26 +241,73 @@ class  MainActivity : FragmentActivity() {
     // Функция восстановления данных из SharedPreferences
     private fun loadData() {
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-
         val result: String? = sharedPreferences.getString("STRING_KEY", "0")   // result
-        binding.result.text = result
-        todayLimit = result!!.toFloat()
+        keyTodayLimit = result!!.toFloat()
+        dataModel.keyTodayLimit.value = keyTodayLimit
+        numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 0L)
+        lAvarageDailyValue = sharedPreferences.getFloat("AVARAGE_DAILY_VALUE", 0f)
 
-        howMany = sharedPreferences.getFloat("HOW_MANY", 123f)
-        numberOfDays = sharedPreferences.getLong("NUMBER_OF_DAYS", 456L)
-
+        //dateFull
         val dateFullString = sharedPreferences.getString("DATE_FULL", "")
-        if (dateFullString!!.isNotEmpty()) {
-            dateFull = LocalDate.parse(dateFullString) // Преобразуем строку обратно в LocalDate
+        if (dateFullString!!.isNotEmpty()) {    // преобразование LocalDate! в String
+            dateFull = LocalDate.parse(dateFullString)
+            dataModel.dateFull.value = dateFull
         } else {
             LocalDate.now()
         }
 
+        //lastDate
+        val lastDateString = sharedPreferences.getString("LAST_DATE", "")
+        if (lastDateString!!.isNotEmpty()) {    // преобразование LocalDate! в String
+            lastDate = LocalDate.parse(lastDateString)
+            dataModel.lastDate.value = lastDate
+        } else {
+            LocalDate.now()
+        }
 
-        //dataModel.money.value = howMany
-        binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+        //howMany
+        val sHowMany = sharedPreferences.getFloat("HOW_MANY", 0f)
+        dataModel.money.value = sHowMany
+        howMany = (Math.round(sHowMany * 100.0) / 100.0).toFloat()
+
+        // новый день
+        if (today != lastDate) {
+            val days: Long = (ChronoUnit.DAYS.between(lastDate, today))
+
+            //два среднесуточных значения для выбора
+            val avarageDailyValueFirstOption = ((howMany-keyTodayLimit+avarageDailyValue) / (numberOfDays-1))
+            dataModel.avarageDailyValueFirstOption.value = avarageDailyValueFirstOption
+            val avarageDailyValueSecondOption = howMany/(numberOfDays-1).toInt().toFloat()
+            dataModel.avarageDailyValueSecondOption.value = avarageDailyValueSecondOption
+
+            //два варианта для дневного лимита
+            val keyTodayLimitFirstOption = keyTodayLimit+(avarageDailyValueFirstOption*days).toInt()
+            dataModel.keyTodayLimitFirstOption.value = keyTodayLimitFirstOption
+            dataModel.keyTodayLimitSecondOption.value = avarageDailyValueSecondOption //это второй варик
+
+            supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.place_holder, EveryDayQuestion.newInstance())
+                .addToBackStack(null)
+                .commit()
+        }
+
     }
 
+    fun onFragmentClosed() {
+        dataModel.avarageDailyValue.observe(this){
+            avarageDailyValue = it
+        }
+        dataModel.keyTodayLimit.observe(this){
+            keyTodayLimit = it
+        }
 
+        todayLimit = (Math.round(keyTodayLimit * 100.0) / 100.0).toFloat()
+        dataModel.todayLimit.value = todayLimit
+        binding.result.text = todayLimit.toString()
+        lastDate = today
+        numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
+        binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+    }
 }
 
