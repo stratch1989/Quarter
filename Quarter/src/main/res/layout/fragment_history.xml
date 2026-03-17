@@ -45,13 +45,29 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <FrameLayout
-                    android:id="@+id/frameAbout"
-                    android:background="#00111111"
+                <TextView
+                    android:id="@+id/historyTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="История трат"
+                    android:textSize="20sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/emptyText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Пока нет трат"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/historyRecyclerView"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="top">
-                </FrameLayout>
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
             </LinearLayout>
         </FrameLayout>

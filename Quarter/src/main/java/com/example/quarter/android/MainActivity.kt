@@ -151,6 +151,7 @@ class MainActivity : FragmentActivity() {
         }
 
         // Обработка кнопки enter
+        val historyManager = HistoryManager(this)
         buttonEnter.setOnClickListener {
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
                 val fictionalDigit = fictionalValue.toDouble()
@@ -158,6 +159,7 @@ class MainActivity : FragmentActivity() {
                 todayLimit = spendResult.newTodayLimit
                 howMany = spendResult.newBudget
                 result.text = "$todayLimit"
+                historyManager.addEntry(fictionalDigit)
                 hasUnsavedChanges = true
                 fictionalValue = ""
                 value.text = ""

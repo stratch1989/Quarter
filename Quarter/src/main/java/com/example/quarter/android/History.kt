@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.quarter.android.databinding.FragmentHistoryBinding
 
 class History : Fragment() {
@@ -19,14 +20,26 @@ class History : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Обратка фона на вызов метода выхода из фрагмента
         binding.closeButton.setOnClickListener {
             parentFragmentManager.popBackStack()
+        }
+
+        val historyManager = HistoryManager(requireContext())
+        val entries = historyManager.loadEntries()
+
+        if (entries.isEmpty()) {
+            binding.emptyText.visibility = View.VISIBLE
+            binding.historyRecyclerView.visibility = View.GONE
+        } else {
+            binding.emptyText.visibility = View.GONE
+            binding.historyRecyclerView.visibility = View.VISIBLE
+            binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+            binding.historyRecyclerView.adapter = HistoryAdapter(entries)
         }
     }
 
     companion object {
         @JvmStatic
-        fun newInstance() = History ()
+        fun newInstance() = History()
     }
 }
