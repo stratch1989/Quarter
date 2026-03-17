@@ -28,6 +28,10 @@ class HistoryManager(context: Context) {
         return list
     }
 
+    fun clear() {
+        prefs.edit().putString(key, "[]").apply()
+    }
+
     fun removeEntry(index: Int): HistoryEntry? {
         val entries = loadEntries().toMutableList()
         if (index < 0 || index >= entries.size) return null

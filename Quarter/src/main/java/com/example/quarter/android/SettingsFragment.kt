@@ -41,25 +41,32 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        // Инициализация текущих значений из DataModel
+        dataModel.dayText.value?.let {
+            binding.daysText.text = "По ${it}"
+        }
+        var dateFull = dataModel.dateFull.value ?: LocalDate.now()
+
         //Получение актуальной даты
         dataModel.dayText.observe(activity as LifecycleOwner) {
-            val dayText = it
-            binding.daysText.text = "По ${dayText}"
+            binding.daysText.text = "По ${it}"
+        }
+
+        fun updateDayLimit() {
+            val numberOfDays: Long = ChronoUnit.DAYS.between(today, dateFull)
+            if (numberOfDays > 0 && dayLimit != 0) {
+                val daily = dayLimit / numberOfDays.toInt()
+                dataModel.dayLimit.value = daily.toDouble()
+                binding.dayLimit.text = "${daily} в день"
+            }
         }
 
         //Получение актуальной даты (полной)
-        var dateFull = LocalDate.now()
         dataModel.dateFull.observe(activity as LifecycleOwner) {
             dateFull = it
+            updateDayLimit()
         }
-
-        // Заполняем дневной лимит
-        val numberOfDays: Long = ChronoUnit.DAYS.between(today, dateFull)
-        if (numberOfDays.toInt() != 0){
-            dayLimit = dayLimit/numberOfDays.toInt()
-        }
-        dataModel.dayLimit.value = dayLimit.toDouble()
-        binding.dayLimit.text = "${dayLimit} в день"
+        updateDayLimit()
 
 
         // Обратка фона на вызов метода выхода из фрагмента

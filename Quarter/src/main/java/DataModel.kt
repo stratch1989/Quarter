@@ -11,6 +11,7 @@ public class DataModel : ViewModel() {
     val dayLimit: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
     val todayLimit: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
     val lastDate: MutableLiveData<LocalDate> by lazy { MutableLiveData<LocalDate>() }
+    val numberOfDays: MutableLiveData<Long> by lazy { MutableLiveData<Long>() }
     val saveClick: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
     //два среднесуточных значения для выбора
@@ -43,13 +44,12 @@ public class DataModel : ViewModel() {
     fun calculateNewDayOptions(
         howMany: Double,
         currentKeyTodayLimit: Double,
-        currentAvarageDailyValue: Double,
         numberOfDays: Long,
         daysSinceLastDate: Long
     ) {
         if (numberOfDays <= 1) return
 
-        val firstOption = (howMany - currentKeyTodayLimit + currentAvarageDailyValue) / (numberOfDays - 1)
+        val firstOption = (howMany - currentKeyTodayLimit) / (numberOfDays - 1)
         avarageDailyValueFirstOption.value = firstOption
 
         val secondOption = howMany / (numberOfDays - 1).toDouble()

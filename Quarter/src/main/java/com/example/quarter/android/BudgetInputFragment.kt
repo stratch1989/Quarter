@@ -41,6 +41,7 @@ class BudgetInputFragment : Fragment() {
             if (!isPlaceholder && howMany.isNotEmpty() && howMany != ".") {
                 dataModel.money.value = "$howMany".toDouble()
                 dataModel.saveClick.value = true
+                HistoryManager(requireContext()).clear()
                 parentFragmentManager.popBackStack()
             }
         }

@@ -16,7 +16,8 @@
       "Bash(adb logcat:*)",
       "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" logcat:*)",
       "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat:*)",
-      "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell:*)"
+      "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" ./gradlew :Quarter:compileDebugKotlin)"
     ]
   }
 }

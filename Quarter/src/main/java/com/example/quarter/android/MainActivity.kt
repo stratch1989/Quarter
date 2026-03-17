@@ -25,8 +25,10 @@ import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
 import com.example.quarter.android.databinding.ActivityMainBinding
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import android.content.Context
+import java.util.Locale
 
 class MainActivity : FragmentActivity() {
     lateinit var binding: ActivityMainBinding
@@ -74,6 +76,7 @@ class MainActivity : FragmentActivity() {
         dataModel.dateFull.observe(this) {
             dateFull = it
             numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
+            dataModel.numberOfDays.value = numberOfDays
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
             updateDayLimitText()
 
@@ -234,6 +237,8 @@ class MainActivity : FragmentActivity() {
         if (dateFullString.isNotEmpty()) {
             dateFull = LocalDate.parse(dateFullString)
             dataModel.dateFull.value = dateFull
+            val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
+            dataModel.dayText.value = dateFull.format(formatter)
         }
 
         //lastDate
@@ -251,7 +256,7 @@ class MainActivity : FragmentActivity() {
         // новый день
         if (today != lastDate && numberOfDays > 1) {
             val days: Long = ChronoUnit.DAYS.between(lastDate, today)
-            dataModel.calculateNewDayOptions(howMany, keyTodayLimit, avarageDailyValue, numberOfDays, days)
+            dataModel.calculateNewDayOptions(howMany, keyTodayLimit, numberOfDays, days)
 
             supportFragmentManager
                 .beginTransaction()

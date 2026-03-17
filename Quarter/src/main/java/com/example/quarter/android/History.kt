@@ -54,10 +54,7 @@ class History : Fragment() {
                         dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + removed.amount)
                     } else {
                         // За прошлые дни — размазываем на оставшиеся дни
-                        val days = dataModel.avarageDailyValue.value?.let {
-                            val money = dataModel.money.value ?: 0.0
-                            if (it != 0.0) (money / it).toLong() else 1L
-                        } ?: 1L
+                        val days = dataModel.numberOfDays.value ?: 1L
                         val perDay = if (days > 0) removed.amount / days else removed.amount
                         dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + perDay)
                     }

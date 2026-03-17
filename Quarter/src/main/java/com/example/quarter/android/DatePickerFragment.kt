@@ -83,6 +83,7 @@ class DatePickerFragment : Fragment() {
                 dataModel.dayText.value = selectedDay
                 dataModel.dateFull.value = dateFull
                 dataModel.lastDate.value = LocalDate.now()
+                HistoryManager(requireContext()).clear()
                 parentFragmentManager.popBackStack()
             }
         }
