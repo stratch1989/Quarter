@@ -29,8 +29,13 @@ import com.example.quarter.android.databinding.ActivityMainBinding
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.view.MotionEvent
+import android.view.animation.DecelerateInterpolator
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
@@ -50,6 +55,44 @@ class MainActivity : FragmentActivity() {
     private var lastSpendAmount: Double? = null
     private var isAddMode = false
 
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupBounceAnimation(view: View) {
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().cancel()
+                    v.animate()
+                        .scaleX(1.20f).scaleY(1.20f)
+                        .setDuration(150)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().cancel()
+                    val shrinkX = ObjectAnimator.ofFloat(v, "scaleX", v.scaleX, 0.78f)
+                    val shrinkY = ObjectAnimator.ofFloat(v, "scaleY", v.scaleY, 0.78f)
+                    val shrink = AnimatorSet().apply {
+                        playTogether(shrinkX, shrinkY)
+                        duration = 200
+                        interpolator = DecelerateInterpolator()
+                    }
+                    val restoreX = ObjectAnimator.ofFloat(v, "scaleX", 0.78f, 1.0f)
+                    val restoreY = ObjectAnimator.ofFloat(v, "scaleY", 0.78f, 1.0f)
+                    val restore = AnimatorSet().apply {
+                        playTogether(restoreX, restoreY)
+                        duration = 150
+                        interpolator = DecelerateInterpolator()
+                    }
+                    AnimatorSet().apply {
+                        playSequentially(shrink, restore)
+                        start()
+                    }
+                }
+            }
+            false
+        }
+    }
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -210,12 +253,20 @@ class MainActivity : FragmentActivity() {
         buttons.forEach { buttonId ->
             val button = findViewById<Button>(buttonId)
             buttonMetrics(button)
+            setupBounceAnimation(button)
             val buttonText = button.text.toString()
             button.setOnClickListener {buttonBinding(buttonText)}
         }
         buttonMetrics(buttonEnter)
         buttonMetrics(butDelete)
         buttonMetrics(butUndo)
+
+        // Анимация для оранжевых и +/- кнопок
+        val butPlusMinus: Button = findViewById(R.id.button_plus_minus)
+        setupBounceAnimation(buttonEnter)
+        setupBounceAnimation(butDelete)
+        setupBounceAnimation(butUndo)
+        setupBounceAnimation(butPlusMinus)
 
         // Обработка кнопки удалить
         butDelete.setOnClickListener {
@@ -283,7 +334,6 @@ class MainActivity : FragmentActivity() {
         }
 
         // Обработка кнопки +/-
-        val butPlusMinus: Button = findViewById(R.id.button_plus_minus)
         buttonMetrics(butPlusMinus)
         butPlusMinus.setOnClickListener {
             isAddMode = !isAddMode
