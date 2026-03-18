@@ -34,6 +34,8 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
 import java.util.Locale
@@ -57,26 +59,29 @@ class MainActivity : FragmentActivity() {
 
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun setupBounceAnimation(view: View) {
+    private fun setupBounceAnimation(view: View, maxScale: Float = 1.20f, shrinkAmount: Float = 0.11f) {
         var pressTime = 0L
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     pressTime = System.currentTimeMillis()
                     v.animate().cancel()
+                    v.background?.colorFilter = PorterDuffColorFilter(
+                        Color.argb(60, 255, 255, 255), PorterDuff.Mode.SRC_ATOP
+                    )
                     v.animate()
-                        .scaleX(1.20f).scaleY(1.20f)
+                        .scaleX(maxScale).scaleY(maxScale)
                         .setDuration(300)
                         .setInterpolator(DecelerateInterpolator())
                         .start()
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     v.animate().cancel()
+                    v.background?.clearColorFilter()
                     val held = System.currentTimeMillis() - pressTime
-                    // 0..300мс -> 0.0..1.0
                     val factor = (held.coerceIn(0, 300) / 300f)
                     val currentScale = v.scaleX
-                    val shrinkTo = 1.0f - (0.11f * factor)
+                    val shrinkTo = 1.0f - (shrinkAmount * factor)
                     val shrinkX = ObjectAnimator.ofFloat(v, "scaleX", currentScale, shrinkTo)
                     val shrinkY = ObjectAnimator.ofFloat(v, "scaleY", currentScale, shrinkTo)
                     val shrink = AnimatorSet().apply {
@@ -270,7 +275,7 @@ class MainActivity : FragmentActivity() {
 
         // Анимация для оранжевых и +/- кнопок
         val butPlusMinus: Button = findViewById(R.id.button_plus_minus)
-        setupBounceAnimation(buttonEnter)
+        setupBounceAnimation(buttonEnter, maxScale = 1.12f, shrinkAmount = 0.07f)
         setupBounceAnimation(butDelete)
         setupBounceAnimation(butUndo)
         setupBounceAnimation(butPlusMinus)
