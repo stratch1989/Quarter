@@ -25,7 +25,8 @@
       "Read(//c/Users/ruslan/Desktop/Quarter/$LOCALAPPDATA/Android/Sdk/platform-tools/**)",
       "Read(//c/Users/ruslan/Desktop/Quarter/$HOME/AppData/Local/Android/Sdk/platform-tools/**)",
       "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" shell:*)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(java:*)"
     ]
   }
 }

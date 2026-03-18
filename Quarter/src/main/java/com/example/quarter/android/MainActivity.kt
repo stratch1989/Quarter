@@ -44,6 +44,9 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.widget.EditText
+import android.widget.GridLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import java.util.Locale
@@ -68,6 +71,18 @@ class MainActivity : FragmentActivity() {
     private var budgetInputValue = ""
     private var settingsPopup: PopupWindow? = null
     private var popupBudgetText: TextView? = null
+    private var isEmojiPickerOpen = false
+    private val selectedEmojis = mutableListOf<String>()
+
+    private val categoryEmojis = mutableListOf(
+        "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
+        "🚕", "🚌", "⛽", "🚇", "✈️", "🚗", "🅿️", "🛴",
+        "🏠", "💡", "🚿", "📱", "📶", "🔧", "🧹", "🗑️",
+        "👕", "👟", "👗", "🧥", "👜", "💍", "🕶️", "💈",
+        "💊", "🏥", "🦷", "🧴", "💪", "🧘", "🏋️", "🩺",
+        "🎬", "🎮", "📚", "🎵", "🎭", "🏖️", "⚽", "🎂",
+        "🎁", "🐕", "👶", "🏫", "💻", "🛒", "🔑", "📦"
+    )
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -311,6 +326,148 @@ class MainActivity : FragmentActivity() {
                 .commit()
         }
 
+        // Кнопка добавления категории — открывает эмодзи-пикер
+        val categoryAddBtn: TextView = findViewById(R.id.category_add_btn)
+        val categoryContainer: LinearLayout = findViewById(R.id.category_container)
+        val emojiPickerOverlay: View = findViewById(R.id.emoji_picker_overlay)
+        val emojiGrid: GridLayout = findViewById(R.id.emoji_grid)
+
+        val longPressHandler = android.os.Handler(mainLooper)
+        val hiddenEmojiInput: EditText = findViewById(R.id.hidden_emoji_input)
+
+        var rebuildAll: () -> Unit = {}
+
+        // Обработка ввода эмодзи с клавиатуры
+        hiddenEmojiInput.addTextChangedListener(object : android.text.TextWatcher {
+            private var handling = false
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (handling) return
+                val text = s?.toString()?.trim() ?: return
+                if (text.isEmpty()) return
+                handling = true
+                hiddenEmojiInput.setText("")
+                hiddenEmojiInput.clearFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(hiddenEmojiInput.windowToken, 0)
+                categoryEmojis.remove(text)
+                categoryEmojis.add(0, text)
+                selectedEmojis.remove(text)
+                selectedEmojis.add(text)
+                rebuildAll()
+                handling = false
+            }
+        })
+
+        rebuildAll = {
+            // Перестроить строку выбранных категорий
+            categoryContainer.removeAllViews()
+            val dp = resources.displayMetrics.density
+            val btnSize = (32 * dp).toInt()
+            val gap = (4 * dp).toInt()
+            for (emoji in selectedEmojis) {
+                val tv = TextView(this).apply {
+                    text = emoji
+                    textSize = 16f
+                    layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
+                        marginEnd = gap
+                    }
+                    gravity = android.view.Gravity.CENTER
+                    background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
+                    setOnClickListener {
+                        selectedEmojis.remove(emoji)
+                        rebuildAll()
+                    }
+                }
+                categoryContainer.addView(tv)
+            }
+            val addBtn = TextView(this).apply {
+                id = R.id.category_add_btn
+                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize)
+                gravity = android.view.Gravity.CENTER
+                text = "+"
+                setTextColor(Color.parseColor("#555555"))
+                textSize = 16f
+                background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
+                setOnClickListener { toggleEmojiPicker() }
+            }
+            categoryContainer.addView(addBtn)
+            findViewById<HorizontalScrollView>(R.id.category_scroll).post {
+                findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_RIGHT)
+            }
+
+            // Перестроить сетку эмодзи
+            emojiGrid.removeAllViews()
+            // Кнопка клавиатуры — первый элемент
+            val kbSize = (48 * dp).toInt()
+            val kbPad = (10 * dp).toInt()
+            val kbBtn = ImageButton(this).apply {
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = kbSize
+                    height = kbSize
+                }
+                setImageResource(R.drawable.ic_keyboard)
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                setPadding(kbPad, kbPad, kbPad, kbPad)
+                background = resources.getDrawable(R.drawable.keyboard_button_bg, theme)
+                setOnClickListener {
+                    hiddenEmojiInput.setText("")
+                    hiddenEmojiInput.requestFocus()
+                    hiddenEmojiInput.postDelayed({
+                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.showSoftInput(hiddenEmojiInput, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+                    }, 100)
+                }
+            }
+            emojiGrid.addView(kbBtn)
+
+            for (emoji in categoryEmojis) {
+                if (selectedEmojis.contains(emoji)) continue
+                @SuppressLint("ClickableViewAccessibility")
+                val tv = TextView(this).apply {
+                    text = emoji
+                    textSize = 26f
+                    val size = (48 * dp).toInt()
+                    layoutParams = GridLayout.LayoutParams().apply {
+                        width = size
+                        height = size
+                    }
+                    gravity = android.view.Gravity.CENTER
+                    var longPressed = false
+                    val deleteRunnable = Runnable {
+                        longPressed = true
+                        categoryEmojis.remove(emoji)
+                        selectedEmojis.remove(emoji)
+                        rebuildAll()
+                    }
+                    setOnTouchListener { _, event ->
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                longPressed = false
+                                longPressHandler.postDelayed(deleteRunnable, 2000)
+                            }
+                            MotionEvent.ACTION_UP -> {
+                                longPressHandler.removeCallbacks(deleteRunnable)
+                                if (!longPressed) {
+                                    selectedEmojis.add(emoji)
+                                    rebuildAll()
+                                }
+                            }
+                            MotionEvent.ACTION_CANCEL -> {
+                                longPressHandler.removeCallbacks(deleteRunnable)
+                            }
+                        }
+                        true
+                    }
+                }
+                emojiGrid.addView(tv)
+            }
+        }
+
+        categoryAddBtn.setOnClickListener { toggleEmojiPicker() }
+        rebuildAll()
+
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
         // Изменения размеров кнопок
@@ -536,6 +693,20 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // Закрытие эмодзи-пикера при тапе вне пикера и category_field
+        if (event.action == MotionEvent.ACTION_DOWN && isEmojiPickerOpen && settingsPopup == null) {
+            val touchX = event.rawX.toInt()
+            val touchY = event.rawY.toInt()
+            val pickerLoc = IntArray(2)
+            binding.emojiPickerOverlay.getLocationOnScreen(pickerLoc)
+            val pickerRect = Rect(pickerLoc[0], pickerLoc[1], pickerLoc[0] + binding.emojiPickerOverlay.width, pickerLoc[1] + binding.emojiPickerOverlay.height)
+            val catLoc = IntArray(2)
+            binding.categoryField.getLocationOnScreen(catLoc)
+            val catRect = Rect(catLoc[0], catLoc[1], catLoc[0] + binding.categoryField.width, catLoc[1] + binding.categoryField.height)
+            if (!pickerRect.contains(touchX, touchY) && !catRect.contains(touchX, touchY)) {
+                toggleEmojiPicker()
+            }
+        }
         if (event.action == MotionEvent.ACTION_DOWN && settingsPopup != null) {
             val popup = settingsPopup ?: return super.dispatchTouchEvent(event)
             val popupView = popup.contentView
@@ -579,6 +750,20 @@ class MainActivity : FragmentActivity() {
         return super.dispatchTouchEvent(event)
     }
 
+    private fun toggleEmojiPicker() {
+        val overlay = binding.emojiPickerOverlay
+        if (isEmojiPickerOpen) {
+            overlay.animate().alpha(0f).setDuration(200).withEndAction {
+                overlay.visibility = View.GONE
+            }.start()
+        } else {
+            overlay.alpha = 0f
+            overlay.visibility = View.VISIBLE
+            overlay.animate().alpha(1f).setDuration(200).start()
+        }
+        isEmojiPickerOpen = !isEmojiPickerOpen
+    }
+
     private fun saveBudgetInput() {
         if (!isBudgetInputMode) return
         val newBudget = budgetInputValue.toDoubleOrNull()
@@ -595,6 +780,10 @@ class MainActivity : FragmentActivity() {
         isBudgetInputMode = false
         budgetInputValue = ""
         settingsPopup?.dismiss()
+        if (isEmojiPickerOpen) {
+            binding.emojiPickerOverlay.visibility = View.GONE
+            isEmojiPickerOpen = false
+        }
         saveData()
     }
 
