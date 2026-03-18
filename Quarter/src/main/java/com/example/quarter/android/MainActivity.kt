@@ -439,7 +439,51 @@ class MainActivity : FragmentActivity() {
                     }
                     rebuildAll()
                 }
+                // Drag-and-drop для перестановки
+                if (!isEmojiPickerOpen) {
+                    container.setOnLongClickListener { v ->
+                        val dragData = android.content.ClipData.newPlainText("emoji", emoji)
+                        val shadow = View.DragShadowBuilder(v)
+                        v.startDragAndDrop(dragData, shadow, emoji, 0)
+                        v.alpha = 0.3f
+                        true
+                    }
+                }
                 categoryContainer.addView(container)
+            }
+            // Обработка drop — перестановка эмодзи
+            categoryContainer.setOnDragListener { v, event ->
+                when (event.action) {
+                    android.view.DragEvent.ACTION_DROP -> {
+                        val draggedEmoji = event.localState as String
+                        val dropX = event.x
+                        val container = v as LinearLayout
+                        var targetIndex = selectedEmojis.size - 1
+                        for (i in 0 until container.childCount) {
+                            val child = container.getChildAt(i)
+                            if (child.id == R.id.category_add_btn) continue
+                            val childCenter = child.left + child.width / 2
+                            if (dropX < childCenter) {
+                                targetIndex = i
+                                break
+                            }
+                        }
+                        val fromIndex = selectedEmojis.indexOf(draggedEmoji)
+                        if (fromIndex != -1 && targetIndex != fromIndex) {
+                            selectedEmojis.removeAt(fromIndex)
+                            if (targetIndex > fromIndex) targetIndex--
+                            selectedEmojis.add(targetIndex.coerceIn(0, selectedEmojis.size), draggedEmoji)
+                        }
+                        rebuildAll()
+                        true
+                    }
+                    android.view.DragEvent.ACTION_DRAG_ENDED -> {
+                        // Восстановить прозрачность если drag отменён
+                        rebuildAll()
+                        true
+                    }
+                    else -> true
+                }
             }
             // Обновить индикатор
             if (activeCategory != null) {
@@ -534,6 +578,31 @@ class MainActivity : FragmentActivity() {
         categoryAddBtn.setOnClickListener { toggleEmojiPicker() }
         rebuildAllRef = rebuildAll
         rebuildAll()
+
+        // Долгое нажатие на меню категорий — открыть режим списка эмодзи
+        val longPressOpenPicker = Runnable {
+            if (!isEmojiPickerOpen) {
+                toggleEmojiPicker()
+            }
+        }
+        binding.categoryScroll.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    longPressHandler.postDelayed(longPressOpenPicker, 1500)
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    longPressHandler.removeCallbacks(longPressOpenPicker)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    // Отмена при значительном сдвиге (скролл)
+                    if (event.historySize > 0) {
+                        val dx = Math.abs(event.x - event.getHistoricalX(0))
+                        if (dx > 10) longPressHandler.removeCallbacks(longPressOpenPicker)
+                    }
+                }
+            }
+            false // не перехватываем — скролл работает как обычно
+        }
 
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
