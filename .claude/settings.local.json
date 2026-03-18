@@ -18,7 +18,14 @@
       "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat:*)",
       "Bash(\"/c/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell:*)",
       "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" ./gradlew :Quarter:compileDebugKotlin)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(./gradlew.bat :Quarter:assembleDebug)",
+      "Bash(adb shell:*)",
+      "Bash(where adb:*)",
+      "Read(//c/Users/ruslan/Desktop/Quarter/$LOCALAPPDATA/Android/Sdk/platform-tools/**)",
+      "Read(//c/Users/ruslan/Desktop/Quarter/$HOME/AppData/Local/Android/Sdk/platform-tools/**)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" shell:*)",
+      "Skill(update-config)"
     ]
   }
 }

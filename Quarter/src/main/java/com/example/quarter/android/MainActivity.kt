@@ -36,8 +36,18 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.app.DatePickerDialog
+import android.graphics.drawable.ColorDrawable
+import java.util.Calendar
+import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
@@ -131,6 +141,13 @@ class MainActivity : FragmentActivity() {
             howMany = dataModel.roundMoney(it)
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
             updateDayLimitText()
+            if (numberOfDays > 0 && howMany != 0.0) {
+                todayLimit = avarageDailyValue.toInt().toDouble()
+                dataModel.todayLimit.value = todayLimit
+                binding.result.text = todayLimit.toString()
+            }
+            lastSpendAmount = null
+            binding.lastOperation.text = ""
             hasUnsavedChanges = true
         }
 
@@ -151,6 +168,8 @@ class MainActivity : FragmentActivity() {
                 binding.result.text = todayLimit.toString()
                 lastDate = today
             }
+            lastSpendAmount = null
+            binding.lastOperation.text = ""
             hasUnsavedChanges = true
         }
 
@@ -165,13 +184,93 @@ class MainActivity : FragmentActivity() {
             hasUnsavedChanges = true
         }
 
-        // Фрагмент Settings
-        binding.settings.setOnClickListener {
-            supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.place_holder, SettingsFragment.newInstance())
-                .addToBackStack(null)
-                .commit()
+        // Попап-меню в стиле Apple
+        binding.settings.setOnClickListener { anchor ->
+            val popupView = LayoutInflater.from(this).inflate(R.layout.popup_settings_menu, null)
+            val dpToPx = resources.displayMetrics.density
+            val popupWidthPx = (275 * dpToPx).toInt()
+            val popupHeightPx = (204 * dpToPx).toInt()
+            val popup = PopupWindow(
+                popupView,
+                popupWidthPx,
+                popupHeightPx,
+                true
+            )
+            popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            popup.elevation = 16f
+
+            val budgetInput = popupView.findViewById<EditText>(R.id.budget_input)
+            if (howMany != 0.0) {
+                budgetInput.setText(dataModel.roundMoney(howMany).toString())
+            }
+
+            budgetInput.setOnEditorActionListener { v, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    val newBudget = v.text.toString().toDoubleOrNull()
+                    if (newBudget != null && newBudget > 0) {
+                        dataModel.money.value = newBudget
+                    }
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                    popup.dismiss()
+                    true
+                } else false
+            }
+
+            popupView.findViewById<LinearLayout>(R.id.menu_budget).setOnClickListener {
+                budgetInput.requestFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(budgetInput, InputMethodManager.SHOW_IMPLICIT)
+            }
+            // Показываем текущую дату если она установлена
+            val dateText = popupView.findViewById<TextView>(R.id.date_text)
+            val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
+            if (numberOfDays > 0) {
+                dateText.text = "📅  По ${dateFull.format(formatter)}"
+            }
+
+            popupView.findViewById<LinearLayout>(R.id.menu_date).setOnClickListener {
+                popup.dismiss()
+                val now = LocalDate.now()
+                val initDate = if (numberOfDays > 0) dateFull else now.plusDays(7)
+                val picker = DatePickerDialog(
+                    this,
+                    R.style.DarkDatePickerTheme,
+                    { _, year, month, dayOfMonth ->
+                        val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                        val days = ChronoUnit.DAYS.between(now, selectedDate)
+                        if (days > 0) {
+                            if (howMany != 0.0) {
+                                dataModel.keyTodayLimit.value = Math.round((howMany / days) * 100.0) / 100.0
+                            }
+                            dataModel.dateFull.value = selectedDate
+                            dataModel.dayText.value = selectedDate.format(formatter)
+                            dataModel.dayNumber.value = days.toInt()
+                            dataModel.lastDate.value = now
+                            HistoryManager(this).updatePeriodStart()
+                        }
+                    },
+                    initDate.year,
+                    initDate.monthValue - 1,
+                    initDate.dayOfMonth
+                )
+                // Минимум — завтра
+                val tomorrow = Calendar.getInstance()
+                tomorrow.add(Calendar.DAY_OF_YEAR, 1)
+                picker.datePicker.minDate = tomorrow.timeInMillis
+                picker.show()
+            }
+            popupView.findViewById<LinearLayout>(R.id.menu_about).setOnClickListener {
+                popup.dismiss()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.place_holder, AboutFragment.newInstance())
+                    .addToBackStack(null)
+                    .commit()
+            }
+
+            // Выравниваем правый край попапа с правым краем кнопки
+            val xOff = anchor.width - popupWidthPx
+            popup.showAsDropDown(anchor, xOff, 8)
         }
 
         // Фрагмент History
@@ -243,7 +342,8 @@ class MainActivity : FragmentActivity() {
         // Обработка нажатия на цифры
         fun buttonBinding(variable: String): Unit {
             if ((variable == "." && fictionalValue.contains("."))
-                || (variable == "0" && fictionalValue.isEmpty())) {}
+                || (variable == "0" && fictionalValue.isEmpty())
+                || fictionalValue.replace(".", "").length >= 8) {}
             else {
                 fictionalValue += variable
                 value.text = fictionalValue
