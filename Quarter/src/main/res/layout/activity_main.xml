@@ -268,11 +268,12 @@
         android:id="@+id/last_operation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="6dp"
         android:textColor="#888888"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/value"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/category_field"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <FrameLayout
         android:id="@+id/category_field"
