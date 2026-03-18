@@ -13,6 +13,7 @@ public class DataModel : ViewModel() {
     val lastDate: MutableLiveData<LocalDate> by lazy { MutableLiveData<LocalDate>() }
     val numberOfDays: MutableLiveData<Long> by lazy { MutableLiveData<Long>() }
     val saveClick: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
+    val clearUndo: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
     //два среднесуточных значения для выбора
     val avarageDailyValue: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }

@@ -85,6 +85,42 @@ class HistoryAdapter(
                         onDelete(currentItem.currentIndex)
                         items.removeAt(pos)
                         notifyItemRemoved(pos)
+
+                        // Обновляем currentIndex для оставшихся записей
+                        for (i in items.indices) {
+                            val item = items[i] as? HistoryItem.Current ?: continue
+                            if (item.currentIndex > currentItem.currentIndex) {
+                                items[i] = item.copy(currentIndex = item.currentIndex - 1)
+                            }
+                        }
+
+                        // Находим заголовок дня над удалённой записью
+                        var headerPos = pos - 1
+                        while (headerPos >= 0 && items[headerPos] !is HistoryItem.DayHeader) {
+                            headerPos--
+                        }
+                        if (headerPos < 0) return@setOnClickListener
+                        val header = items[headerPos] as HistoryItem.DayHeader
+
+                        // Считаем оставшиеся записи под этим заголовком
+                        var newTotal = 0.0
+                        var hasEntries = false
+                        var i = headerPos + 1
+                        while (i < items.size && items[i] is HistoryItem.Current) {
+                            hasEntries = true
+                            newTotal += (items[i] as HistoryItem.Current).entry.amount
+                            i++
+                        }
+
+                        if (!hasEntries) {
+                            // Удаляем пустой заголовок дня
+                            items.removeAt(headerPos)
+                            notifyItemRemoved(headerPos)
+                        } else {
+                            // Обновляем сумму в заголовке
+                            items[headerPos] = header.copy(total = Math.round(newTotal * 100.0) / 100.0)
+                            notifyItemChanged(headerPos)
+                        }
                     }
                 }
             }

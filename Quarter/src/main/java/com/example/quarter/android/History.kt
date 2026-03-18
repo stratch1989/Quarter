@@ -38,7 +38,7 @@ class History : Fragment() {
 
         // Итого за текущий период
         val totalMoney = dataModel.money.value ?: 0.0
-        val currentTotal = currentEntries.sumOf { it.amount }
+        var currentTotal = currentEntries.sumOf { it.amount }
         if (currentEntries.isNotEmpty()) {
             binding.periodTotal.visibility = View.VISIBLE
             binding.periodTotal.text = "Потрачено: ${dataModel.roundMoney(currentTotal)} ₽ из ${dataModel.roundMoney(totalMoney + currentTotal)} ₽"
@@ -81,9 +81,9 @@ class History : Fragment() {
                     dataModel.money.value = dataModel.roundMoney(currentMoney + removed.amount)
 
                     // Обновляем итого
-                    val newCurrentTotal = dataModel.roundMoney(currentTotal - removed.amount)
-                    val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + newCurrentTotal)
-                    binding.periodTotal.text = "Потрачено: ${newCurrentTotal} ₽ из ${newTotalBudget} ₽"
+                    currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
+                    val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + currentTotal)
+                    binding.periodTotal.text = "Потрачено: ${currentTotal} ₽ из ${newTotalBudget} ₽"
 
                     // Возврат в дневной лимит
                     val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
@@ -95,6 +95,9 @@ class History : Fragment() {
                         val perDay = if (days > 0) removed.amount / days else removed.amount
                         dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + perDay)
                     }
+
+                    // Сбрасываем undo в MainActivity
+                    dataModel.clearUndo.value = true
                 }
             }
         }

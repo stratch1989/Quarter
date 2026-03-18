@@ -148,7 +148,10 @@ class MainActivity : FragmentActivity() {
                     val newBudget = dataModel.roundMoney(howMany + inputAmount)
                     result.text = preview.toString()
                     result.setTextColor(Color.parseColor("#4CAF50"))
+                    binding.textView2.text = "Пополнение"
+                    binding.textView2.setTextColor(Color.parseColor("#4CAF50"))
                     binding.dayLimit.text = "${newBudget} на ${numberOfDays} дней"
+                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
                 } else {
                     val preview = dataModel.roundMoney(todayLimit - inputAmount)
                     if (preview < 0) {
@@ -280,6 +283,11 @@ class MainActivity : FragmentActivity() {
             binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
             lastOperation.text = ""
             updatePreview()
+        }
+
+        dataModel.clearUndo.observe(this) {
+            lastSpendAmount = null
+            lastOperation.text = ""
         }
 
         dataModel.saveClick.observe(this) {
