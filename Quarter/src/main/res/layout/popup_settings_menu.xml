@@ -19,25 +19,12 @@
         android:focusable="true">
 
         <TextView
+            android:id="@+id/budget_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="💰  "
-            android:textSize="17sp" />
-
-        <EditText
-            android:id="@+id/budget_input"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Укажите бюджет"
+            android:text="💰  Укажите бюджет"
             android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:textSize="17sp"
-            android:background="@android:color/transparent"
-            android:inputType="numberDecimal"
-            android:imeOptions="actionDone"
-            android:maxLines="1"
-            android:singleLine="true" />
+            android:textSize="17sp" />
 
     </LinearLayout>
 

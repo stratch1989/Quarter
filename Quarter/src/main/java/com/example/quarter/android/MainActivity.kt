@@ -37,15 +37,13 @@ import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.app.DatePickerDialog
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import java.util.Calendar
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import java.util.Locale
@@ -66,12 +64,18 @@ class MainActivity : FragmentActivity() {
     private var hasUnsavedChanges = false
     private var lastSpendAmount: Double? = null
     private var isAddMode = false
+    private var isBudgetInputMode = false
+    private var budgetInputValue = ""
+    private var settingsPopup: PopupWindow? = null
+    private var popupBudgetText: TextView? = null
 
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBounceAnimation(view: View, maxScale: Float = 1.20f, shrinkAmount: Float = 0.11f) {
         var pressTime = 0L
         view.setOnTouchListener { v, event ->
+            // Попап открыт и не режим бюджета — блокируем анимацию
+            if (settingsPopup != null && !isBudgetInputMode) return@setOnTouchListener false
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     pressTime = System.currentTimeMillis()
@@ -125,6 +129,7 @@ class MainActivity : FragmentActivity() {
 
         val result: TextView = findViewById(R.id.result)
         val lastOperation: TextView = findViewById(R.id.last_operation)
+        val value: TextView = findViewById(R.id.value)
 
         fun updateDayLimitText() {
             val hasBudget = howMany != 0.0
@@ -186,6 +191,9 @@ class MainActivity : FragmentActivity() {
 
         // Попап-меню в стиле Apple
         binding.settings.setOnClickListener { anchor ->
+            // Если попап уже открыт — закрываем
+            settingsPopup?.let { it.dismiss(); return@setOnClickListener }
+
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_settings_menu, null)
             val dpToPx = resources.displayMetrics.density
             val popupWidthPx = (275 * dpToPx).toInt()
@@ -194,35 +202,50 @@ class MainActivity : FragmentActivity() {
                 popupView,
                 popupWidthPx,
                 popupHeightPx,
-                true
+                false // не фокусируемый — numpad работает под попапом
             )
             popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             popup.elevation = 16f
+            settingsPopup = popup
 
-            val budgetInput = popupView.findViewById<EditText>(R.id.budget_input)
-            if (howMany != 0.0) {
-                budgetInput.setText(dataModel.roundMoney(howMany).toString())
+            // Затемнение фона
+            binding.dimOverlay.visibility = View.VISIBLE
+            binding.dimOverlayNumpad.visibility = View.VISIBLE
+            binding.dimOverlay.animate().alpha(0.7f).setDuration(200).start()
+            binding.dimOverlayNumpad.animate().alpha(0.7f).setDuration(200).start()
+
+            popup.setOnDismissListener {
+                settingsPopup = null
+                popupBudgetText = null
+                isBudgetInputMode = false
+                budgetInputValue = ""
+                // Убираем затемнение
+                binding.dimOverlay.animate().alpha(0f).setDuration(200).withEndAction {
+                    binding.dimOverlay.visibility = View.GONE
+                }.start()
+                binding.dimOverlayNumpad.animate().alpha(0f).setDuration(200).withEndAction {
+                    binding.dimOverlayNumpad.visibility = View.GONE
+                }.start()
             }
 
-            budgetInput.setOnEditorActionListener { v, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    val newBudget = v.text.toString().toDoubleOrNull()
-                    if (newBudget != null && newBudget > 0) {
-                        dataModel.money.value = newBudget
-                    }
-                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    popup.dismiss()
-                    true
-                } else false
+            // Бюджет
+            popupBudgetText = popupView.findViewById(R.id.budget_text)
+            if (howMany != 0.0) {
+                popupBudgetText?.text = "💰  ${dataModel.roundMoney(howMany)}"
             }
 
             popupView.findViewById<LinearLayout>(R.id.menu_budget).setOnClickListener {
-                budgetInput.requestFocus()
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(budgetInput, InputMethodManager.SHOW_IMPLICIT)
+                isBudgetInputMode = true
+                budgetInputValue = ""
+                popupBudgetText?.text = "💰  _"
+                popupBudgetText?.setTextColor(Color.parseColor("#FF9800"))
+                // Плавно убираем затемнение с клавиатуры
+                binding.dimOverlayNumpad.animate().alpha(0f).setDuration(300).withEndAction {
+                    binding.dimOverlayNumpad.visibility = View.GONE
+                }.start()
             }
-            // Показываем текущую дату если она установлена
+
+            // Дата
             val dateText = popupView.findViewById<TextView>(R.id.date_text)
             val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
             if (numberOfDays > 0) {
@@ -230,6 +253,8 @@ class MainActivity : FragmentActivity() {
             }
 
             popupView.findViewById<LinearLayout>(R.id.menu_date).setOnClickListener {
+                isBudgetInputMode = false
+                budgetInputValue = ""
                 popup.dismiss()
                 val now = LocalDate.now()
                 val initDate = if (numberOfDays > 0) dateFull else now.plusDays(7)
@@ -254,13 +279,16 @@ class MainActivity : FragmentActivity() {
                     initDate.monthValue - 1,
                     initDate.dayOfMonth
                 )
-                // Минимум — завтра
                 val tomorrow = Calendar.getInstance()
                 tomorrow.add(Calendar.DAY_OF_YEAR, 1)
                 picker.datePicker.minDate = tomorrow.timeInMillis
                 picker.show()
             }
+
+            // О проекте
             popupView.findViewById<LinearLayout>(R.id.menu_about).setOnClickListener {
+                isBudgetInputMode = false
+                budgetInputValue = ""
                 popup.dismiss()
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.place_holder, AboutFragment.newInstance())
@@ -275,6 +303,7 @@ class MainActivity : FragmentActivity() {
 
         // Фрагмент History
         binding.history.setOnClickListener {
+            if (settingsPopup != null) return@setOnClickListener
             supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.place_holder, History.newInstance())
@@ -282,7 +311,6 @@ class MainActivity : FragmentActivity() {
                 .commit()
         }
 
-        val value: TextView = findViewById(R.id.value)
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
 
         // Изменения размеров кнопок
@@ -341,6 +369,19 @@ class MainActivity : FragmentActivity() {
 
         // Обработка нажатия на цифры
         fun buttonBinding(variable: String): Unit {
+            // Попап открыт, но не режим бюджета — закрываем попап
+            if (settingsPopup != null && !isBudgetInputMode) {
+                settingsPopup?.dismiss()
+                return
+            }
+            if (isBudgetInputMode) {
+                if ((variable == "." && budgetInputValue.contains("."))
+                    || (variable == "0" && budgetInputValue.isEmpty())
+                    || budgetInputValue.replace(".", "").length >= 8) return
+                budgetInputValue += variable
+                popupBudgetText?.text = "💰  $budgetInputValue"
+                return
+            }
             if ((variable == "." && fictionalValue.contains("."))
                 || (variable == "0" && fictionalValue.isEmpty())
                 || fictionalValue.replace(".", "").length >= 8) {}
@@ -382,6 +423,17 @@ class MainActivity : FragmentActivity() {
 
         // Обработка кнопки удалить
         butDelete.setOnClickListener {
+            if (settingsPopup != null && !isBudgetInputMode) {
+                settingsPopup?.dismiss()
+                return@setOnClickListener
+            }
+            if (isBudgetInputMode) {
+                if (budgetInputValue.isNotEmpty()) {
+                    budgetInputValue = budgetInputValue.dropLast(1)
+                    popupBudgetText?.text = if (budgetInputValue.isEmpty()) "💰  _" else "💰  $budgetInputValue"
+                }
+                return@setOnClickListener
+            }
             if (fictionalValue.isNotEmpty()) {
                 fictionalValue = fictionalValue.substring(0, fictionalValue.length - 1)
                 value.text = fictionalValue
@@ -389,6 +441,11 @@ class MainActivity : FragmentActivity() {
             }
         }
         butDelete.setOnLongClickListener {
+            if (isBudgetInputMode) {
+                budgetInputValue = ""
+                popupBudgetText?.text = "💰  _"
+                return@setOnLongClickListener true
+            }
             if (fictionalValue.isNotEmpty()) {
                 fictionalValue = ""
                 value.text = fictionalValue
@@ -400,6 +457,15 @@ class MainActivity : FragmentActivity() {
         // Обработка кнопки enter
         val historyManager = HistoryManager(this)
         buttonEnter.setOnClickListener {
+            if (settingsPopup != null && !isBudgetInputMode) {
+                settingsPopup?.dismiss()
+                return@setOnClickListener
+            }
+            if (isBudgetInputMode) {
+                saveBudgetInput()
+                settingsPopup?.dismiss()
+                return@setOnClickListener
+            }
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
                 val fictionalDigit = fictionalValue.toDouble()
                 if (isAddMode) {
@@ -469,8 +535,66 @@ class MainActivity : FragmentActivity() {
 
     }
 
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN && settingsPopup != null) {
+            val popup = settingsPopup ?: return super.dispatchTouchEvent(event)
+            val popupView = popup.contentView
+            val touchX = event.rawX.toInt()
+            val touchY = event.rawY.toInt()
+
+            // Проверяем попал ли тап в попап
+            val popupLoc = IntArray(2)
+            popupView.getLocationOnScreen(popupLoc)
+            val popupRect = Rect(popupLoc[0], popupLoc[1], popupLoc[0] + popupView.width, popupLoc[1] + popupView.height)
+
+            // Проверяем попал ли тап в numpad
+            val numpadLoc = IntArray(2)
+            binding.linearLayout.getLocationOnScreen(numpadLoc)
+            val numpadRect = Rect(numpadLoc[0], numpadLoc[1], numpadLoc[0] + binding.linearLayout.width, numpadLoc[1] + binding.linearLayout.height)
+
+            // Проверяем попал ли тап в кнопку настроек
+            val settingsLoc = IntArray(2)
+            binding.settings.getLocationOnScreen(settingsLoc)
+            val settingsRect = Rect(settingsLoc[0], settingsLoc[1], settingsLoc[0] + binding.settings.width, settingsLoc[1] + binding.settings.height)
+
+            // Проверяем попал ли тап в кнопку истории
+            val historyLoc = IntArray(2)
+            binding.history.getLocationOnScreen(historyLoc)
+            val historyRect = Rect(historyLoc[0], historyLoc[1], historyLoc[0] + binding.history.width, historyLoc[1] + binding.history.height)
+
+            // Тап на историю — просто закрываем попап, не открываем историю
+            if (historyRect.contains(touchX, touchY)) {
+                isBudgetInputMode = false
+                budgetInputValue = ""
+                popup.dismiss()
+                return true // поглощаем тап
+            }
+
+            if (!popupRect.contains(touchX, touchY) && !numpadRect.contains(touchX, touchY) && !settingsRect.contains(touchX, touchY)) {
+                isBudgetInputMode = false
+                budgetInputValue = ""
+                popup.dismiss()
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    private fun saveBudgetInput() {
+        if (!isBudgetInputMode) return
+        val newBudget = budgetInputValue.toDoubleOrNull()
+        if (newBudget != null && newBudget > 0) {
+            dataModel.money.value = newBudget
+        }
+        isBudgetInputMode = false
+        budgetInputValue = ""
+        popupBudgetText = null
+    }
+
     override fun onPause() {
         super.onPause()
+        isBudgetInputMode = false
+        budgetInputValue = ""
+        settingsPopup?.dismiss()
         saveData()
     }
 
