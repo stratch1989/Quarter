@@ -58,30 +58,37 @@ class MainActivity : FragmentActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBounceAnimation(view: View) {
+        var pressTime = 0L
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    pressTime = System.currentTimeMillis()
                     v.animate().cancel()
                     v.animate()
                         .scaleX(1.20f).scaleY(1.20f)
-                        .setDuration(150)
+                        .setDuration(300)
                         .setInterpolator(DecelerateInterpolator())
                         .start()
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     v.animate().cancel()
-                    val shrinkX = ObjectAnimator.ofFloat(v, "scaleX", v.scaleX, 0.78f)
-                    val shrinkY = ObjectAnimator.ofFloat(v, "scaleY", v.scaleY, 0.78f)
+                    val held = System.currentTimeMillis() - pressTime
+                    // 0..300мс -> 0.0..1.0
+                    val factor = (held.coerceIn(0, 300) / 300f)
+                    val currentScale = v.scaleX
+                    val shrinkTo = 1.0f - (0.11f * factor)
+                    val shrinkX = ObjectAnimator.ofFloat(v, "scaleX", currentScale, shrinkTo)
+                    val shrinkY = ObjectAnimator.ofFloat(v, "scaleY", currentScale, shrinkTo)
                     val shrink = AnimatorSet().apply {
                         playTogether(shrinkX, shrinkY)
-                        duration = 200
+                        duration = (200 * factor).toLong().coerceAtLeast(80)
                         interpolator = DecelerateInterpolator()
                     }
-                    val restoreX = ObjectAnimator.ofFloat(v, "scaleX", 0.78f, 1.0f)
-                    val restoreY = ObjectAnimator.ofFloat(v, "scaleY", 0.78f, 1.0f)
+                    val restoreX = ObjectAnimator.ofFloat(v, "scaleX", shrinkTo, 1.0f)
+                    val restoreY = ObjectAnimator.ofFloat(v, "scaleY", shrinkTo, 1.0f)
                     val restore = AnimatorSet().apply {
                         playTogether(restoreX, restoreY)
-                        duration = 150
+                        duration = (150 * factor).toLong().coerceAtLeast(60)
                         interpolator = DecelerateInterpolator()
                     }
                     AnimatorSet().apply {
