@@ -281,7 +281,9 @@
         android:layout_marginBottom="8dp"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
-        android:background="@drawable/category_field_bg"
+        android:background="@drawable/category_field_fill"
+        android:foreground="@drawable/category_field_border"
+        android:clipToOutline="true"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintStart_toStartOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="@+id/linearLayout">
@@ -291,8 +293,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scrollbars="none"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:clipToPadding="false">
 
             <LinearLayout

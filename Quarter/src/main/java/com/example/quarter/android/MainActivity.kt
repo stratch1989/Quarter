@@ -45,6 +45,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -372,38 +373,73 @@ class MainActivity : FragmentActivity() {
             val indicator = findViewById<TextView>(R.id.active_category_indicator)
             for (emoji in selectedEmojis) {
                 val isActive = emoji == activeCategory
-                val tv = TextView(this).apply {
-                    text = emoji
-                    textSize = 16f
+                val container = FrameLayout(this).apply {
                     layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
                         marginEnd = gap
                     }
-                    gravity = android.view.Gravity.CENTER
                     background = resources.getDrawable(
                         if (isActive) R.drawable.category_emoji_active_bg else R.drawable.category_emoji_bg,
                         theme
                     )
-                    setOnClickListener {
-                        if (isEmojiPickerOpen) {
-                            selectedEmojis.remove(emoji)
-                            if (activeCategory == emoji) {
-                                activeCategory = null
-                                indicator.visibility = View.GONE
-                            }
-                        } else {
-                            if (activeCategory == emoji) {
-                                activeCategory = null
-                                indicator.visibility = View.GONE
-                            } else {
-                                activeCategory = emoji
-                                indicator.text = emoji
-                                indicator.visibility = View.VISIBLE
-                            }
-                        }
-                        rebuildAll()
-                    }
+                    clipToOutline = true
                 }
-                categoryContainer.addView(tv)
+                // Эмодзи
+                val tv = TextView(this).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                    text = emoji
+                    textSize = 16f
+                    gravity = android.view.Gravity.CENTER
+                }
+                container.addView(tv)
+                // Затемнение + крестик в режиме пикера
+                if (isEmojiPickerOpen) {
+                    val dim = View(this).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+                        setBackgroundColor(Color.argb(120, 0, 0, 0))
+                    }
+                    container.addView(dim)
+                    val xSize = (12 * dp).toInt()
+                    val xMark = TextView(this).apply {
+                        layoutParams = FrameLayout.LayoutParams(xSize, xSize).apply {
+                            gravity = android.view.Gravity.TOP or android.view.Gravity.END
+                        }
+                        text = "×"
+                        setTextColor(Color.WHITE)
+                        textSize = 7f
+                        gravity = android.view.Gravity.CENTER
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.OVAL
+                            setColor(Color.argb(200, 80, 80, 80))
+                        }
+                    }
+                    container.addView(xMark)
+                }
+                container.setOnClickListener {
+                    if (isEmojiPickerOpen) {
+                        selectedEmojis.remove(emoji)
+                        if (activeCategory == emoji) {
+                            activeCategory = null
+                            indicator.visibility = View.GONE
+                        }
+                    } else {
+                        if (activeCategory == emoji) {
+                            activeCategory = null
+                            indicator.visibility = View.GONE
+                        } else {
+                            activeCategory = emoji
+                            indicator.text = emoji
+                            indicator.visibility = View.VISIBLE
+                        }
+                    }
+                    rebuildAll()
+                }
+                categoryContainer.addView(container)
             }
             // Обновить индикатор
             if (activeCategory != null) {
@@ -496,6 +532,7 @@ class MainActivity : FragmentActivity() {
         }
 
         categoryAddBtn.setOnClickListener { toggleEmojiPicker() }
+        rebuildAllRef = rebuildAll
         rebuildAll()
 
         val displayMetrics = resources.displayMetrics.widthPixels/4.3
@@ -802,6 +839,8 @@ class MainActivity : FragmentActivity() {
         return super.dispatchTouchEvent(event)
     }
 
+    private var rebuildAllRef: (() -> Unit)? = null
+
     private fun toggleEmojiPicker() {
         val overlay = binding.emojiPickerOverlay
         if (isEmojiPickerOpen) {
@@ -814,6 +853,7 @@ class MainActivity : FragmentActivity() {
             overlay.animate().alpha(1f).setDuration(200).start()
         }
         isEmojiPickerOpen = !isEmojiPickerOpen
+        rebuildAllRef?.invoke()
     }
 
     private fun saveBudgetInput() {
