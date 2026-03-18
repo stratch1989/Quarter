@@ -225,6 +225,14 @@ class MainActivity : FragmentActivity() {
                 updatePreview()
             }
         }
+        butDelete.setOnLongClickListener {
+            if (fictionalValue.isNotEmpty()) {
+                fictionalValue = ""
+                value.text = fictionalValue
+                updatePreview()
+            }
+            true
+        }
 
         // Обработка кнопки enter
         val historyManager = HistoryManager(this)
