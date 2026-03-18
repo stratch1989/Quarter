@@ -24,9 +24,25 @@ class History : Fragment() {
         return binding.root
     }
 
+    private fun dismissWithAnimation() {
+        binding.clickableBackground.animate().alpha(0f).setDuration(200).withEndAction {
+            if (isAdded) parentFragmentManager.popBackStack()
+        }.start()
+        binding.frameForMetrics.animate().alpha(0f).setDuration(200).start()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.closeButton.setOnClickListener {
-            parentFragmentManager.popBackStack()
+        // Анимация появления
+        binding.clickableBackground.alpha = 0f
+        binding.frameForMetrics.alpha = 0f
+        binding.clickableBackground.animate().alpha(1f).setDuration(200).start()
+        binding.frameForMetrics.animate().alpha(1f).setDuration(200).start()
+
+        binding.clickableBackground.setOnClickListener {
+            dismissWithAnimation()
+        }
+        binding.frameForMetrics.setOnClickListener {
+            // Блокируем закрытие при тапе на карточку
         }
 
         val historyManager = HistoryManager(requireContext())
