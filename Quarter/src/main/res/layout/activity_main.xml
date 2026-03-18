@@ -308,17 +308,7 @@
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp">
 
-                <TextView
-                    android:id="@+id/category_add_btn"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/category_add_button_bg"
-                    android:gravity="center"
-                    android:text="+"
-                    android:textColor="#555555"
-                    android:textSize="16sp"
-                    android:clickable="true"
-                    android:focusable="true" />
+                <!-- Кнопка + и эмодзи добавляются программно -->
 
             </LinearLayout>
         </HorizontalScrollView>
@@ -329,10 +319,10 @@
         android:id="@+id/emoji_picker_overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/emoji_picker_bg"
+        android:background="@drawable/emoji_picker_fill"
+        android:foreground="@drawable/emoji_picker_border"
+        android:clipToOutline="true"
         android:visibility="gone"
-        android:clipChildren="true"
-        android:clipToPadding="true"
         app:layout_constraintBottom_toBottomOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="@+id/linearLayout"
         app:layout_constraintStart_toStartOf="@+id/linearLayout"
@@ -347,9 +337,10 @@
 
             <GridLayout
                 android:id="@+id/emoji_grid"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:columnCount="7"
+                android:layout_gravity="center_horizontal"
+                android:columnCount="6"
                 android:useDefaultMargins="true" />
 
         </ScrollView>

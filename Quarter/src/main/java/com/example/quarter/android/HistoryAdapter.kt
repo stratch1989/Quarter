@@ -75,7 +75,8 @@ class HistoryAdapter(
             }
             is HistoryItem.Current -> {
                 holder as EntryViewHolder
-                holder.amount.text = "- ${item.entry.amount} ₽"
+                val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
+                holder.amount.text = "- ${item.entry.amount} ₽$cat"
                 holder.date.text = ""
                 holder.deleteButton.visibility = View.VISIBLE
                 holder.deleteButton.setOnClickListener {
@@ -126,7 +127,8 @@ class HistoryAdapter(
             }
             is HistoryItem.Old -> {
                 holder as EntryViewHolder
-                holder.amount.text = "- ${item.entry.amount} ₽"
+                val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
+                holder.amount.text = "- ${item.entry.amount} ₽$cat"
                 holder.date.text = ""
                 holder.deleteButton.visibility = View.GONE
             }

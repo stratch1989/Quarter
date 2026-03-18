@@ -328,8 +328,6 @@ class MainActivity : FragmentActivity() {
                 .commit()
         }
 
-        // Кнопка добавления категории — открывает эмодзи-пикер
-        val categoryAddBtn: TextView = findViewById(R.id.category_add_btn)
         val categoryContainer: LinearLayout = findViewById(R.id.category_container)
         val emojiPickerOverlay: View = findViewById(R.id.emoji_picker_overlay)
         val emojiGrid: GridLayout = findViewById(R.id.emoji_grid)
@@ -357,8 +355,9 @@ class MainActivity : FragmentActivity() {
                     categoryEmojis.add(0, text)
                 }
                 if (!selectedEmojis.contains(text)) {
-                    selectedEmojis.add(text)
+                    selectedEmojis.add(0, text)
                 }
+                activeCategory = text
                 rebuildAll()
                 handling = false
             }
@@ -368,9 +367,23 @@ class MainActivity : FragmentActivity() {
             // Перестроить строку выбранных категорий
             categoryContainer.removeAllViews()
             val dp = resources.displayMetrics.density
-            val btnSize = (32 * dp).toInt()
-            val gap = (4 * dp).toInt()
+            val btnSize = (38 * dp).toInt()
+            val gap = (6 * dp).toInt()
             val indicator = findViewById<TextView>(R.id.active_category_indicator)
+            // Кнопка + первая
+            val addBtn = TextView(this).apply {
+                id = R.id.category_add_btn
+                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
+                    marginEnd = gap
+                }
+                gravity = android.view.Gravity.CENTER
+                text = "+"
+                setTextColor(Color.parseColor("#555555"))
+                textSize = 16f
+                background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
+                setOnClickListener { toggleEmojiPicker() }
+            }
+            categoryContainer.addView(addBtn)
             for (emoji in selectedEmojis) {
                 val isActive = emoji == activeCategory
                 val container = FrameLayout(this).apply {
@@ -458,13 +471,13 @@ class MainActivity : FragmentActivity() {
                         val draggedEmoji = event.localState as String
                         val dropX = event.x
                         val container = v as LinearLayout
+                        // child 0 = кнопка +, эмодзи начинаются с 1
                         var targetIndex = selectedEmojis.size - 1
-                        for (i in 0 until container.childCount) {
+                        for (i in 1 until container.childCount) {
                             val child = container.getChildAt(i)
-                            if (child.id == R.id.category_add_btn) continue
                             val childCenter = child.left + child.width / 2
                             if (dropX < childCenter) {
-                                targetIndex = i
+                                targetIndex = i - 1 // -1 т.к. кнопка + на позиции 0
                                 break
                             }
                         }
@@ -492,17 +505,6 @@ class MainActivity : FragmentActivity() {
             } else {
                 indicator.visibility = View.GONE
             }
-            val addBtn = TextView(this).apply {
-                id = R.id.category_add_btn
-                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize)
-                gravity = android.view.Gravity.CENTER
-                text = "+"
-                setTextColor(Color.parseColor("#555555"))
-                textSize = 16f
-                background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
-                setOnClickListener { toggleEmojiPicker() }
-            }
-            categoryContainer.addView(addBtn)
             findViewById<HorizontalScrollView>(R.id.category_scroll).post {
                 findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_RIGHT)
             }
@@ -560,7 +562,8 @@ class MainActivity : FragmentActivity() {
                             MotionEvent.ACTION_UP -> {
                                 longPressHandler.removeCallbacks(deleteRunnable)
                                 if (!longPressed) {
-                                    selectedEmojis.add(emoji)
+                                    selectedEmojis.add(0, emoji)
+                                    activeCategory = emoji
                                     rebuildAll()
                                 }
                             }
@@ -575,7 +578,6 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        categoryAddBtn.setOnClickListener { toggleEmojiPicker() }
         rebuildAllRef = rebuildAll
         rebuildAll()
 
@@ -775,7 +777,7 @@ class MainActivity : FragmentActivity() {
                     todayLimit = spendResult.newTodayLimit
                     howMany = spendResult.newBudget
                     result.text = "$todayLimit"
-                    historyManager.addEntry(fictionalDigit)
+                    historyManager.addEntry(fictionalDigit, activeCategory)
                     lastSpendAmount = fictionalDigit
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     lastOperation.text = "- ${fictionalDigit} ₽$categoryText"

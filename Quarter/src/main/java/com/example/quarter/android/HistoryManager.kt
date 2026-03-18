@@ -5,16 +5,16 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
 
-data class HistoryEntry(val amount: Double, val date: String, val timestamp: Long)
+data class HistoryEntry(val amount: Double, val date: String, val timestamp: Long, val category: String? = null)
 
 class HistoryManager(context: Context) {
     private val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
     private val key = "HISTORY"
     private val periodKey = "PERIOD_START_TS"
 
-    fun addEntry(amount: Double) {
+    fun addEntry(amount: Double, category: String? = null) {
         val entries = loadEntries().toMutableList()
-        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis()))
+        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category))
         saveEntries(entries)
     }
 
@@ -27,7 +27,8 @@ class HistoryManager(context: Context) {
             list.add(HistoryEntry(
                 obj.getDouble("amount"),
                 obj.getString("date"),
-                obj.optLong("timestamp", 0L)
+                obj.optLong("timestamp", 0L),
+                obj.optString("category", null).takeIf { !it.isNullOrEmpty() }
             ))
         }
         return list
@@ -61,6 +62,7 @@ class HistoryManager(context: Context) {
             obj.put("amount", entry.amount)
             obj.put("date", entry.date)
             obj.put("timestamp", entry.timestamp)
+            if (entry.category != null) obj.put("category", entry.category)
             array.put(obj)
         }
         prefs.edit().putString(key, array.toString()).apply()
