@@ -73,6 +73,7 @@ class MainActivity : FragmentActivity() {
     private var popupBudgetText: TextView? = null
     private var isEmojiPickerOpen = false
     private val selectedEmojis = mutableListOf<String>()
+    private var activeCategory: String? = null
 
     private val categoryEmojis = mutableListOf(
         "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
@@ -351,10 +352,12 @@ class MainActivity : FragmentActivity() {
                 hiddenEmojiInput.clearFocus()
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                 imm.hideSoftInputFromWindow(hiddenEmojiInput.windowToken, 0)
-                categoryEmojis.remove(text)
-                categoryEmojis.add(0, text)
-                selectedEmojis.remove(text)
-                selectedEmojis.add(text)
+                if (!categoryEmojis.contains(text)) {
+                    categoryEmojis.add(0, text)
+                }
+                if (!selectedEmojis.contains(text)) {
+                    selectedEmojis.add(text)
+                }
                 rebuildAll()
                 handling = false
             }
@@ -366,7 +369,9 @@ class MainActivity : FragmentActivity() {
             val dp = resources.displayMetrics.density
             val btnSize = (32 * dp).toInt()
             val gap = (4 * dp).toInt()
+            val indicator = findViewById<TextView>(R.id.active_category_indicator)
             for (emoji in selectedEmojis) {
+                val isActive = emoji == activeCategory
                 val tv = TextView(this).apply {
                     text = emoji
                     textSize = 16f
@@ -374,13 +379,38 @@ class MainActivity : FragmentActivity() {
                         marginEnd = gap
                     }
                     gravity = android.view.Gravity.CENTER
-                    background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
+                    background = resources.getDrawable(
+                        if (isActive) R.drawable.category_emoji_active_bg else R.drawable.category_emoji_bg,
+                        theme
+                    )
                     setOnClickListener {
-                        selectedEmojis.remove(emoji)
+                        if (isEmojiPickerOpen) {
+                            selectedEmojis.remove(emoji)
+                            if (activeCategory == emoji) {
+                                activeCategory = null
+                                indicator.visibility = View.GONE
+                            }
+                        } else {
+                            if (activeCategory == emoji) {
+                                activeCategory = null
+                                indicator.visibility = View.GONE
+                            } else {
+                                activeCategory = emoji
+                                indicator.text = emoji
+                                indicator.visibility = View.VISIBLE
+                            }
+                        }
                         rebuildAll()
                     }
                 }
                 categoryContainer.addView(tv)
+            }
+            // Обновить индикатор
+            if (activeCategory != null) {
+                indicator.text = activeCategory
+                indicator.visibility = View.VISIBLE
+            } else {
+                indicator.visibility = View.GONE
             }
             val addBtn = TextView(this).apply {
                 id = R.id.category_add_btn
@@ -632,7 +662,8 @@ class MainActivity : FragmentActivity() {
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
                     lastSpendAmount = null
-                    lastOperation.text = "+ ${fictionalDigit} ₽"
+                    val categoryText = if (activeCategory != null) " $activeCategory" else ""
+                    lastOperation.text = "+ ${fictionalDigit} ₽$categoryText"
                 } else {
                     val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
                     todayLimit = spendResult.newTodayLimit
@@ -640,7 +671,22 @@ class MainActivity : FragmentActivity() {
                     result.text = "$todayLimit"
                     historyManager.addEntry(fictionalDigit)
                     lastSpendAmount = fictionalDigit
-                    lastOperation.text = "- ${fictionalDigit} ₽"
+                    val categoryText = if (activeCategory != null) " $activeCategory" else ""
+                    lastOperation.text = "- ${fictionalDigit} ₽$categoryText"
+                }
+                // Сбросить активную категорию
+                if (activeCategory != null) {
+                    activeCategory = null
+                    binding.activeCategoryIndicator.visibility = View.GONE
+                    // Перестроить меню чтобы убрать подсветку
+                    categoryContainer.post {
+                        for (i in 0 until categoryContainer.childCount) {
+                            val child = categoryContainer.getChildAt(i)
+                            if (child.id != R.id.category_add_btn) {
+                                child.background = resources.getDrawable(R.drawable.category_emoji_bg, theme)
+                            }
+                        }
+                    }
                 }
                 hasUnsavedChanges = true
                 fictionalValue = ""
@@ -693,6 +739,12 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // Скрытие системной клавиатуры при тапе вне неё
+        if (event.action == MotionEvent.ACTION_DOWN && binding.hiddenEmojiInput.hasFocus()) {
+            binding.hiddenEmojiInput.clearFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.hideSoftInputFromWindow(binding.hiddenEmojiInput.windowToken, 0)
+        }
         // Закрытие эмодзи-пикера при тапе вне пикера и category_field
         if (event.action == MotionEvent.ACTION_DOWN && isEmojiPickerOpen && settingsPopup == null) {
             val touchX = event.rawX.toInt()
