@@ -26,7 +26,11 @@
       "Read(//c/Users/ruslan/Desktop/Quarter/$HOME/AppData/Local/Android/Sdk/platform-tools/**)",
       "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" shell:*)",
       "Skill(update-config)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Read(//c/Users/ruslan/Desktop/Quarter/Local/**)",
+      "Read(//c/Program Files/Java/**)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew :Quarter:assembleDebug)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" install:*)"
     ]
   }
 }

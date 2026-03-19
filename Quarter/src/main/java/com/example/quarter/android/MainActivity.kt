@@ -163,13 +163,6 @@ class MainActivity : FragmentActivity() {
             howMany = dataModel.roundMoney(it)
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
             updateDayLimitText()
-            if (numberOfDays > 0 && howMany != 0.0) {
-                todayLimit = avarageDailyValue.toInt().toDouble()
-                dataModel.todayLimit.value = todayLimit
-                binding.result.text = todayLimit.toString()
-            }
-            lastSpendAmount = null
-            binding.lastOperation.text = ""
             hasUnsavedChanges = true
         }
 
@@ -840,7 +833,10 @@ class MainActivity : FragmentActivity() {
         dataModel.saveClick.observe(this) {
             todayLimit = 0.0
             todayLimit += (avarageDailyValue).toInt()
+            dataModel.todayLimit.value = todayLimit
             result.text = todayLimit.toString()
+            lastSpendAmount = null
+            lastOperation.text = ""
             hasUnsavedChanges = true
         }
 
@@ -932,6 +928,7 @@ class MainActivity : FragmentActivity() {
         val newBudget = budgetInputValue.toDoubleOrNull()
         if (newBudget != null && newBudget > 0) {
             dataModel.money.value = newBudget
+            dataModel.saveClick.value = true
         }
         isBudgetInputMode = false
         budgetInputValue = ""
