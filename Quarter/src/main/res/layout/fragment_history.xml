@@ -9,6 +9,62 @@
     tools:context=".History">
 
     <FrameLayout
+        android:layout_width="355dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp">
+
+        <LinearLayout
+            android:id="@+id/modeToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/category_emoji_bg"
+            android:clipToOutline="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/listModeButton"
+                android:layout_width="46dp"
+                android:layout_height="match_parent"
+                android:background="#252525"
+                android:gravity="center"
+                android:text="☰"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+            <View
+                android:layout_width="0.5dp"
+                android:layout_height="match_parent"
+                android:background="#333333" />
+
+            <TextView
+                android:id="@+id/categoryFilterButton"
+                android:layout_width="46dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="📊"
+                android:textSize="18sp" />
+
+            <View
+                android:layout_width="0.5dp"
+                android:layout_height="match_parent"
+                android:background="#333333" />
+
+            <TextView
+                android:id="@+id/chartModeButton"
+                android:layout_width="46dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="◎"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/frameForMetrics"
         android:layout_width="355dp"
         android:layout_height="340dp"
@@ -68,6 +124,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
+
+            <ScrollView
+                android:id="@+id/chartContainer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:visibility="gone">
+
+                <com.example.quarter.android.DonutChartView
+                    android:id="@+id/donutChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </ScrollView>
 
         </LinearLayout>
     </FrameLayout>

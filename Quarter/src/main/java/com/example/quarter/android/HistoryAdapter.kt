@@ -12,6 +12,7 @@ import java.util.Locale
 
 sealed class HistoryItem {
     data class DayHeader(val date: String, val total: Double) : HistoryItem()
+    data class CategoryHeader(val category: String?, val total: Double) : HistoryItem()
     data class Current(val entry: HistoryEntry, val currentIndex: Int) : HistoryItem()
     object PeriodDivider : HistoryItem()
     data class Old(val entry: HistoryEntry) : HistoryItem()
@@ -31,6 +32,7 @@ class HistoryAdapter(
         const val TYPE_CURRENT = 1
         const val TYPE_PERIOD_DIVIDER = 2
         const val TYPE_OLD = 3
+        const val TYPE_CATEGORY_HEADER = 4
     }
 
     class DayHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -48,6 +50,7 @@ class HistoryAdapter(
 
     override fun getItemViewType(position: Int): Int = when (items[position]) {
         is HistoryItem.DayHeader -> TYPE_DAY_HEADER
+        is HistoryItem.CategoryHeader -> TYPE_CATEGORY_HEADER
         is HistoryItem.Current -> TYPE_CURRENT
         is HistoryItem.PeriodDivider -> TYPE_PERIOD_DIVIDER
         is HistoryItem.Old -> TYPE_OLD
@@ -56,7 +59,7 @@ class HistoryAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            TYPE_DAY_HEADER -> DayHeaderViewHolder(inflater.inflate(R.layout.list_item_history_day_header, parent, false))
+            TYPE_DAY_HEADER, TYPE_CATEGORY_HEADER -> DayHeaderViewHolder(inflater.inflate(R.layout.list_item_history_day_header, parent, false))
             TYPE_PERIOD_DIVIDER -> DividerViewHolder(inflater.inflate(R.layout.list_item_history_divider, parent, false))
             else -> EntryViewHolder(inflater.inflate(R.layout.list_item_history, parent, false))
         }
@@ -71,6 +74,11 @@ class HistoryAdapter(
                     yesterday -> "Вчера"
                     else -> LocalDate.parse(item.date).format(dateFormatter)
                 }
+                holder.dayTotal.text = "- ${item.total} ₽"
+            }
+            is HistoryItem.CategoryHeader -> {
+                holder as DayHeaderViewHolder
+                holder.dayTitle.text = item.category ?: "Без категории"
                 holder.dayTotal.text = "- ${item.total} ₽"
             }
             is HistoryItem.Current -> {
@@ -95,13 +103,12 @@ class HistoryAdapter(
                             }
                         }
 
-                        // Находим заголовок дня над удалённой записью
+                        // Находим заголовок над удалённой записью
                         var headerPos = pos - 1
-                        while (headerPos >= 0 && items[headerPos] !is HistoryItem.DayHeader) {
+                        while (headerPos >= 0 && items[headerPos] !is HistoryItem.DayHeader && items[headerPos] !is HistoryItem.CategoryHeader) {
                             headerPos--
                         }
                         if (headerPos < 0) return@setOnClickListener
-                        val header = items[headerPos] as HistoryItem.DayHeader
 
                         // Считаем оставшиеся записи под этим заголовком
                         var newTotal = 0.0
@@ -114,12 +121,15 @@ class HistoryAdapter(
                         }
 
                         if (!hasEntries) {
-                            // Удаляем пустой заголовок дня
                             items.removeAt(headerPos)
                             notifyItemRemoved(headerPos)
                         } else {
-                            // Обновляем сумму в заголовке
-                            items[headerPos] = header.copy(total = Math.round(newTotal * 100.0) / 100.0)
+                            val roundedTotal = Math.round(newTotal * 100.0) / 100.0
+                            when (val header = items[headerPos]) {
+                                is HistoryItem.DayHeader -> items[headerPos] = header.copy(total = roundedTotal)
+                                is HistoryItem.CategoryHeader -> items[headerPos] = header.copy(total = roundedTotal)
+                                else -> return@setOnClickListener
+                            }
                             notifyItemChanged(headerPos)
                         }
                     }
