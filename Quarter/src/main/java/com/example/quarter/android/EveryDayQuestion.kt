@@ -2,6 +2,7 @@ package com.example.quarter.android
 
 import DataModel
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -23,10 +24,15 @@ class EveryDayQuestion : Fragment() {
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Обратка фона на вызов метода выхода из фрагмента
-        binding.clickableBackground.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
+        // Блокируем закрытие по фону — выбор обязателен
+        binding.clickableBackground.setOnClickListener { }
+
+        // Блокируем системную кнопку «Назад»
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() { }
+            }
+        )
 
         var avarageDailyValueFirstOption = 0.0
         var avarageDailyValueSecondOption = 0.0

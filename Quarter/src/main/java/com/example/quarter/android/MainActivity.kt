@@ -948,18 +948,22 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun saveData() {
-        if (!hasUnsavedChanges) return
-        val result: String = binding.result.text.toString()
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        editor.putString("STRING_KEY", result)
-        editor.putString("HOW_MANY", howMany.toString())
-        editor.putLong("NUMBER_OF_DAYS", numberOfDays)
-        editor.putString("AVARAGE_DAILY_VALUE", avarageDailyValue.toString())
-        editor.putString("DATE_FULL", dateFull.toString())
-        editor.putString("LAST_DATE", lastDate.toString())
+        // Категории сохраняем всегда
+        editor.putString("SELECTED_EMOJIS", selectedEmojis.joinToString(","))
+        editor.putString("CATEGORY_EMOJIS", categoryEmojis.joinToString(","))
+        if (hasUnsavedChanges) {
+            val result: String = binding.result.text.toString()
+            editor.putString("STRING_KEY", result)
+            editor.putString("HOW_MANY", howMany.toString())
+            editor.putLong("NUMBER_OF_DAYS", numberOfDays)
+            editor.putString("AVARAGE_DAILY_VALUE", avarageDailyValue.toString())
+            editor.putString("DATE_FULL", dateFull.toString())
+            editor.putString("LAST_DATE", lastDate.toString())
+            hasUnsavedChanges = false
+        }
         editor.apply()
-        hasUnsavedChanges = false
     }
 
     // Читает значение как String, а если в SharedPreferences лежит старый Float — ловит ClassCastException
@@ -993,6 +997,18 @@ class MainActivity : FragmentActivity() {
         if (lastDateString.isNotEmpty()) {
             lastDate = LocalDate.parse(lastDateString)
             dataModel.lastDate.value = lastDate
+        }
+
+        // Категории
+        val savedSelected = sharedPreferences.getString("SELECTED_EMOJIS", null)
+        if (!savedSelected.isNullOrEmpty()) {
+            selectedEmojis.clear()
+            selectedEmojis.addAll(savedSelected.split(","))
+        }
+        val savedCategories = sharedPreferences.getString("CATEGORY_EMOJIS", null)
+        if (!savedCategories.isNullOrEmpty()) {
+            categoryEmojis.clear()
+            categoryEmojis.addAll(savedCategories.split(","))
         }
 
         //howMany
