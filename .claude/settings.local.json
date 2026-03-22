@@ -30,7 +30,23 @@
       "Read(//c/Users/ruslan/Desktop/Quarter/Local/**)",
       "Read(//c/Program Files/Java/**)",
       "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew :Quarter:assembleDebug)",
-      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" install:*)"
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" install:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "WebFetch(domain:www.usue.ru)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "Bash(unzip -p \"Кибисов Илья Владимирович_1687166755.docx\" word/document.xml)",
+      "Bash(grep -o -E \".{0,500}Выводы по.{0,500}\")",
+      "Bash(python3:*)",
+      "Bash(unzip -p 'Кибисов Илья Владимирович_1687166755.docx' word/document.xml)",
+      "Read(//tmp/**)",
+      "Bash(unzip -p 'Кибисов Илья Владимирович_1687166755.docx' document.xml)",
+      "Bash(iconv -f UTF-16LE -t UTF-8)",
+      "Bash(unzip -l 'Кибисов Илья Владимирович_1687166755.docx')",
+      "Bash(tr '>' '\\\\n')",
+      "Bash(printf 'Chapter 1: Описание и исследование предметной области\\\\n')",
+      "Bash(printf 'Chapter 2: Проектная часть\\\\n')",
+      "Bash(C:/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe shell:*)"
     ]
   }
 }

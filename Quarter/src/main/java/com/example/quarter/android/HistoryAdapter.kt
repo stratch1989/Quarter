@@ -20,6 +20,7 @@ sealed class HistoryItem {
 
 class HistoryAdapter(
     private val items: MutableList<HistoryItem>,
+    private val isIncome: Boolean = false,
     private val onDelete: (Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -74,17 +75,20 @@ class HistoryAdapter(
                     yesterday -> "Вчера"
                     else -> LocalDate.parse(item.date).format(dateFormatter)
                 }
-                holder.dayTotal.text = "- ${item.total} ₽"
+                val sign = if (isIncome) "+" else "-"
+                holder.dayTotal.text = "$sign ${item.total} ₽"
             }
             is HistoryItem.CategoryHeader -> {
                 holder as DayHeaderViewHolder
                 holder.dayTitle.text = item.category ?: "Без категории"
-                holder.dayTotal.text = "- ${item.total} ₽"
+                val sign = if (isIncome) "+" else "-"
+                holder.dayTotal.text = "$sign ${item.total} ₽"
             }
             is HistoryItem.Current -> {
                 holder as EntryViewHolder
+                val sign = if (isIncome) "+" else "-"
                 val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                holder.amount.text = "- ${item.entry.amount} ₽$cat"
+                holder.amount.text = "$sign ${item.entry.amount} ₽$cat"
                 holder.date.text = ""
                 holder.deleteButton.visibility = View.VISIBLE
                 holder.deleteButton.setOnClickListener {
@@ -137,8 +141,9 @@ class HistoryAdapter(
             }
             is HistoryItem.Old -> {
                 holder as EntryViewHolder
+                val sign = if (isIncome) "+" else "-"
                 val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                holder.amount.text = "- ${item.entry.amount} ₽$cat"
+                holder.amount.text = "$sign ${item.entry.amount} ₽$cat"
                 holder.date.text = ""
                 holder.deleteButton.visibility = View.GONE
             }

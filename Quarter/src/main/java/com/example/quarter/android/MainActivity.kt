@@ -72,6 +72,7 @@ class MainActivity : FragmentActivity() {
     private var budgetInputValue = ""
     private var settingsPopup: PopupWindow? = null
     private var popupBudgetText: TextView? = null
+    private var dayStreak = 1
     private var isEmojiPickerOpen = false
     private val selectedEmojis = mutableListOf<String>()
     private var activeCategory: String? = null
@@ -148,14 +149,42 @@ class MainActivity : FragmentActivity() {
         val lastOperation: TextView = findViewById(R.id.last_operation)
         val value: TextView = findViewById(R.id.value)
 
+        fun updateTextView2(text: String, color: Int) {
+            val cs = binding.textView2.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+            val resultAmount = result.text.toString().toDoubleOrNull() ?: 0.0
+            if (text == "/день" && resultAmount <= 999999 && resultAmount >= -999999) {
+                // справа от суммы на baseline
+                cs.startToEnd = R.id.result
+                cs.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                cs.topToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                cs.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                cs.baselineToBaseline = R.id.result
+                binding.textView2.text = "/день"
+            } else {
+                // снизу от суммы
+                cs.startToEnd = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                cs.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+                cs.topToBottom = R.id.result
+                cs.baselineToBaseline = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                cs.topMargin = 0
+                binding.textView2.text = text
+            }
+            binding.textView2.setTextColor(color)
+            binding.textView2.layoutParams = cs
+        }
+
         fun updateDayLimitText() {
             val hasBudget = howMany != 0.0
             val hasDate = numberOfDays > 0
-            binding.dayLimit.text = when {
-                hasBudget && hasDate -> "${howMany} на ${numberOfDays} дней"
-                hasBudget && !hasDate -> "Укажите дату в настройках"
-                !hasBudget && hasDate -> "Укажите бюджет в настройках"
-                else -> "Введите дату и сумму в настройках"
+            if (hasBudget && hasDate) {
+                binding.dayLimit.visibility = android.view.View.GONE
+            } else {
+                binding.dayLimit.visibility = android.view.View.VISIBLE
+                binding.dayLimit.text = when {
+                    hasBudget && !hasDate -> "Укажите дату в настройках"
+                    !hasBudget && hasDate -> "Укажите бюджет в настройках"
+                    else -> "Введите дату и сумму в настройках"
+                }
             }
         }
 
@@ -259,7 +288,13 @@ class MainActivity : FragmentActivity() {
             val dateText = popupView.findViewById<TextView>(R.id.date_text)
             val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
             if (numberOfDays > 0) {
-                dateText.text = "📅  По ${dateFull.format(formatter)}"
+                val dateStr = "📅  По ${dateFull.format(formatter)}"
+                val daysStr = " ($numberOfDays дн.)"
+                val spannable = android.text.SpannableString(dateStr + daysStr)
+                spannable.setSpan(android.text.style.RelativeSizeSpan(0.7f), dateStr.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannable.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), dateStr.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannable.setSpan(android.text.style.ForegroundColorSpan(Color.parseColor("#888888")), dateStr.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                dateText.text = spannable
             }
 
             popupView.findViewById<LinearLayout>(R.id.menu_date).setOnClickListener {
@@ -306,9 +341,9 @@ class MainActivity : FragmentActivity() {
                     .commit()
             }
 
-            // Выравниваем правый край попапа с правым краем кнопки
+            // Правый верхний угол попапа совпадает с правым верхним углом кнопки
             val xOff = anchor.width - popupWidthPx
-            popup.showAsDropDown(anchor, xOff, 8)
+            popup.showAsDropDown(anchor, xOff, -anchor.height)
         }
 
         // Фрагмент History
@@ -317,6 +352,16 @@ class MainActivity : FragmentActivity() {
             supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.place_holder, History.newInstance())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // Streak popup
+        binding.streakButton.setOnClickListener {
+            if (settingsPopup != null) return@setOnClickListener
+            supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.place_holder, StreakFragment.newInstance(dayStreak))
                 .addToBackStack(null)
                 .commit()
         }
@@ -618,10 +663,11 @@ class MainActivity : FragmentActivity() {
                     val newBudget = dataModel.roundMoney(howMany + inputAmount)
                     result.text = preview.toString()
                     result.setTextColor(Color.parseColor("#4CAF50"))
-                    binding.textView2.text = "Пополнение"
-                    binding.textView2.setTextColor(Color.parseColor("#4CAF50"))
-                    binding.dayLimit.text = "${newBudget} на ${numberOfDays} дней"
-                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                    updateTextView2("Пополнение", Color.parseColor("#4CAF50"))
+                    if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
+                        binding.dayLimit.text = "${newBudget} на ${numberOfDays} дней"
+                        binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                    }
                 } else {
                     val preview = dataModel.roundMoney(todayLimit - inputAmount)
                     if (preview < 0) {
@@ -630,26 +676,30 @@ class MainActivity : FragmentActivity() {
                         val newDaily = dataModel.roundMoney(remainingBudget / days)
                         result.text = newDaily.toString()
                         result.setTextColor(Color.parseColor("#FF4444"))
-                        binding.textView2.text = "Новый бюджет"
-                        binding.textView2.setTextColor(Color.parseColor("#FF4444"))
-                        binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
-                        if (remainingBudget < 0) binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
-                        else binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                        updateTextView2("Новый бюджет", Color.parseColor("#FF4444"))
+                        if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
+                            binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
+                            if (remainingBudget < 0) binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
+                            else binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                        }
                     } else {
                         val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
                         result.text = preview.toString()
                         result.setTextColor(Color.WHITE)
-                        binding.textView2.text = "На сегодня"
-                        binding.textView2.setTextColor(Color.WHITE)
-                        binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
-                        binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                        updateTextView2("/день", Color.parseColor("#888888"))
+                        if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
+                            binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
+                            binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                        }
                     }
                 }
             } else {
                 result.text = todayLimit.toString()
                 result.setTextColor(Color.WHITE)
-                binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
-                binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
+                updateTextView2(
+                    if (isAddMode) "Пополнение" else "/день",
+                    if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
+                )
                 updateDayLimitText()
                 binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
@@ -762,6 +812,7 @@ class MainActivity : FragmentActivity() {
                     dataModel.money.value = howMany
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
+                    historyManager.addIncomeEntry(fictionalDigit, activeCategory)
                     lastSpendAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     lastOperation.text = "+ ${fictionalDigit} ₽$categoryText"
@@ -793,8 +844,10 @@ class MainActivity : FragmentActivity() {
                 fictionalValue = ""
                 value.text = ""
                 result.setTextColor(Color.WHITE)
-                binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
-                binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
+                updateTextView2(
+                    if (isAddMode) "Пополнение" else "/день",
+                    if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
+                )
                 updateDayLimitText()
                 binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
@@ -819,8 +872,10 @@ class MainActivity : FragmentActivity() {
         buttonMetrics(butPlusMinus)
         butPlusMinus.setOnClickListener {
             isAddMode = !isAddMode
-            binding.textView2.text = if (isAddMode) "Пополнение" else "На сегодня"
-            binding.textView2.setTextColor(if (isAddMode) Color.parseColor("#4CAF50") else Color.WHITE)
+            updateTextView2(
+                if (isAddMode) "Пополнение" else "/день",
+                if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
+            )
             lastOperation.text = ""
             updatePreview()
         }
@@ -1011,6 +1066,29 @@ class MainActivity : FragmentActivity() {
             categoryEmojis.addAll(savedCategories.split(","))
         }
 
+        // Streak
+        val streakLastDate = sharedPreferences.getString("STREAK_LAST_DATE", null)
+        dayStreak = sharedPreferences.getInt("DAY_STREAK", 0)
+        val todayStr = LocalDate.now().toString()
+        if (streakLastDate == todayStr) {
+            // Уже заходил сегодня — ничего не меняем
+        } else if (streakLastDate == LocalDate.now().minusDays(1).toString()) {
+            // Заходил вчера — продолжаем серию
+            dayStreak++
+            sharedPreferences.edit()
+                .putInt("DAY_STREAK", dayStreak)
+                .putString("STREAK_LAST_DATE", todayStr)
+                .apply()
+        } else {
+            // Пропустил день(и) — серия с 1
+            dayStreak = 1
+            sharedPreferences.edit()
+                .putInt("DAY_STREAK", 1)
+                .putString("STREAK_LAST_DATE", todayStr)
+                .apply()
+        }
+        binding.streakCount.text = dayStreak.toString()
+
         //howMany
         val sHowMany = getStringOrFloat(sharedPreferences, "HOW_MANY", "0.0").toDouble()
         dataModel.money.value = sHowMany
@@ -1038,7 +1116,12 @@ class MainActivity : FragmentActivity() {
         binding.result.text = todayLimit.toString()
         lastDate = today
         numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
-        binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+        if (howMany != 0.0 && numberOfDays > 0) {
+            binding.dayLimit.visibility = android.view.View.GONE
+        } else {
+            binding.dayLimit.visibility = android.view.View.VISIBLE
+            binding.dayLimit.text = "${howMany} на ${numberOfDays} дней"
+        }
         hasUnsavedChanges = true
     }
 }

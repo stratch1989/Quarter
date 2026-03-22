@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Бордер: градиент от серого (верхний левый) к #4c4740 (нижний правый) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#555555"
+                android:endColor="#4c4740"
+                android:angle="315" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+
+    <!-- Заливка поверх, с отступом 1dp = толщина бордера -->
+    <item
+        android:left="1dp"
+        android:top="1dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#181818" />
+            <corners android:radius="23dp" />
+        </shape>
+    </item>
+
+</layer-list>

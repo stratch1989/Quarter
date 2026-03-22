@@ -42,14 +42,30 @@ class SettingsFragment : Fragment() {
         }
 
         // Инициализация текущих значений из DataModel
-        dataModel.dayText.value?.let {
-            binding.daysText.text = "По ${it}"
+        fun setDaysTextWithCount(dateStr: String, dateFull: LocalDate) {
+            val base = "По $dateStr"
+            val days = ChronoUnit.DAYS.between(today, dateFull)
+            if (days > 0) {
+                val suffix = " ($days дн.)"
+                val spannable = android.text.SpannableString(base + suffix)
+                spannable.setSpan(android.text.style.RelativeSizeSpan(0.7f), base.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannable.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), base.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannable.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#888888")), base.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                binding.daysText.text = spannable
+            } else {
+                binding.daysText.text = base
+            }
         }
+
         var dateFull = dataModel.dateFull.value ?: LocalDate.now()
+
+        dataModel.dayText.value?.let {
+            setDaysTextWithCount(it, dateFull)
+        }
 
         //Получение актуальной даты
         dataModel.dayText.observe(activity as LifecycleOwner) {
-            binding.daysText.text = "По ${it}"
+            setDaysTextWithCount(it, dateFull)
         }
 
         fun updateDayLimit() {
@@ -64,6 +80,7 @@ class SettingsFragment : Fragment() {
         //Получение актуальной даты (полной)
         dataModel.dateFull.observe(activity as LifecycleOwner) {
             dateFull = it
+            dataModel.dayText.value?.let { txt -> setDaysTextWithCount(txt, dateFull) }
             updateDayLimit()
         }
         updateDayLimit()

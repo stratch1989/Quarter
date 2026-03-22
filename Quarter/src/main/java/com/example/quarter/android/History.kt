@@ -16,6 +16,7 @@ class History : Fragment() {
     lateinit var binding: FragmentHistoryBinding
     private lateinit var historyManager: HistoryManager
     private var viewMode = MODE_LIST
+    private var isIncomeMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -32,6 +33,7 @@ class History : Fragment() {
         }.start()
         binding.frameForMetrics.animate().alpha(0f).setDuration(200).start()
         binding.modeToggle.animate().alpha(0f).setDuration(200).start()
+        binding.typeToggle.animate().alpha(0f).setDuration(200).start()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,13 +41,16 @@ class History : Fragment() {
         binding.clickableBackground.alpha = 0f
         binding.frameForMetrics.alpha = 0f
         binding.modeToggle.alpha = 0f
+        binding.typeToggle.alpha = 0f
         binding.clickableBackground.animate().alpha(1f).setDuration(200).start()
         binding.frameForMetrics.animate().alpha(1f).setDuration(200).start()
         binding.modeToggle.animate().alpha(1f).setDuration(200).start()
+        binding.typeToggle.animate().alpha(1f).setDuration(200).start()
 
         binding.clickableBackground.setOnClickListener { dismissWithAnimation() }
         binding.frameForMetrics.setOnClickListener { }
         binding.modeToggle.setOnClickListener { }
+        binding.typeToggle.setOnClickListener { }
 
         historyManager = HistoryManager(requireContext())
 
@@ -53,6 +58,16 @@ class History : Fragment() {
         binding.categoryFilterButton.setOnClickListener { switchMode(MODE_CATEGORY) }
         binding.chartModeButton.setOnClickListener { switchMode(MODE_CHART) }
 
+        binding.expenseButton.setOnClickListener { switchType(false) }
+        binding.incomeButton.setOnClickListener { switchType(true) }
+
+        refreshView()
+    }
+
+    private fun switchType(income: Boolean) {
+        if (isIncomeMode == income) return
+        isIncomeMode = income
+        updateTypeButtons()
         refreshView()
     }
 
@@ -63,29 +78,40 @@ class History : Fragment() {
         refreshView()
     }
 
+    private fun updateTypeButtons() {
+        binding.expenseButton.setBackgroundColor(if (!isIncomeMode) 0xFF252525.toInt() else 0x00000000)
+        binding.incomeButton.setBackgroundColor(if (isIncomeMode) 0xFF252525.toInt() else 0x00000000)
+    }
+
     private fun updateModeButtons() {
         binding.listModeButton.setBackgroundColor(if (viewMode == MODE_LIST) 0xFF252525.toInt() else 0x00000000)
         binding.categoryFilterButton.setBackgroundColor(if (viewMode == MODE_CATEGORY) 0xFF252525.toInt() else 0x00000000)
         binding.chartModeButton.setBackgroundColor(if (viewMode == MODE_CHART) 0xFF252525.toInt() else 0x00000000)
+        val prefix = if (isIncomeMode) "пополнений" else "трат"
         binding.historyTitle.text = when (viewMode) {
             MODE_CATEGORY -> "По категориям"
             MODE_CHART -> "Диаграмма"
-            else -> "История трат"
+            else -> "История $prefix"
         }
     }
 
     private fun refreshView() {
-        val allEntries = historyManager.loadEntries()
+        updateModeButtons()
+        val allEntries = if (isIncomeMode) historyManager.loadIncomeEntries() else historyManager.loadEntries()
         val periodTs = historyManager.getPeriodStartTimestamp()
         val currentEntries = allEntries.filter { it.timestamp >= periodTs }
         val oldEntries = allEntries.filter { it.timestamp < periodTs }
 
         // Итого за текущий период
-        val totalMoney = dataModel.money.value ?: 0.0
         var currentTotal = currentEntries.sumOf { it.amount }
         if (currentEntries.isNotEmpty()) {
             binding.periodTotal.visibility = View.VISIBLE
-            binding.periodTotal.text = "Потрачено: ${dataModel.roundMoney(currentTotal)} ₽ из ${dataModel.roundMoney(totalMoney + currentTotal)} ₽"
+            if (isIncomeMode) {
+                binding.periodTotal.text = "Пополнено: ${dataModel.roundMoney(currentTotal)} ₽"
+            } else {
+                val totalMoney = dataModel.money.value ?: 0.0
+                binding.periodTotal.text = "Потрачено: ${dataModel.roundMoney(currentTotal)} ₽ из ${dataModel.roundMoney(totalMoney + currentTotal)} ₽"
+            }
         } else {
             binding.periodTotal.visibility = View.GONE
         }
@@ -104,30 +130,46 @@ class History : Fragment() {
         }
 
         if (items.isEmpty()) {
+            binding.emptyText.text = if (isIncomeMode) "Пополнения за текущий период\nпоявятся здесь" else "Траты за текущий период\nпоявятся здесь"
             binding.emptyText.visibility = View.VISIBLE
             binding.historyRecyclerView.visibility = View.GONE
         } else {
             binding.emptyText.visibility = View.GONE
             binding.historyRecyclerView.visibility = View.VISIBLE
             binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            binding.historyRecyclerView.adapter = HistoryAdapter(items) { currentIndex ->
-                val removed = historyManager.removeCurrentEntry(currentIndex)
+            binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode) { currentIndex ->
+                val removed = historyManager.removeCurrentEntry(currentIndex, isIncomeMode)
                 if (removed != null) {
-                    val currentMoney = dataModel.money.value ?: 0.0
-                    dataModel.money.value = dataModel.roundMoney(currentMoney + removed.amount)
+                    if (isIncomeMode) {
+                        // Удаление пополнения — вычитаем из бюджета
+                        val currentMoney = dataModel.money.value ?: 0.0
+                        dataModel.money.value = dataModel.roundMoney(currentMoney - removed.amount)
 
-                    currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
-                    val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + currentTotal)
-                    binding.periodTotal.text = "Потрачено: ${currentTotal} ₽ из ${newTotalBudget} ₽"
+                        currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
+                        binding.periodTotal.text = "Пополнено: ${dataModel.roundMoney(currentTotal)} ₽"
 
-                    val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
-                    val isToday = removed.date == LocalDate.now().toString()
-                    if (isToday) {
-                        dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + removed.amount)
-                    } else {
+                        val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
                         val days = dataModel.numberOfDays.value ?: 1L
                         val perDay = if (days > 0) removed.amount / days else removed.amount
-                        dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + perDay)
+                        dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit - perDay)
+                    } else {
+                        // Удаление траты — возвращаем в бюджет
+                        val currentMoney = dataModel.money.value ?: 0.0
+                        dataModel.money.value = dataModel.roundMoney(currentMoney + removed.amount)
+
+                        currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
+                        val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + currentTotal)
+                        binding.periodTotal.text = "Потрачено: ${currentTotal} ₽ из ${newTotalBudget} ₽"
+
+                        val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
+                        val isToday = removed.date == LocalDate.now().toString()
+                        if (isToday) {
+                            dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + removed.amount)
+                        } else {
+                            val days = dataModel.numberOfDays.value ?: 1L
+                            val perDay = if (days > 0) removed.amount / days else removed.amount
+                            dataModel.todayLimit.value = dataModel.roundMoney(currentTodayLimit + perDay)
+                        }
                     }
 
                     dataModel.clearUndo.value = true

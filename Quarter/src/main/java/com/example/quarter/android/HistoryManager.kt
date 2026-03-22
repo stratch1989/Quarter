@@ -10,16 +10,27 @@ data class HistoryEntry(val amount: Double, val date: String, val timestamp: Lon
 class HistoryManager(context: Context) {
     private val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
     private val key = "HISTORY"
+    private val incomeKey = "INCOME_HISTORY"
     private val periodKey = "PERIOD_START_TS"
 
     fun addEntry(amount: Double, category: String? = null) {
         val entries = loadEntries().toMutableList()
         entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category))
-        saveEntries(entries)
+        saveEntries(entries, key)
     }
 
-    fun loadEntries(): List<HistoryEntry> {
-        val json = prefs.getString(key, "[]") ?: "[]"
+    fun addIncomeEntry(amount: Double, category: String? = null) {
+        val entries = loadIncomeEntries().toMutableList()
+        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category))
+        saveEntries(entries, incomeKey)
+    }
+
+    fun loadEntries(): List<HistoryEntry> = loadEntriesFromKey(key)
+
+    fun loadIncomeEntries(): List<HistoryEntry> = loadEntriesFromKey(incomeKey)
+
+    private fun loadEntriesFromKey(storageKey: String): List<HistoryEntry> {
+        val json = prefs.getString(storageKey, "[]") ?: "[]"
         val array = JSONArray(json)
         val list = mutableListOf<HistoryEntry>()
         for (i in 0 until array.length()) {
@@ -42,20 +53,21 @@ class HistoryManager(context: Context) {
         prefs.edit().putLong(periodKey, System.currentTimeMillis()).apply()
     }
 
-    fun removeCurrentEntry(currentIndex: Int): HistoryEntry? {
+    fun removeCurrentEntry(currentIndex: Int, income: Boolean = false): HistoryEntry? {
         val periodTs = getPeriodStartTimestamp()
-        val allEntries = loadEntries().toMutableList()
+        val storageKey = if (income) incomeKey else key
+        val allEntries = (if (income) loadIncomeEntries() else loadEntries()).toMutableList()
         val currentEntries = allEntries.filter { it.timestamp >= periodTs }
         if (currentIndex < 0 || currentIndex >= currentEntries.size) return null
         val target = currentEntries[currentIndex]
         val globalIndex = allEntries.indexOf(target)
         if (globalIndex == -1) return null
         allEntries.removeAt(globalIndex)
-        saveEntries(allEntries)
+        saveEntries(allEntries, storageKey)
         return target
     }
 
-    private fun saveEntries(entries: List<HistoryEntry>) {
+    private fun saveEntries(entries: List<HistoryEntry>, storageKey: String) {
         val array = JSONArray()
         for (entry in entries) {
             val obj = JSONObject()
@@ -65,6 +77,6 @@ class HistoryManager(context: Context) {
             if (entry.category != null) obj.put("category", entry.category)
             array.put(obj)
         }
-        prefs.edit().putString(key, array.toString()).apply()
+        prefs.edit().putString(storageKey, array.toString()).apply()
     }
 }
