@@ -67,6 +67,7 @@ class MainActivity : FragmentActivity() {
     var lastDate = LocalDate.now()
     private var hasUnsavedChanges = false
     private var lastSpendAmount: Double? = null
+    private var lastIncomeAmount: Double? = null
     private var isAddMode = false
     private var isBudgetInputMode = false
     private var budgetInputValue = ""
@@ -86,6 +87,17 @@ class MainActivity : FragmentActivity() {
         "🎬", "🎮", "📚", "🎵", "🎭", "🏖️", "⚽", "🎂",
         "🎁", "🐕", "👶", "🏫", "💻", "🛒", "🔑", "📦"
     )
+
+    private val incomeCategoryEmojis = mutableListOf(
+        "💰", "💳", "🏦", "💵", "💎", "📈", "🤑", "💸",
+        "💼", "🏢", "👔", "🖥️", "⌨️", "📊", "🏭", "🛠️",
+        "🎓", "📖", "✏️", "🧑‍🏫", "🏅", "📜", "🎯", "🧠",
+        "🏡", "🔑", "📦", "🚗", "🛍️", "💍", "🎁", "🖼️",
+        "🤝", "👨‍👩‍👧", "👴", "💌", "🙏", "❤️", "🫶", "🎉",
+        "📱", "💻", "🎮", "🎵", "📸", "🎬", "✍️", "🛒"
+    )
+
+    private val selectedIncomeEmojis = mutableListOf<String>()
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -173,7 +185,30 @@ class MainActivity : FragmentActivity() {
             binding.textView2.layoutParams = cs
         }
 
+        val defaultDayLimitMarginTop = (16 * resources.displayMetrics.density).toInt()
+        val statusDayLimitMarginTop = (-4 * resources.displayMetrics.density).toInt()
+
+        fun resetDayLimitStyle() {
+            binding.dayLimit.textSize = 14f
+            binding.dayLimit.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.NORMAL)
+            binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+            (binding.dayLimit.layoutParams as? androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)?.let {
+                it.topMargin = defaultDayLimitMarginTop
+                binding.dayLimit.layoutParams = it
+            }
+        }
+
+        fun setDayLimitStatusStyle() {
+            binding.dayLimit.textSize = 24f
+            binding.dayLimit.setTypeface(binding.dayLimit.typeface, android.graphics.Typeface.BOLD)
+            (binding.dayLimit.layoutParams as? androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)?.let {
+                it.topMargin = statusDayLimitMarginTop
+                binding.dayLimit.layoutParams = it
+            }
+        }
+
         fun updateDayLimitText() {
+            resetDayLimitStyle()
             val hasBudget = howMany != 0.0
             val hasDate = numberOfDays > 0
             if (hasBudget && hasDate) {
@@ -213,6 +248,7 @@ class MainActivity : FragmentActivity() {
                 lastDate = today
             }
             lastSpendAmount = null
+            lastIncomeAmount = null
             binding.lastOperation.text = ""
             hasUnsavedChanges = true
         }
@@ -389,11 +425,13 @@ class MainActivity : FragmentActivity() {
                 hiddenEmojiInput.clearFocus()
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                 imm.hideSoftInputFromWindow(hiddenEmojiInput.windowToken, 0)
-                if (!categoryEmojis.contains(text)) {
-                    categoryEmojis.add(0, text)
+                val emojis = if (isAddMode) incomeCategoryEmojis else categoryEmojis
+                val selected = if (isAddMode) selectedIncomeEmojis else selectedEmojis
+                if (!emojis.contains(text)) {
+                    emojis.add(0, text)
                 }
-                if (!selectedEmojis.contains(text)) {
-                    selectedEmojis.add(0, text)
+                if (!selected.contains(text)) {
+                    selected.add(0, text)
                 }
                 activeCategory = text
                 rebuildAll()
@@ -408,6 +446,8 @@ class MainActivity : FragmentActivity() {
             val btnSize = (38 * dp).toInt()
             val gap = (6 * dp).toInt()
             val indicator = findViewById<TextView>(R.id.active_category_indicator)
+            val currentSelected = if (isAddMode) selectedIncomeEmojis else selectedEmojis
+            val currentEmojis = if (isAddMode) incomeCategoryEmojis else categoryEmojis
             // Кнопка + первая
             val addBtn = TextView(this).apply {
                 id = R.id.category_add_btn
@@ -422,7 +462,7 @@ class MainActivity : FragmentActivity() {
                 setOnClickListener { toggleEmojiPicker() }
             }
             categoryContainer.addView(addBtn)
-            for (emoji in selectedEmojis) {
+            for (emoji in currentSelected) {
                 val isActive = emoji == activeCategory
                 val container = FrameLayout(this).apply {
                     layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
@@ -473,7 +513,7 @@ class MainActivity : FragmentActivity() {
                 }
                 container.setOnClickListener {
                     if (isEmojiPickerOpen) {
-                        selectedEmojis.remove(emoji)
+                        currentSelected.remove(emoji)
                         if (activeCategory == emoji) {
                             activeCategory = null
                             indicator.visibility = View.GONE
@@ -509,8 +549,9 @@ class MainActivity : FragmentActivity() {
                         val draggedEmoji = event.localState as String
                         val dropX = event.x
                         val container = v as LinearLayout
+                        val dragSelected = if (isAddMode) selectedIncomeEmojis else selectedEmojis
                         // child 0 = кнопка +, эмодзи начинаются с 1
-                        var targetIndex = selectedEmojis.size - 1
+                        var targetIndex = dragSelected.size - 1
                         for (i in 1 until container.childCount) {
                             val child = container.getChildAt(i)
                             val childCenter = child.left + child.width / 2
@@ -519,11 +560,11 @@ class MainActivity : FragmentActivity() {
                                 break
                             }
                         }
-                        val fromIndex = selectedEmojis.indexOf(draggedEmoji)
+                        val fromIndex = dragSelected.indexOf(draggedEmoji)
                         if (fromIndex != -1 && targetIndex != fromIndex) {
-                            selectedEmojis.removeAt(fromIndex)
+                            dragSelected.removeAt(fromIndex)
                             if (targetIndex > fromIndex) targetIndex--
-                            selectedEmojis.add(targetIndex.coerceIn(0, selectedEmojis.size), draggedEmoji)
+                            dragSelected.add(targetIndex.coerceIn(0, dragSelected.size), draggedEmoji)
                         }
                         rebuildAll()
                         true
@@ -572,8 +613,8 @@ class MainActivity : FragmentActivity() {
             }
             emojiGrid.addView(kbBtn)
 
-            for (emoji in categoryEmojis) {
-                if (selectedEmojis.contains(emoji)) continue
+            for (emoji in currentEmojis) {
+                if (currentSelected.contains(emoji)) continue
                 @SuppressLint("ClickableViewAccessibility")
                 val tv = TextView(this).apply {
                     text = emoji
@@ -587,8 +628,8 @@ class MainActivity : FragmentActivity() {
                     var longPressed = false
                     val deleteRunnable = Runnable {
                         longPressed = true
-                        categoryEmojis.remove(emoji)
-                        selectedEmojis.remove(emoji)
+                        currentEmojis.remove(emoji)
+                        currentSelected.remove(emoji)
                         rebuildAll()
                     }
                     setOnTouchListener { _, event ->
@@ -600,7 +641,7 @@ class MainActivity : FragmentActivity() {
                             MotionEvent.ACTION_UP -> {
                                 longPressHandler.removeCallbacks(deleteRunnable)
                                 if (!longPressed) {
-                                    selectedEmojis.add(0, emoji)
+                                    currentSelected.add(0, emoji)
                                     activeCategory = emoji
                                     rebuildAll()
                                 }
@@ -660,14 +701,13 @@ class MainActivity : FragmentActivity() {
                 val inputAmount = fictionalValue.toDoubleOrNull() ?: 0.0
                 if (isAddMode) {
                     val preview = dataModel.roundMoney(todayLimit + inputAmount)
-                    val newBudget = dataModel.roundMoney(howMany + inputAmount)
                     result.text = preview.toString()
                     result.setTextColor(Color.parseColor("#4CAF50"))
-                    updateTextView2("Пополнение", Color.parseColor("#4CAF50"))
-                    if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
-                        binding.dayLimit.text = "${newBudget} на ${numberOfDays} дней"
-                        binding.dayLimit.setTextColor(Color.parseColor("#888888"))
-                    }
+                    updateTextView2("/день", Color.parseColor("#4CAF50"))
+                    binding.dayLimit.visibility = View.VISIBLE
+                    binding.dayLimit.text = "Пополнение"
+                    binding.dayLimit.setTextColor(Color.parseColor("#4CAF50"))
+                    setDayLimitStatusStyle()
                 } else {
                     val preview = dataModel.roundMoney(todayLimit - inputAmount)
                     if (preview < 0) {
@@ -676,32 +716,37 @@ class MainActivity : FragmentActivity() {
                         val newDaily = dataModel.roundMoney(remainingBudget / days)
                         result.text = newDaily.toString()
                         result.setTextColor(Color.parseColor("#FF4444"))
-                        updateTextView2("Новый бюджет", Color.parseColor("#FF4444"))
-                        if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
-                            binding.dayLimit.text = "${dataModel.roundMoney(remainingBudget)} на ${days} дней"
-                            if (remainingBudget < 0) binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
-                            else binding.dayLimit.setTextColor(Color.parseColor("#888888"))
-                        }
+                        updateTextView2("/день", Color.parseColor("#FF4444"))
+                        binding.dayLimit.visibility = View.VISIBLE
+                        binding.dayLimit.text = "Новый бюджет"
+                        binding.dayLimit.setTextColor(Color.parseColor("#FF4444"))
+                        setDayLimitStatusStyle()
                     } else {
                         val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
                         result.text = preview.toString()
                         result.setTextColor(Color.WHITE)
                         updateTextView2("/день", Color.parseColor("#888888"))
-                        if (binding.dayLimit.visibility == android.view.View.VISIBLE) {
+                        resetDayLimitStyle()
+                        if (binding.dayLimit.visibility == View.VISIBLE) {
                             binding.dayLimit.text = "${remainingBudget} на ${numberOfDays} дней"
-                            binding.dayLimit.setTextColor(Color.parseColor("#888888"))
                         }
                     }
                 }
             } else {
                 result.text = todayLimit.toString()
-                result.setTextColor(Color.WHITE)
-                updateTextView2(
-                    if (isAddMode) "Пополнение" else "/день",
-                    if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
-                )
-                updateDayLimitText()
-                binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                if (isAddMode) {
+                    result.setTextColor(Color.parseColor("#4CAF50"))
+                    updateTextView2("/день", Color.parseColor("#4CAF50"))
+                    binding.dayLimit.visibility = View.VISIBLE
+                    binding.dayLimit.text = "Пополнение"
+                    binding.dayLimit.setTextColor(Color.parseColor("#4CAF50"))
+                    setDayLimitStatusStyle()
+                } else {
+                    result.setTextColor(Color.WHITE)
+                    updateTextView2("/день", Color.parseColor("#888888"))
+                    updateDayLimitText()
+                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                }
             }
         }
 
@@ -813,6 +858,7 @@ class MainActivity : FragmentActivity() {
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
                     historyManager.addIncomeEntry(fictionalDigit, activeCategory)
+                    lastIncomeAmount = fictionalDigit
                     lastSpendAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     lastOperation.text = "+ ${fictionalDigit} ₽$categoryText"
@@ -823,6 +869,7 @@ class MainActivity : FragmentActivity() {
                     result.text = "$todayLimit"
                     historyManager.addEntry(fictionalDigit, activeCategory)
                     lastSpendAmount = fictionalDigit
+                    lastIncomeAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     lastOperation.text = "- ${fictionalDigit} ₽$categoryText"
                 }
@@ -844,44 +891,55 @@ class MainActivity : FragmentActivity() {
                 fictionalValue = ""
                 value.text = ""
                 result.setTextColor(Color.WHITE)
-                updateTextView2(
-                    if (isAddMode) "Пополнение" else "/день",
-                    if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
-                )
+                updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
                 updateDayLimitText()
                 binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             }
         }
 
-        // Обработка кнопки отмены последней траты
+        // Обработка кнопки отмены последней операции
         butUndo.setOnClickListener {
-            val amount = lastSpendAmount ?: return@setOnClickListener
-            todayLimit = dataModel.roundMoney(todayLimit + amount)
-            howMany = dataModel.roundMoney(howMany + amount)
-            dataModel.money.value = howMany
-            dataModel.todayLimit.value = todayLimit
-            result.text = "$todayLimit"
-            // Удаляем последнюю запись из истории (первая в списке = последняя добавленная)
-            historyManager.removeCurrentEntry(0)
-            lastSpendAmount = null
-            lastOperation.text = ""
-            hasUnsavedChanges = true
+            if (lastIncomeAmount != null) {
+                val amount = lastIncomeAmount!!
+                todayLimit = dataModel.roundMoney(todayLimit - amount)
+                howMany = dataModel.roundMoney(howMany - amount)
+                dataModel.money.value = howMany
+                dataModel.todayLimit.value = todayLimit
+                result.text = "$todayLimit"
+                historyManager.removeCurrentEntry(0, income = true)
+                lastIncomeAmount = null
+                lastOperation.text = ""
+                hasUnsavedChanges = true
+            } else if (lastSpendAmount != null) {
+                val amount = lastSpendAmount!!
+                todayLimit = dataModel.roundMoney(todayLimit + amount)
+                howMany = dataModel.roundMoney(howMany + amount)
+                dataModel.money.value = howMany
+                dataModel.todayLimit.value = todayLimit
+                result.text = "$todayLimit"
+                historyManager.removeCurrentEntry(0)
+                lastSpendAmount = null
+                lastOperation.text = ""
+                hasUnsavedChanges = true
+            }
         }
 
         // Обработка кнопки +/-
         buttonMetrics(butPlusMinus)
         butPlusMinus.setOnClickListener {
             isAddMode = !isAddMode
-            updateTextView2(
-                if (isAddMode) "Пополнение" else "/день",
-                if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888")
-            )
+            activeCategory = null
+            updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
             lastOperation.text = ""
+            lastSpendAmount = null
+            lastIncomeAmount = null
+            rebuildAllRef?.invoke()
             updatePreview()
         }
 
         dataModel.clearUndo.observe(this) {
             lastSpendAmount = null
+            lastIncomeAmount = null
             lastOperation.text = ""
         }
 
@@ -891,6 +949,7 @@ class MainActivity : FragmentActivity() {
             dataModel.todayLimit.value = todayLimit
             result.text = todayLimit.toString()
             lastSpendAmount = null
+            lastIncomeAmount = null
             lastOperation.text = ""
             hasUnsavedChanges = true
         }
@@ -1008,6 +1067,8 @@ class MainActivity : FragmentActivity() {
         // Категории сохраняем всегда
         editor.putString("SELECTED_EMOJIS", selectedEmojis.joinToString(","))
         editor.putString("CATEGORY_EMOJIS", categoryEmojis.joinToString(","))
+        editor.putString("SELECTED_INCOME_EMOJIS", selectedIncomeEmojis.joinToString(","))
+        editor.putString("INCOME_CATEGORY_EMOJIS", incomeCategoryEmojis.joinToString(","))
         if (hasUnsavedChanges) {
             val result: String = binding.result.text.toString()
             editor.putString("STRING_KEY", result)
@@ -1064,6 +1125,16 @@ class MainActivity : FragmentActivity() {
         if (!savedCategories.isNullOrEmpty()) {
             categoryEmojis.clear()
             categoryEmojis.addAll(savedCategories.split(","))
+        }
+        val savedIncomeSelected = sharedPreferences.getString("SELECTED_INCOME_EMOJIS", null)
+        if (!savedIncomeSelected.isNullOrEmpty()) {
+            selectedIncomeEmojis.clear()
+            selectedIncomeEmojis.addAll(savedIncomeSelected.split(","))
+        }
+        val savedIncomeCategories = sharedPreferences.getString("INCOME_CATEGORY_EMOJIS", null)
+        if (!savedIncomeCategories.isNullOrEmpty()) {
+            incomeCategoryEmojis.clear()
+            incomeCategoryEmojis.addAll(savedIncomeCategories.split(","))
         }
 
         // Streak
