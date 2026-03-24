@@ -14,7 +14,7 @@ import java.util.Locale
 sealed class HistoryItem {
     data class DayHeader(val date: String, val total: Double) : HistoryItem()
     data class CategoryHeader(val category: String?, val total: Double) : HistoryItem()
-    data class CategoryLegend(val label: String, val amount: Double, val color: Int) : HistoryItem()
+    data class CategoryLegend(val label: String, val amount: Double, val color: Int, val count: Int = 0, val entries: List<HistoryEntry> = emptyList()) : HistoryItem()
     data class Current(val entry: HistoryEntry, val currentIndex: Int) : HistoryItem()
     object PeriodDivider : HistoryItem()
     data class Old(val entry: HistoryEntry) : HistoryItem()
@@ -24,6 +24,8 @@ class HistoryAdapter(
     private val items: MutableList<HistoryItem>,
     private val isIncome: Boolean = false,
     private val isEditMode: Boolean = false,
+    private val onItemClick: ((HistoryEntry) -> Unit)? = null,
+    private val onCategoryClick: ((List<HistoryEntry>, String) -> Unit)? = null,
     private val onDelete: (Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -104,10 +106,15 @@ class HistoryAdapter(
                 val bg = holder.dot.background as GradientDrawable
                 bg.setColor(item.color)
                 holder.label.text = item.label
+                holder.label.setTextColor(0xFFFFFFFF.toInt())
                 val formatted = if (item.amount == item.amount.toLong().toDouble())
                     item.amount.toLong().toString() else item.amount.toString()
                 val sign = if (isIncome) "+" else "-"
                 holder.amount.text = "$sign$formatted"
+                holder.amount.setTextColor(0xFFFFFFFF.toInt())
+                holder.itemView.setOnClickListener {
+                    onCategoryClick?.invoke(item.entries, item.label)
+                }
             }
             is HistoryItem.Current -> {
                 holder as EntryViewHolder
@@ -191,6 +198,9 @@ class HistoryAdapter(
                         }
                     }
                 }
+                holder.itemView.setOnClickListener {
+                    onItemClick?.invoke(item.entry)
+                }
             }
             is HistoryItem.Old -> {
                 holder as EntryViewHolder
@@ -225,6 +235,9 @@ class HistoryAdapter(
                 }
 
                 holder.deleteButton.visibility = View.GONE
+                holder.itemView.setOnClickListener {
+                    onItemClick?.invoke(item.entry)
+                }
             }
             is HistoryItem.PeriodDivider -> {}
         }

@@ -13,16 +13,23 @@ class HistoryManager(context: Context) {
     private val incomeKey = "INCOME_HISTORY"
     private val periodKey = "PERIOD_START_TS"
 
-    fun addEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null) {
+    fun addEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null, date: String? = null) {
         val entries = loadEntries().toMutableList()
-        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
+        entries.add(0, HistoryEntry(amount, date ?: LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
         saveEntries(entries, key)
     }
 
-    fun addIncomeEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null) {
+    fun addIncomeEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null, date: String? = null) {
         val entries = loadIncomeEntries().toMutableList()
-        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
+        entries.add(0, HistoryEntry(amount, date ?: LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
         saveEntries(entries, incomeKey)
+    }
+
+    fun removeEntryByTimestamp(timestamp: Long, isIncome: Boolean) {
+        val k = if (isIncome) incomeKey else key
+        val entries = loadEntriesFromKey(k).toMutableList()
+        entries.removeAll { it.timestamp == timestamp }
+        saveEntries(entries, k)
     }
 
     fun loadEntries(): List<HistoryEntry> = loadEntriesFromKey(key)

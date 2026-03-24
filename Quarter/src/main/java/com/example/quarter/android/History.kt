@@ -19,6 +19,7 @@ class History : Fragment() {
     private var viewMode = MODE_LIST
     private var isIncomeMode = false
     private var isEditMode = false
+    var onEntryClick: ((HistoryEntry, Boolean) -> Unit)? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -167,7 +168,12 @@ class History : Fragment() {
             binding.emptyText.visibility = View.GONE
             binding.historyRecyclerView.visibility = View.VISIBLE
             binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode, isEditMode) { currentIndex ->
+            binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode, isEditMode, onItemClick = { entry ->
+                onEntryClick?.invoke(entry, isIncomeMode)
+                dismissWithAnimation()
+            }, onCategoryClick = { entries, categoryName ->
+                showCategoryEntriesPopup(entries, categoryName)
+            }) { currentIndex ->
                 val removed = historyManager.removeCurrentEntry(currentIndex, isIncomeMode)
                 if (removed != null) {
                     if (isIncomeMode) {
@@ -285,7 +291,8 @@ class History : Fragment() {
                 val label = category ?: "Без категории"
                 val color = if (category == null) DonutChartView.NO_CATEGORY_COLOR
                 else DonutChartView.COLORS[colorIndex++ % DonutChartView.COLORS.size]
-                items.add(HistoryItem.CategoryLegend(label, total, color))
+                val catEntries = grouped[category]!!
+                items.add(HistoryItem.CategoryLegend(label, total, color, catEntries.size, catEntries))
             }
         }
 
@@ -297,6 +304,33 @@ class History : Fragment() {
         }
 
         return items
+    }
+
+    private fun showCategoryEntriesPopup(entries: List<HistoryEntry>, categoryName: String) {
+        // Временно переключаемся в режим списка с фильтром по категории
+        val items = mutableListOf<HistoryItem>()
+        groupByDay(entries).forEach { (date, dayEntries) ->
+            val dayTotal = dataModel.roundMoney(dayEntries.sumOf { it.amount })
+            items.add(HistoryItem.DayHeader(date, dayTotal))
+            dayEntries.forEach { entry ->
+                items.add(HistoryItem.Old(entry))
+            }
+        }
+
+        binding.historyTitle.text = categoryName
+        binding.categoryBackButton.visibility = View.VISIBLE
+        binding.emptyText.visibility = View.GONE
+        binding.historyRecyclerView.visibility = View.VISIBLE
+        binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode, false, onItemClick = { entry ->
+            onEntryClick?.invoke(entry, isIncomeMode)
+            dismissWithAnimation()
+        }) { _ -> }
+
+        // Клик на кнопку назад — вернуться к списку категорий
+        binding.categoryBackButton.setOnClickListener {
+            binding.categoryBackButton.visibility = View.GONE
+            refreshView()
+        }
     }
 
     private fun groupByDay(entries: List<HistoryEntry>): Map<String, List<HistoryEntry>> {

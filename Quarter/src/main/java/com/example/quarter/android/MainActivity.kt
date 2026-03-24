@@ -103,7 +103,12 @@ class MainActivity : FragmentActivity() {
     private var lastOpCategory: String? = null
     private var lastOpNote: String? = null
     private var lastOpTime: String? = null
+    private var lastOpDate: java.time.LocalDate? = null
     private var lastOpWasIncome: Boolean = false
+    private var lastOpEntry: HistoryEntry? = null
+    private var editingEntry: HistoryEntry? = null
+    private var editingWasIncome: Boolean = false
+    private var rebuildCategoryUI: (() -> Unit)? = null
 
     private val categoryEmojis = mutableListOf(
         "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
@@ -249,7 +254,7 @@ class MainActivity : FragmentActivity() {
         val value: TextView = findViewById(R.id.value)
 
         binding.lastOperation.setOnClickListener {
-            if (lastOpAmount != null) {
+            if (lastOpAmount != null && binding.lastOperation.alpha > 0.1f) {
                 restoreLastOperation()
             }
         }
@@ -267,6 +272,7 @@ class MainActivity : FragmentActivity() {
             binding.dayLimit.animate().alpha(0.15f).setDuration(200).start()
             binding.history.animate().alpha(0f).setDuration(200).start()
             binding.streakButton.animate().alpha(0f).setDuration(200).start()
+            binding.streakCount.animate().alpha(0f).setDuration(200).start()
             binding.repeatButtonFrame.animate().alpha(0f).setDuration(200).start()
             binding.settings.animate().alpha(0f).setDuration(200).start()
             binding.dateTimeContainer.animate().alpha(0.15f).setDuration(200).start()
@@ -282,6 +288,7 @@ class MainActivity : FragmentActivity() {
             binding.dayLimit.animate().alpha(1f).setDuration(200).start()
             binding.history.animate().alpha(1f).setDuration(200).start()
             binding.streakButton.animate().alpha(1f).setDuration(200).start()
+            binding.streakCount.animate().alpha(1f).setDuration(200).start()
             binding.repeatButtonFrame.animate().alpha(1f).setDuration(200).start()
             binding.settings.animate().alpha(1f).setDuration(200).start()
             binding.dateTimeContainer.animate().alpha(1f).setDuration(200).start()
@@ -656,9 +663,33 @@ class MainActivity : FragmentActivity() {
         // Фрагмент History
         binding.history.setOnClickListener {
             if (settingsPopup != null) return@setOnClickListener
+            val historyFragment = History.newInstance()
+            historyFragment.onEntryClick = { entry, wasIncome ->
+                // Режим редактирования существующей записи
+                editingEntry = entry
+                editingWasIncome = wasIncome
+                fictionalValue = entry.amount.let {
+                    if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString()
+                }
+                value.text = fictionalValue
+                isAddMode = wasIncome
+                activeCategory = entry.category
+                activeNote = entry.note
+                activeTime = entry.time ?: java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                try {
+                    activeDate = java.time.LocalDate.parse(entry.date)
+                } catch (_: Exception) {
+                    activeDate = java.time.LocalDate.now()
+                }
+                if (activeNote != null) binding.noteField.setText(activeNote)
+                binding.timeFieldText.text = activeTime
+                binding.dateFieldText.text = activeDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
+                // Подсветить выбранную категорию в меню
+                rebuildAllRef?.invoke()
+            }
             supportFragmentManager
                 .beginTransaction()
-                .replace(R.id.place_holder, History.newInstance())
+                .replace(R.id.place_holder, historyFragment)
                 .addToBackStack(null)
                 .commit()
         }
@@ -795,8 +826,7 @@ class MainActivity : FragmentActivity() {
                             indicator.visibility = View.GONE
                         } else {
                             activeCategory = emoji
-                            indicator.text = emoji
-                            indicator.visibility = View.VISIBLE
+                            // indicator отключён
                         }
                     }
                     rebuildAll()
@@ -848,13 +878,8 @@ class MainActivity : FragmentActivity() {
                     else -> true
                 }
             }
-            // Обновить индикатор
-            if (activeCategory != null) {
-                indicator.text = activeCategory
-                indicator.visibility = View.VISIBLE
-            } else {
-                indicator.visibility = View.GONE
-            }
+            // Индикатор отключён
+            indicator.visibility = View.GONE
             findViewById<HorizontalScrollView>(R.id.category_scroll).post {
                 findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_LEFT)
             }
@@ -1126,13 +1151,28 @@ class MainActivity : FragmentActivity() {
             }
             if ((fictionalValue.isNotEmpty()) && (value.text != ".")) {
                 val fictionalDigit = fictionalValue.toDouble()
+
+                // Если редактируем старую запись — удаляем её и откатываем её эффект
+                val editing = editingEntry
+                if (editing != null) {
+                    historyManager.removeEntryByTimestamp(editing.timestamp, editingWasIncome)
+                    if (editingWasIncome) {
+                        todayLimit = dataModel.roundMoney(todayLimit - editing.amount)
+                        howMany = dataModel.roundMoney(howMany - editing.amount)
+                    } else {
+                        todayLimit = dataModel.roundMoney(todayLimit + editing.amount)
+                        howMany = dataModel.roundMoney(howMany + editing.amount)
+                    }
+                    editingEntry = null
+                }
+
                 if (isAddMode) {
                     todayLimit = dataModel.roundMoney(todayLimit + fictionalDigit)
                     howMany = dataModel.roundMoney(howMany + fictionalDigit)
                     dataModel.money.value = howMany
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
-                    historyManager.addIncomeEntry(fictionalDigit, activeCategory, activeNote, activeTime)
+                    historyManager.addIncomeEntry(fictionalDigit, activeCategory, activeNote, activeTime, activeDate.toString())
                     lastIncomeAmount = fictionalDigit
                     lastSpendAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
@@ -1143,14 +1183,16 @@ class MainActivity : FragmentActivity() {
                     lastOpCategory = activeCategory
                     lastOpNote = activeNote
                     lastOpTime = activeTime
+                    lastOpDate = activeDate
                     lastOpWasIncome = true
+                    lastOpEntry = historyManager.loadIncomeEntries().firstOrNull()
                     scheduleLastOperationFade()
                 } else {
                     val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
                     todayLimit = spendResult.newTodayLimit
                     howMany = spendResult.newBudget
                     result.text = "$todayLimit"
-                    historyManager.addEntry(fictionalDigit, activeCategory, activeNote, activeTime)
+                    historyManager.addEntry(fictionalDigit, activeCategory, activeNote, activeTime, activeDate.toString())
                     lastSpendAmount = fictionalDigit
                     lastIncomeAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
@@ -1161,7 +1203,9 @@ class MainActivity : FragmentActivity() {
                     lastOpCategory = activeCategory
                     lastOpNote = activeNote
                     lastOpTime = activeTime
+                    lastOpDate = activeDate
                     lastOpWasIncome = false
+                    lastOpEntry = historyManager.loadEntries().firstOrNull()
                     scheduleLastOperationFade()
 
                     // Если включён режим подписки — создаём регулярную трату
@@ -1409,19 +1453,24 @@ class MainActivity : FragmentActivity() {
         activeCategory = lastOpCategory
         activeNote = lastOpNote
         activeTime = lastOpTime ?: java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+        activeDate = lastOpDate ?: java.time.LocalDate.now()
 
         // UI
-        if (activeCategory != null) {
-            binding.activeCategoryIndicator.text = activeCategory
-            binding.activeCategoryIndicator.visibility = View.VISIBLE
-        }
         if (activeNote != null) {
             binding.noteField.setText(activeNote)
         }
         binding.timeFieldText.text = activeTime
+        binding.dateFieldText.text = activeDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
+        // Подсветить выбранную категорию
+        rebuildAllRef?.invoke()
+
+        // Ставим режим редактирования
+        editingEntry = lastOpEntry
+        editingWasIncome = lastOpWasIncome
 
         // Сброс — чтобы повторный клик не работал
         lastOpAmount = null
+        lastOpEntry = null
     }
 
     private fun showDatePickerPopup(anchor: View) {
@@ -1430,9 +1479,16 @@ class MainActivity : FragmentActivity() {
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popup.elevation = 16f
 
+        binding.popupOverlay.alpha = 0f
         binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.animate().alpha(1f).setDuration(200).start()
         binding.popupOverlay.setOnClickListener { popup.dismiss() }
-        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
+        popup.setOnDismissListener {
+            binding.popupOverlay.animate().alpha(0f).setDuration(200).withEndAction {
+                binding.popupOverlay.visibility = View.GONE
+            }.start()
+        }
+        popup.animationStyle = android.R.style.Animation_Dialog
 
         val dayPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.dayPicker)
         val monthPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.monthPicker)
@@ -1471,9 +1527,16 @@ class MainActivity : FragmentActivity() {
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popup.elevation = 16f
 
+        binding.popupOverlay.alpha = 0f
         binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.animate().alpha(1f).setDuration(200).start()
         binding.popupOverlay.setOnClickListener { popup.dismiss() }
-        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
+        popup.setOnDismissListener {
+            binding.popupOverlay.animate().alpha(0f).setDuration(200).withEndAction {
+                binding.popupOverlay.visibility = View.GONE
+            }.start()
+        }
+        popup.animationStyle = android.R.style.Animation_Dialog
 
         val hourPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.hourPicker)
         val minutePicker = popupView.findViewById<android.widget.NumberPicker>(R.id.minutePicker)
