@@ -43,7 +43,7 @@ class EveryDayQuestion : Fragment() {
         // Наблюдатели вынесены на один уровень (не вложенные)
         dataModel.keyTodayLimit.observe(viewLifecycleOwner) {
             keyTodayLimit = it
-            binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()} ₽"
+            binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()}"
         }
 
         dataModel.keyTodayLimitFirstOption.observe(viewLifecycleOwner) {

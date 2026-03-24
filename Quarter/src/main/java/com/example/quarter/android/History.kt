@@ -18,6 +18,7 @@ class History : Fragment() {
     private lateinit var historyManager: HistoryManager
     private var viewMode = MODE_LIST
     private var isIncomeMode = false
+    private var isEditMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,6 +36,8 @@ class History : Fragment() {
         binding.frameForMetrics.animate().alpha(0f).setDuration(200).start()
         binding.modeToggle.animate().alpha(0f).setDuration(200).start()
         binding.typeToggle.animate().alpha(0f).setDuration(200).start()
+        binding.editButton.animate().alpha(0f).setDuration(200).start()
+        binding.confirmButton.animate().alpha(0f).setDuration(200).start()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -43,15 +46,37 @@ class History : Fragment() {
         binding.frameForMetrics.alpha = 0f
         binding.modeToggle.alpha = 0f
         binding.typeToggle.alpha = 0f
+        binding.editButton.alpha = 0f
         binding.clickableBackground.animate().alpha(1f).setDuration(200).start()
         binding.frameForMetrics.animate().alpha(1f).setDuration(200).start()
         binding.modeToggle.animate().alpha(1f).setDuration(200).start()
         binding.typeToggle.animate().alpha(1f).setDuration(200).start()
+        binding.editButton.animate().alpha(1f).setDuration(200).start()
 
         binding.clickableBackground.setOnClickListener { dismissWithAnimation() }
         binding.frameForMetrics.setOnClickListener { }
         binding.modeToggle.setOnClickListener { }
         binding.typeToggle.setOnClickListener { }
+
+        binding.editButton.setOnClickListener {
+            isEditMode = true
+            binding.editButton.visibility = View.GONE
+            binding.confirmButton.alpha = 1f
+            binding.confirmButton.visibility = View.VISIBLE
+            binding.modeToggle.visibility = View.GONE
+            binding.typeToggle.visibility = View.GONE
+            refreshView()
+        }
+
+        binding.confirmButton.setOnClickListener {
+            isEditMode = false
+            binding.confirmButton.visibility = View.GONE
+            binding.editButton.alpha = 1f
+            binding.editButton.visibility = View.VISIBLE
+            binding.modeToggle.visibility = View.VISIBLE
+            binding.typeToggle.visibility = View.VISIBLE
+            refreshView()
+        }
 
         historyManager = HistoryManager(requireContext())
 
@@ -94,6 +119,10 @@ class History : Fragment() {
             MODE_CHART -> "Диаграмма"
             else -> "История $prefix"
         }
+        // Кнопка edit только в режиме списка
+        if (!isEditMode) {
+            binding.editButton.visibility = if (viewMode == MODE_LIST) View.VISIBLE else View.GONE
+        }
     }
 
     private fun refreshView() {
@@ -108,10 +137,10 @@ class History : Fragment() {
         if (currentEntries.isNotEmpty()) {
             binding.periodTotal.visibility = View.VISIBLE
             if (isIncomeMode) {
-                binding.periodTotal.text = "Пополнено: ${dataModel.roundMoney(currentTotal)} ₽"
+                binding.periodTotal.text = "${dataModel.roundMoney(currentTotal)}"
             } else {
                 val totalMoney = dataModel.money.value ?: 0.0
-                binding.periodTotal.text = "Потрачено: ${dataModel.roundMoney(currentTotal)} ₽ из ${dataModel.roundMoney(totalMoney + currentTotal)} ₽"
+                binding.periodTotal.text = "${dataModel.roundMoney(currentTotal)} из ${dataModel.roundMoney(totalMoney + currentTotal)}"
             }
         } else {
             binding.periodTotal.visibility = View.GONE
@@ -138,7 +167,7 @@ class History : Fragment() {
             binding.emptyText.visibility = View.GONE
             binding.historyRecyclerView.visibility = View.VISIBLE
             binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode) { currentIndex ->
+            binding.historyRecyclerView.adapter = HistoryAdapter(items, isIncomeMode, isEditMode) { currentIndex ->
                 val removed = historyManager.removeCurrentEntry(currentIndex, isIncomeMode)
                 if (removed != null) {
                     if (isIncomeMode) {
@@ -147,7 +176,7 @@ class History : Fragment() {
                         dataModel.money.value = dataModel.roundMoney(currentMoney - removed.amount)
 
                         currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
-                        binding.periodTotal.text = "Пополнено: ${dataModel.roundMoney(currentTotal)} ₽"
+                        binding.periodTotal.text = "${dataModel.roundMoney(currentTotal)}"
 
                         val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
                         val days = dataModel.numberOfDays.value ?: 1L
@@ -160,7 +189,7 @@ class History : Fragment() {
 
                         currentTotal = dataModel.roundMoney(currentTotal - removed.amount)
                         val newTotalBudget = dataModel.roundMoney(currentMoney + removed.amount + currentTotal)
-                        binding.periodTotal.text = "Потрачено: ${currentTotal} ₽ из ${newTotalBudget} ₽"
+                        binding.periodTotal.text = "${currentTotal} из ${newTotalBudget}"
 
                         val currentTodayLimit = dataModel.todayLimit.value ?: 0.0
                         val isToday = removed.date == LocalDate.now().toString()

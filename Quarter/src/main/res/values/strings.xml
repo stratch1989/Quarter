@@ -3,6 +3,7 @@
 
     <!-- activity_main -->
     <string name="per_day">/день</string>
+    <string name="note_placeholder">📝  Заметка</string>
     <string name="hint_set_date_and_budget">Введите дату и сумму в настройках</string>
 
     <!-- contentDescription: кнопки activity_main -->
@@ -11,6 +12,7 @@
     <string name="cd_subscriptions">Подписки</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_history">История</string>
+    <string name="cd_edit">Редактировать</string>
 
     <!-- fragment_about -->
     <string name="about_subtitle">Личный бюджет-трекер</string>

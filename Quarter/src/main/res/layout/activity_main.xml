@@ -257,6 +257,7 @@
         android:textColor="@android:color/background_light"
         android:textSize="70sp"
         android:textStyle="bold"
+        android:maxLines="1"
         android:layout_marginStart="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.013"
@@ -495,6 +496,57 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/result" />
 
+    <FrameLayout
+        android:id="@+id/noteFieldContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/note_field_fill"
+        android:foreground="@drawable/note_field_border"
+        android:clipToOutline="true"
+        app:layout_constraintTop_toBottomOf="@id/day_limit"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="10dp"
+            android:paddingEnd="4dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_note"
+                android:scaleType="fitCenter"
+                android:importantForAccessibility="no" />
+
+            <EditText
+                android:id="@+id/noteField"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:minWidth="80dp"
+                android:hint="Заметка"
+                android:textColorHint="#666666"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@android:color/transparent"
+                android:inputType="text"
+                android:maxLength="50"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                android:importantForAutofill="no"
+                android:paddingStart="6dp"
+                android:paddingEnd="10dp"
+                android:gravity="center_vertical" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
     <View
         android:id="@+id/dim_overlay"
         android:layout_width="match_parent"
@@ -529,6 +581,18 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:background="@android:color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/popupOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:visibility="gone"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

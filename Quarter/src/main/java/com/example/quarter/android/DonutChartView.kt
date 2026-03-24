@@ -197,10 +197,10 @@ class DonutChartView @JvmOverloads constructor(
             canvas.drawText(seg.label, cx, cy - 4 * dp, centerTextPaint)
             centerTextPaint.textSize = 14 * dp
             val pct = (seg.amount / total * 100).toInt()
-            canvas.drawText("${formatAmount(seg.amount)} ₽ · $pct%", cx, cy + 14 * dp, centerTextPaint)
+            canvas.drawText("${formatAmount(seg.amount)} · $pct%", cx, cy + 14 * dp, centerTextPaint)
         } else {
             centerTextPaint.textSize = 16 * dp
-            canvas.drawText("${formatAmount(total)} ₽", cx, cy + centerTextPaint.textSize / 3, centerTextPaint)
+            canvas.drawText("${formatAmount(total)}", cx, cy + centerTextPaint.textSize / 3, centerTextPaint)
         }
 
     }

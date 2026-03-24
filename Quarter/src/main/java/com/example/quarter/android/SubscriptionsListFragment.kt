@@ -74,7 +74,7 @@ class SubscriptionsListFragment : Fragment() {
 
             // Сумма и интервал
             val info = TextView(requireContext()).apply {
-                text = "${sub.amount}₽ / ${sub.getDisplayInterval()}"
+                text = "${sub.amount} / ${sub.getDisplayInterval()}"
                 setTextColor(Color.WHITE)
                 textSize = 15f
                 layoutParams = LinearLayout.LayoutParams(

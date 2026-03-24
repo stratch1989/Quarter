@@ -95,6 +95,7 @@ class MainActivity : FragmentActivity() {
     private var isEmojiPickerOpen = false
     private val selectedEmojis = mutableListOf<String>()
     private var activeCategory: String? = null
+    private var activeNote: String? = null
 
     private val categoryEmojis = mutableListOf(
         "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
@@ -239,6 +240,40 @@ class MainActivity : FragmentActivity() {
         val lastOperation: TextView = findViewById(R.id.last_operation)
         val value: TextView = findViewById(R.id.value)
 
+        // Поле заметки
+        fun showNoteMode() {
+            binding.linearLayout.animate().alpha(0f).setDuration(200).start()
+            binding.categoryField.animate().alpha(0f).setDuration(200).start()
+            binding.value.animate().alpha(0f).setDuration(200).start()
+        }
+
+        fun hideNoteMode() {
+            binding.linearLayout.animate().alpha(1f).setDuration(200).start()
+            binding.categoryField.animate().alpha(1f).setDuration(200).start()
+            binding.value.animate().alpha(1f).setDuration(200).start()
+        }
+
+        binding.noteField.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                showNoteMode()
+            } else {
+                val text = binding.noteField.text.toString().trim()
+                activeNote = if (text.isEmpty()) null else text
+                hideNoteMode()
+            }
+        }
+
+        binding.noteField.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                val text = binding.noteField.text.toString().trim()
+                activeNote = if (text.isEmpty()) null else text
+                binding.noteField.clearFocus()
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(binding.noteField.windowToken, 0)
+                true
+            } else false
+        }
+
         fun updateTextView2(text: String, color: Int) {
             val cs = binding.textView2.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
             val resultAmount = result.text.toString().toDoubleOrNull() ?: 0.0
@@ -262,6 +297,44 @@ class MainActivity : FragmentActivity() {
             binding.textView2.setTextColor(color)
             binding.textView2.layoutParams = cs
         }
+
+        // Автоуменьшение шрифта для больших чисел
+        result.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val len = s?.length ?: 0
+                result.textSize = when {
+                    len <= 7 -> 70f
+                    len == 8 -> 60f
+                    len == 9 -> 50f
+                    len == 10 -> 42f
+                    else -> 36f
+                }
+                binding.textView2.textSize = when {
+                    len <= 7 -> 24f
+                    len == 8 -> 20f
+                    len == 9 -> 17f
+                    len == 10 -> 14f
+                    else -> 12f
+                }
+            }
+        })
+
+        value.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val len = s?.length ?: 0
+                value.textSize = when {
+                    len <= 7 -> 60f
+                    len == 8 -> 50f
+                    len == 9 -> 42f
+                    len == 10 -> 36f
+                    else -> 30f
+                }
+            }
+        })
 
         val defaultDayLimitMarginTop = (16 * resources.displayMetrics.density).toInt()
         val statusDayLimitMarginTop = (-4 * resources.displayMetrics.density).toInt()
@@ -496,7 +569,12 @@ class MainActivity : FragmentActivity() {
             popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             popup.elevation = 16f
             subscriptionPopup = popup
-            popup.setOnDismissListener { subscriptionPopup = null }
+            binding.popupOverlay.visibility = View.VISIBLE
+            binding.popupOverlay.setOnClickListener { popup.dismiss() }
+            popup.setOnDismissListener {
+                subscriptionPopup = null
+                binding.popupOverlay.visibility = View.GONE
+            }
 
             fun selectMode(mode: String) {
                 activeSubscriptionMode = mode
@@ -860,6 +938,7 @@ class MainActivity : FragmentActivity() {
                     val preview = dataModel.roundMoney(todayLimit + inputAmount)
                     result.text = preview.toString()
                     result.setTextColor(Color.parseColor("#4CAF50"))
+                    binding.textView2.visibility = View.VISIBLE
                     updateTextView2("/день", Color.parseColor("#4CAF50"))
                     binding.dayLimit.visibility = View.VISIBLE
                     binding.dayLimit.text = "Пополнение"
@@ -873,6 +952,7 @@ class MainActivity : FragmentActivity() {
                         val newDaily = dataModel.roundMoney(remainingBudget / days)
                         result.text = newDaily.toString()
                         result.setTextColor(Color.parseColor("#FF4444"))
+                        binding.textView2.visibility = View.VISIBLE
                         updateTextView2("/день", Color.parseColor("#FF4444"))
                         binding.dayLimit.visibility = View.VISIBLE
                         binding.dayLimit.text = "Новый бюджет"
@@ -882,6 +962,7 @@ class MainActivity : FragmentActivity() {
                         val remainingBudget = dataModel.roundMoney(howMany - inputAmount)
                         result.text = preview.toString()
                         result.setTextColor(Color.WHITE)
+                        binding.textView2.visibility = View.VISIBLE
                         updateTextView2("/день", Color.parseColor("#888888"))
                         resetDayLimitStyle()
                         if (binding.dayLimit.visibility == View.VISIBLE) {
@@ -891,6 +972,7 @@ class MainActivity : FragmentActivity() {
                 }
             } else {
                 result.text = todayLimit.toString()
+                binding.textView2.visibility = View.VISIBLE
                 if (isAddMode) {
                     result.setTextColor(Color.parseColor("#4CAF50"))
                     updateTextView2("/день", Color.parseColor("#4CAF50"))
@@ -1014,21 +1096,23 @@ class MainActivity : FragmentActivity() {
                     dataModel.money.value = howMany
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
-                    historyManager.addIncomeEntry(fictionalDigit, activeCategory)
+                    historyManager.addIncomeEntry(fictionalDigit, activeCategory, activeNote)
                     lastIncomeAmount = fictionalDigit
                     lastSpendAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
-                    lastOperation.text = "+ ${fictionalDigit} ₽$categoryText"
+                    val noteTextIncome = if (activeNote != null) " · $activeNote" else ""
+                    lastOperation.text = "+ ${fictionalDigit}$categoryText$noteTextIncome"
                 } else {
                     val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
                     todayLimit = spendResult.newTodayLimit
                     howMany = spendResult.newBudget
                     result.text = "$todayLimit"
-                    historyManager.addEntry(fictionalDigit, activeCategory)
+                    historyManager.addEntry(fictionalDigit, activeCategory, activeNote)
                     lastSpendAmount = fictionalDigit
                     lastIncomeAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
-                    lastOperation.text = "- ${fictionalDigit} ₽$categoryText"
+                    val noteTextSpend = if (activeNote != null) " · $activeNote" else ""
+                    lastOperation.text = "- ${fictionalDigit}$categoryText$noteTextSpend"
 
                     // Если включён режим подписки — создаём регулярную трату
                     if (activeSubscriptionMode != null) {
@@ -1065,6 +1149,8 @@ class MainActivity : FragmentActivity() {
                 hasUnsavedChanges = true
                 fictionalValue = ""
                 value.text = ""
+                activeNote = null
+                binding.noteField.text.clear()
                 updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
                 if (isAddMode) {
                     result.setTextColor(Color.parseColor("#4CAF50"))
@@ -1242,6 +1328,9 @@ class MainActivity : FragmentActivity() {
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popup.isClippingEnabled = false
         popup.elevation = 16f
+        binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.setOnClickListener { popup.dismiss() }
+        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
 
         val numberText = popupView.findViewById<TextView>(R.id.interval_number)
         val unitText = popupView.findViewById<TextView>(R.id.interval_unit)

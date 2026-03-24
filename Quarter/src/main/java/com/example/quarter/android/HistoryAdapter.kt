@@ -23,6 +23,7 @@ sealed class HistoryItem {
 class HistoryAdapter(
     private val items: MutableList<HistoryItem>,
     private val isIncome: Boolean = false,
+    private val isEditMode: Boolean = false,
     private val onDelete: (Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -87,13 +88,13 @@ class HistoryAdapter(
                     else -> LocalDate.parse(item.date).format(dateFormatter)
                 }
                 val sign = if (isIncome) "+" else "-"
-                holder.dayTotal.text = "$sign ${item.total} ₽"
+                holder.dayTotal.text = "$sign ${item.total}"
             }
             is HistoryItem.CategoryHeader -> {
                 holder as DayHeaderViewHolder
                 holder.dayTitle.text = item.category ?: "Без категории"
                 val sign = if (isIncome) "+" else "-"
-                holder.dayTotal.text = "$sign ${item.total} ₽"
+                holder.dayTotal.text = "$sign ${item.total}"
             }
             is HistoryItem.CategoryLegend -> {
                 holder as LegendViewHolder
@@ -103,15 +104,19 @@ class HistoryAdapter(
                 val formatted = if (item.amount == item.amount.toLong().toDouble())
                     item.amount.toLong().toString() else item.amount.toString()
                 val sign = if (isIncome) "+" else "-"
-                holder.amount.text = "$sign$formatted ₽"
+                holder.amount.text = "$sign$formatted"
             }
             is HistoryItem.Current -> {
                 holder as EntryViewHolder
                 val sign = if (isIncome) "+" else "-"
                 val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                holder.amount.text = "$sign ${item.entry.amount} ₽$cat"
+                val noteText = if (item.entry.note != null) {
+                    val truncated = if (item.entry.note.length > 12) item.entry.note.take(12) + "..." else item.entry.note
+                    " · $truncated"
+                } else ""
+                holder.amount.text = "$sign ${item.entry.amount}$cat$noteText"
                 holder.date.text = ""
-                holder.deleteButton.visibility = View.VISIBLE
+                holder.deleteButton.visibility = if (isEditMode) View.VISIBLE else View.GONE
                 holder.deleteButton.setOnClickListener {
                     val pos = holder.adapterPosition
                     if (pos != RecyclerView.NO_POSITION) {
@@ -166,7 +171,11 @@ class HistoryAdapter(
                 holder as EntryViewHolder
                 val sign = if (isIncome) "+" else "-"
                 val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                holder.amount.text = "$sign ${item.entry.amount} ₽$cat"
+                val noteText = if (item.entry.note != null) {
+                    val truncated = if (item.entry.note.length > 12) item.entry.note.take(12) + "..." else item.entry.note
+                    " · $truncated"
+                } else ""
+                holder.amount.text = "$sign ${item.entry.amount}$cat$noteText"
                 holder.date.text = ""
                 holder.deleteButton.visibility = View.GONE
             }

@@ -49,7 +49,7 @@ class DataConflictFragment : Fragment() {
             (prefs.getString("HOW_MANY", "0") ?: "0").toDouble()
         } catch (_: Exception) { 0.0 }
         val localDays = prefs.getLong("NUMBER_OF_DAYS", 0L)
-        localInfo.text = "Бюджет: ${localHowMany.toLong()} ₽, дней: $localDays"
+        localInfo.text = "Бюджет: ${localHowMany.toLong()}, дней: $localDays"
 
         // Загружаем облачные данные
         val uid = AuthManager.currentUser?.uid
@@ -58,7 +58,7 @@ class DataConflictFragment : Fragment() {
                 val data = FirestoreSync.loadBudgetFromFirestore(uid)
                 cloudData = data
                 if (data != null) {
-                    cloudInfo.text = "Бюджет: ${data.howMany.toLong()} ₽, дней: ${data.numberOfDays}"
+                    cloudInfo.text = "Бюджет: ${data.howMany.toLong()}, дней: ${data.numberOfDays}"
                 } else {
                     cloudInfo.text = "Нет данных"
                 }
