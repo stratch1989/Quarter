@@ -67,11 +67,11 @@
     <string name="menu_account">👤  Аккаунт</string>
 
     <!-- popup_subscription_menu -->
-    <string name="sub_menu_disable">✕  Отключить</string>
-    <string name="sub_menu_daily">📅  Ежедневная</string>
-    <string name="sub_menu_weekly">📆  Еженедельная</string>
-    <string name="sub_menu_monthly">🗓️  Месячная</string>
-    <string name="sub_menu_custom">⚙️  Свой интервал</string>
-    <string name="sub_menu_list">📋  Текущие подписки</string>
+    <string name="sub_menu_disable">Отключить</string>
+    <string name="sub_menu_daily">Ежедневная</string>
+    <string name="sub_menu_weekly">Еженедельная</string>
+    <string name="sub_menu_monthly">Месячная</string>
+    <string name="sub_menu_custom">Свой интервал</string>
+    <string name="sub_menu_list">Текущие подписки</string>
 
 </resources>

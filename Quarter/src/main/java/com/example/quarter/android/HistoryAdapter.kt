@@ -1,5 +1,6 @@
 package com.example.quarter.android
 
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import java.util.Locale
 sealed class HistoryItem {
     data class DayHeader(val date: String, val total: Double) : HistoryItem()
     data class CategoryHeader(val category: String?, val total: Double) : HistoryItem()
+    data class CategoryLegend(val label: String, val amount: Double, val color: Int) : HistoryItem()
     data class Current(val entry: HistoryEntry, val currentIndex: Int) : HistoryItem()
     object PeriodDivider : HistoryItem()
     data class Old(val entry: HistoryEntry) : HistoryItem()
@@ -34,6 +36,7 @@ class HistoryAdapter(
         const val TYPE_PERIOD_DIVIDER = 2
         const val TYPE_OLD = 3
         const val TYPE_CATEGORY_HEADER = 4
+        const val TYPE_CATEGORY_LEGEND = 5
     }
 
     class DayHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -49,9 +52,16 @@ class HistoryAdapter(
 
     class DividerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
+    class LegendViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val dot: View = itemView.findViewById(R.id.legendDot)
+        val label: TextView = itemView.findViewById(R.id.legendLabel)
+        val amount: TextView = itemView.findViewById(R.id.legendAmount)
+    }
+
     override fun getItemViewType(position: Int): Int = when (items[position]) {
         is HistoryItem.DayHeader -> TYPE_DAY_HEADER
         is HistoryItem.CategoryHeader -> TYPE_CATEGORY_HEADER
+        is HistoryItem.CategoryLegend -> TYPE_CATEGORY_LEGEND
         is HistoryItem.Current -> TYPE_CURRENT
         is HistoryItem.PeriodDivider -> TYPE_PERIOD_DIVIDER
         is HistoryItem.Old -> TYPE_OLD
@@ -61,6 +71,7 @@ class HistoryAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             TYPE_DAY_HEADER, TYPE_CATEGORY_HEADER -> DayHeaderViewHolder(inflater.inflate(R.layout.list_item_history_day_header, parent, false))
+            TYPE_CATEGORY_LEGEND -> LegendViewHolder(inflater.inflate(R.layout.list_item_category_legend, parent, false))
             TYPE_PERIOD_DIVIDER -> DividerViewHolder(inflater.inflate(R.layout.list_item_history_divider, parent, false))
             else -> EntryViewHolder(inflater.inflate(R.layout.list_item_history, parent, false))
         }
@@ -83,6 +94,16 @@ class HistoryAdapter(
                 holder.dayTitle.text = item.category ?: "Без категории"
                 val sign = if (isIncome) "+" else "-"
                 holder.dayTotal.text = "$sign ${item.total} ₽"
+            }
+            is HistoryItem.CategoryLegend -> {
+                holder as LegendViewHolder
+                val bg = holder.dot.background as GradientDrawable
+                bg.setColor(item.color)
+                holder.label.text = item.label
+                val formatted = if (item.amount == item.amount.toLong().toDouble())
+                    item.amount.toLong().toString() else item.amount.toString()
+                val sign = if (isIncome) "+" else "-"
+                holder.amount.text = "$sign$formatted ₽"
             }
             is HistoryItem.Current -> {
                 holder as EntryViewHolder

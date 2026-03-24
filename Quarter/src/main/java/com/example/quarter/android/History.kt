@@ -244,34 +244,27 @@ class History : Fragment() {
     ): MutableList<HistoryItem> {
         val items = mutableListOf<HistoryItem>()
 
-        val grouped = currentEntries.groupBy { it.category }
-        val sortedKeys = grouped.keys.sortedWith(
-            compareBy<String?> { it == null }.thenBy { it ?: "" }
-        )
-        sortedKeys.forEach { category ->
-            val entries = grouped[category] ?: return@forEach
-            val total = dataModel.roundMoney(entries.sumOf { it.amount })
-            items.add(HistoryItem.CategoryHeader(category, total))
-            entries.forEach { entry ->
-                val currentIndex = currentEntries.indexOf(entry)
-                items.add(HistoryItem.Current(entry, currentIndex))
+        fun addLegendItems(entries: List<HistoryEntry>) {
+            val grouped = entries.groupBy { it.category }
+            val sortedKeys = grouped.keys.sortedWith(
+                compareBy<String?> { it == null }
+                    .thenByDescending { key -> grouped[key]?.sumOf { it.amount } ?: 0.0 }
+            )
+            var colorIndex = 0
+            sortedKeys.forEach { category ->
+                val total = dataModel.roundMoney(grouped[category]!!.sumOf { it.amount })
+                val label = category ?: "Без категории"
+                val color = if (category == null) DonutChartView.NO_CATEGORY_COLOR
+                else DonutChartView.COLORS[colorIndex++ % DonutChartView.COLORS.size]
+                items.add(HistoryItem.CategoryLegend(label, total, color))
             }
         }
 
+        addLegendItems(currentEntries)
+
         if (oldEntries.isNotEmpty()) {
             items.add(HistoryItem.PeriodDivider)
-            val oldGrouped = oldEntries.groupBy { it.category }
-            val sortedOldKeys = oldGrouped.keys.sortedWith(
-                compareBy<String?> { it == null }.thenBy { it ?: "" }
-            )
-            sortedOldKeys.forEach { category ->
-                val entries = oldGrouped[category] ?: return@forEach
-                val total = dataModel.roundMoney(entries.sumOf { it.amount })
-                items.add(HistoryItem.CategoryHeader(category, total))
-                entries.forEach { entry ->
-                    items.add(HistoryItem.Old(entry))
-                }
-            }
+            addLegendItems(oldEntries)
         }
 
         return items

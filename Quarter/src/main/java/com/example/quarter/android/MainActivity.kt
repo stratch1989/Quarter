@@ -1236,11 +1236,11 @@ class MainActivity : FragmentActivity() {
     private fun showCustomIntervalPopup(anchor: View) {
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_custom_interval, null)
         val dpToPx = resources.displayMetrics.density
-        val popupWidthPx = (275 * dpToPx).toInt()
-        val popupHeightPx = (180 * dpToPx).toInt()
+        val popupWidthPx = (280 * dpToPx).toInt()
 
-        val popup = PopupWindow(popupView, popupWidthPx, popupHeightPx, true)
+        val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.isClippingEnabled = false
         popup.elevation = 16f
 
         val numberText = popupView.findViewById<TextView>(R.id.interval_number)
@@ -1273,6 +1273,9 @@ class MainActivity : FragmentActivity() {
         }
 
         // Стрелки числа
+        popupView.findViewById<TextView>(R.id.number_up).setOnClickListener {
+            if (currentNumber < 31) { currentNumber++; numberText.text = "$currentNumber" }
+        }
         popupView.findViewById<TextView>(R.id.number_up).setOnTouchListener { _, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> startRepeat {
@@ -1282,10 +1285,13 @@ class MainActivity : FragmentActivity() {
             }
             true
         }
+        popupView.findViewById<TextView>(R.id.number_down).setOnClickListener {
+            if (currentNumber > 1) { currentNumber--; numberText.text = "$currentNumber" }
+        }
         popupView.findViewById<TextView>(R.id.number_down).setOnTouchListener { _, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> startRepeat {
-                    if (currentNumber > 2) { currentNumber--; numberText.text = "$currentNumber" }
+                    if (currentNumber > 1) { currentNumber--; numberText.text = "$currentNumber" }
                 }
                 android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
             }
@@ -1293,6 +1299,10 @@ class MainActivity : FragmentActivity() {
         }
 
         // Стрелки единицы
+        popupView.findViewById<TextView>(R.id.unit_up).setOnClickListener {
+            currentUnitIndex = (currentUnitIndex + 1) % units.size
+            unitText.text = units[currentUnitIndex]
+        }
         popupView.findViewById<TextView>(R.id.unit_up).setOnTouchListener { _, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> startRepeat {
@@ -1302,6 +1312,10 @@ class MainActivity : FragmentActivity() {
                 android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
             }
             true
+        }
+        popupView.findViewById<TextView>(R.id.unit_down).setOnClickListener {
+            currentUnitIndex = (currentUnitIndex - 1 + units.size) % units.size
+            unitText.text = units[currentUnitIndex]
         }
         popupView.findViewById<TextView>(R.id.unit_down).setOnTouchListener { _, event ->
             when (event.action) {
@@ -1314,8 +1328,8 @@ class MainActivity : FragmentActivity() {
             true
         }
 
-        // Кнопка "Готово"
-        popupView.findViewById<TextView>(R.id.btn_done).setOnClickListener {
+        // Кнопка подтверждения
+        popupView.findViewById<ImageButton>(R.id.btn_done).setOnClickListener {
             customIntervalDays = currentNumber
             customIntervalUnit = unitKeys[currentUnitIndex]
             activeSubscriptionMode = "custom"
@@ -1324,7 +1338,9 @@ class MainActivity : FragmentActivity() {
         }
 
         val xOff = anchor.width - popupWidthPx
-        popup.showAsDropDown(anchor, xOff, -anchor.height)
+        // Выровнять верх попапа (кнопку okey) с верхом anchor (кнопки подписок)
+        val yOff = -anchor.height
+        popup.showAsDropDown(anchor, xOff, yOff)
     }
 
     override fun onNewIntent(intent: Intent?) {

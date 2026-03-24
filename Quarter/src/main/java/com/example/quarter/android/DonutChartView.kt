@@ -90,9 +90,7 @@ class DonutChartView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val dp = resources.displayMetrics.density
-        val ringArea = (70 * 2 + 24 + 16) * dp
-        val legendArea = segments.size * 24 * dp + 20 * dp
-        val h = (ringArea + legendArea).toInt()
+        val h = ((70 * 2 + 24 + 16) * dp).toInt()
         setMeasuredDimension(w, resolveSize(h, heightMeasureSpec))
     }
 
@@ -205,22 +203,6 @@ class DonutChartView @JvmOverloads constructor(
             canvas.drawText("${formatAmount(total)} ₽", cx, cy + centerTextPaint.textSize / 3, centerTextPaint)
         }
 
-        // Легенда
-        val legendTop = cy + radius + strokeW / 2 + 24 * dp
-        val lineH = 24 * dp
-        val dotR = 5 * dp
-        legendLabelPaint.textSize = 13.5f * dp
-        legendAmountPaint.textSize = 13.5f * dp
-        val leftPad = 4 * dp
-        val rightPad = width - 4 * dp
-
-        for ((i, seg) in segments.withIndex()) {
-            val y = legendTop + i * lineH
-            dotPaint.color = seg.color
-            canvas.drawCircle(leftPad + dotR, y, dotR, dotPaint)
-            canvas.drawText(seg.label, leftPad + dotR * 3 + 2 * dp, y + legendLabelPaint.textSize / 3, legendLabelPaint)
-            canvas.drawText("${formatAmount(seg.amount)} ₽", rightPad, y + legendAmountPaint.textSize / 3, legendAmountPaint)
-        }
     }
 
     private fun formatAmount(amount: Double): String {
