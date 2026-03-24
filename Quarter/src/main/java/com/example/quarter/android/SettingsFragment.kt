@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LifecycleOwner
 import com.example.quarter.android.databinding.FragmentSettingsBinding
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -15,12 +14,13 @@ import java.time.temporal.ChronoUnit
 
 class SettingsFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentSettingsBinding
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         binding.root.requestFocus()
         return binding.root
     }
@@ -33,7 +33,7 @@ class SettingsFragment : Fragment() {
 
 
         // Получение актуального кол-ва денег на весь срок
-        dataModel.money.observe(activity as LifecycleOwner) {
+        dataModel.money.observe(viewLifecycleOwner) {
             if (it != 0.0) {
                 binding.howMany.text = (Math.round(it * 100.0) / 100.0).toString()
                 dayLimit = it.toInt()
@@ -64,7 +64,7 @@ class SettingsFragment : Fragment() {
         }
 
         //Получение актуальной даты
-        dataModel.dayText.observe(activity as LifecycleOwner) {
+        dataModel.dayText.observe(viewLifecycleOwner) {
             setDaysTextWithCount(it, dateFull)
         }
 
@@ -72,13 +72,12 @@ class SettingsFragment : Fragment() {
             val numberOfDays: Long = ChronoUnit.DAYS.between(today, dateFull)
             if (numberOfDays > 0 && dayLimit != 0) {
                 val daily = dayLimit / numberOfDays.toInt()
-                dataModel.dayLimit.value = daily.toDouble()
                 binding.dayLimit.text = "${daily} в день"
             }
         }
 
         //Получение актуальной даты (полной)
-        dataModel.dateFull.observe(activity as LifecycleOwner) {
+        dataModel.dateFull.observe(viewLifecycleOwner) {
             dateFull = it
             dataModel.dayText.value?.let { txt -> setDaysTextWithCount(txt, dateFull) }
             updateDayLimit()
@@ -103,6 +102,11 @@ class SettingsFragment : Fragment() {
                 .addToBackStack(null)
                 .commit()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

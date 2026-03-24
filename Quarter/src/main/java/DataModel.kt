@@ -8,7 +8,6 @@ public class DataModel : ViewModel() {
     val dayText: MutableLiveData<String> by lazy { MutableLiveData<String>() }
     val dayNumber: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
     val dateFull: MutableLiveData<LocalDate> by lazy { MutableLiveData<LocalDate>() }
-    val dayLimit: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
     val todayLimit: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
     val lastDate: MutableLiveData<LocalDate> by lazy { MutableLiveData<LocalDate>() }
     val numberOfDays: MutableLiveData<Long> by lazy { MutableLiveData<Long>() }
@@ -17,8 +16,6 @@ public class DataModel : ViewModel() {
 
     // Auth & Subscription
     val isPremium: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
-    val isLoggedIn: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
-    val userName: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
     //два среднесуточных значения для выбора
     val avarageDailyValue: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
@@ -61,7 +58,7 @@ public class DataModel : ViewModel() {
         val secondOption = howMany / (numberOfDays - 1).toDouble()
         avarageDailyValueSecondOption.value = secondOption
 
-        keyTodayLimitFirstOption.value = currentKeyTodayLimit + (firstOption * daysSinceLastDate).toInt()
+        keyTodayLimitFirstOption.value = roundMoney(currentKeyTodayLimit + firstOption * daysSinceLastDate)
         keyTodayLimitSecondOption.value = secondOption
     }
 

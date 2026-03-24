@@ -56,12 +56,10 @@ import com.example.quarter.android.auth.AuthFragment
 import com.example.quarter.android.auth.AuthManager
 import com.example.quarter.android.billing.PremiumGate
 import com.example.quarter.android.billing.PremiumManager
-import com.example.quarter.android.billing.SubscriptionFragment
 import com.example.quarter.android.data.BudgetData
 import com.example.quarter.android.data.FirestoreSync
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -171,9 +169,6 @@ class MainActivity : FragmentActivity() {
     }
 
     private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
-        val user = auth.currentUser
-        dataModel.isLoggedIn.value = user != null
-        dataModel.userName.value = user?.email
     }
 
     private val isFirebaseAvailable: Boolean
@@ -195,7 +190,7 @@ class MainActivity : FragmentActivity() {
         }
 
         // Проверяем Premium-статус в фоне
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             val result = PremiumManager(this@MainActivity).checkPremiumStatus()
             dataModel.isPremium.value = result.isPremium
         }
@@ -282,7 +277,7 @@ class MainActivity : FragmentActivity() {
 
             if (howMany != 0.0) {
                 todayLimit = 0.0
-                todayLimit += avarageDailyValue.toInt()
+                todayLimit += Math.floor(avarageDailyValue)
                 if (keyTodayLimit != 0.0) {
                     todayLimit = keyTodayLimit
                     keyTodayLimit = 0.0
@@ -492,7 +487,6 @@ class MainActivity : FragmentActivity() {
                 frag.setOnDeleteListener { index ->
                     if (index in subscriptions.indices) {
                         subscriptions.removeAt(index)
-                        SubscriptionManager(this).saveSubscriptions(subscriptions)
                     }
                 }
                 supportFragmentManager.beginTransaction()
@@ -1086,7 +1080,7 @@ class MainActivity : FragmentActivity() {
 
         dataModel.saveClick.observe(this) {
             todayLimit = 0.0
-            todayLimit += (avarageDailyValue).toInt()
+            todayLimit += Math.floor(avarageDailyValue)
             dataModel.todayLimit.value = todayLimit
             result.text = todayLimit.toString()
             lastSpendAmount = null
@@ -1295,7 +1289,7 @@ class MainActivity : FragmentActivity() {
         val data: Uri? = intent?.data
         if (data?.scheme == "quarter" && data.host == "payment") {
             // Полная перепроверка Premium-статуса после возврата из оплаты
-            CoroutineScope(Dispatchers.Main).launch {
+            lifecycleScope.launch {
                 val result = PremiumManager(this@MainActivity).checkPremiumStatus()
                 dataModel.isPremium.value = result.isPremium
             }
@@ -1330,7 +1324,7 @@ class MainActivity : FragmentActivity() {
         editor.putString("SELECTED_INCOME_EMOJIS", selectedIncomeEmojis.joinToString(","))
         editor.putString("INCOME_CATEGORY_EMOJIS", incomeCategoryEmojis.joinToString(","))
         if (hasUnsavedChanges) {
-            val result: String = binding.result.text.toString()
+            val result: String = todayLimit.toString()
             editor.putString("STRING_KEY", result)
             editor.putString("HOW_MANY", howMany.toString())
             editor.putLong("NUMBER_OF_DAYS", numberOfDays)

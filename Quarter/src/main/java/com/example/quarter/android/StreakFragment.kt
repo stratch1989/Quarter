@@ -8,13 +8,14 @@ import androidx.fragment.app.Fragment
 import com.example.quarter.android.databinding.FragmentStreakBinding
 
 class StreakFragment : Fragment() {
-    lateinit var binding: FragmentStreakBinding
+    private var _binding: FragmentStreakBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentStreakBinding.inflate(inflater, container, false)
+        _binding = FragmentStreakBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -51,6 +52,11 @@ class StreakFragment : Fragment() {
             mod10 in 2..4 -> "дня"
             else -> "дней"
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

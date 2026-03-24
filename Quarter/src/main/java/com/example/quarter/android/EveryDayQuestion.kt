@@ -8,18 +8,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LifecycleOwner
 import com.example.quarter.android.databinding.FragmentEveryDayQuestionBinding
 import java.time.temporal.ChronoUnit
 
 class EveryDayQuestion : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentEveryDayQuestionBinding
+    private var _binding: FragmentEveryDayQuestionBinding? = null
+    private val binding get() = _binding!!
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentEveryDayQuestionBinding.inflate(inflater, container, false)
+        _binding = FragmentEveryDayQuestionBinding.inflate(inflater, container, false)
         binding.root.requestFocus()
         return binding.root
     }
@@ -41,26 +41,26 @@ class EveryDayQuestion : Fragment() {
         var keyTodayLimit = 0.0
 
         // Наблюдатели вынесены на один уровень (не вложенные)
-        dataModel.keyTodayLimit.observe(activity as LifecycleOwner) {
+        dataModel.keyTodayLimit.observe(viewLifecycleOwner) {
             keyTodayLimit = it
             binding.dayLimit.text = "Вчера вы сэкономили ${keyTodayLimit.toInt()} ₽"
         }
 
-        dataModel.keyTodayLimitFirstOption.observe(activity as LifecycleOwner) {
+        dataModel.keyTodayLimitFirstOption.observe(viewLifecycleOwner) {
             keyTodayLimitFirstOption = it
         }
 
-        dataModel.avarageDailyValueFirstOption.observe(activity as LifecycleOwner) {
+        dataModel.avarageDailyValueFirstOption.observe(viewLifecycleOwner) {
             avarageDailyValueFirstOption = it
         }
 
-        dataModel.avarageDailyValueSecondOption.observe(activity as LifecycleOwner) {
+        dataModel.avarageDailyValueSecondOption.observe(viewLifecycleOwner) {
             avarageDailyValueSecondOption = it
         }
 
         dataModel.avarageDailyValue.value = avarageDailyValueSecondOption
 
-        dataModel.keyTodayLimitSecondOption.observe(activity as LifecycleOwner) {
+        dataModel.keyTodayLimitSecondOption.observe(viewLifecycleOwner) {
             keyTodayLimitSecondOption = it
         }
 
@@ -79,6 +79,11 @@ class EveryDayQuestion : Fragment() {
 
     }
 
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
     companion object {
         @JvmStatic

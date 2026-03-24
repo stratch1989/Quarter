@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.quarter.android.databinding.FragmentDatePickerBinding
@@ -19,14 +18,15 @@ import java.util.Calendar
 
 class DatePickerFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentDatePickerBinding
+    private var _binding: FragmentDatePickerBinding? = null
+    private val binding get() = _binding!!
 
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentDatePickerBinding.inflate(inflater, container, false)
+        _binding = FragmentDatePickerBinding.inflate(inflater, container, false)
         binding.root.requestFocus()
         return binding.root
     }
@@ -40,7 +40,7 @@ class DatePickerFragment : Fragment() {
         var numberOfDay = 0
 
         // numberOfDay нужен для отметки выбранного дня
-        dataModel.dayNumber.observe(activity as LifecycleOwner) {
+        dataModel.dayNumber.observe(viewLifecycleOwner) {
             numberOfDay = it
         }
 
@@ -65,7 +65,7 @@ class DatePickerFragment : Fragment() {
         }
 
         var money = 0.0
-        dataModel.money.observe(activity as LifecycleOwner) {
+        dataModel.money.observe(viewLifecycleOwner) {
             money = it
         }
 
@@ -89,6 +89,11 @@ class DatePickerFragment : Fragment() {
         }
         recyclerView.adapter = adapter
     }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     companion object {
         @JvmStatic
         fun newInstance() = DatePickerFragment()

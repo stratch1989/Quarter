@@ -16,8 +16,7 @@ import com.example.quarter.android.R
 import com.example.quarter.android.data.FirestoreSync
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import android.widget.EditText
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,7 +33,7 @@ class AuthFragment : Fragment() {
         if (result.resultCode == Activity.RESULT_OK) {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).result
             account?.idToken?.let { idToken ->
-                CoroutineScope(Dispatchers.Main).launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     try {
                         val user = AuthManager.signInWithGoogle(idToken)
                         if (user != null) {
@@ -140,7 +139,7 @@ class AuthFragment : Fragment() {
             }
 
             authButton.isEnabled = false
-            CoroutineScope(Dispatchers.Main).launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     val user = if (isRegisterMode) {
                         AuthManager.registerWithEmail(email, password)
@@ -169,9 +168,6 @@ class AuthFragment : Fragment() {
     }
 
     private fun onAuthSuccess(uid: String, email: String) {
-        dataModel.isLoggedIn.value = true
-        dataModel.userName.value = email
-
         val prefs = requireContext().getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE)
 
         // Проверяем, есть ли данные в Firestore
@@ -241,9 +237,9 @@ class AuthFragment : Fragment() {
 
         signOutButton.setOnClickListener {
             AuthManager.signOut(requireContext(), webClientId)
-            dataModel.isLoggedIn.value = false
+            context?.getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE)
+                ?.edit()?.putBoolean("SYNCED_TO_FIRESTORE", false)?.apply()
             dataModel.isPremium.value = false
-            dataModel.userName.value = null
             parentFragmentManager.popBackStack()
         }
 
@@ -256,18 +252,6 @@ class AuthFragment : Fragment() {
         view?.findViewById<TextView>(R.id.error_text)?.let {
             it.text = message
             it.visibility = View.VISIBLE
-        }
-    }
-
-    private fun getFirebaseErrorMessage(e: Exception): String {
-        val msg = e.localizedMessage ?: e.message ?: "Неизвестная ошибка"
-        return when {
-            msg.contains("no user record", ignoreCase = true) -> "Пользователь не найден"
-            msg.contains("password is invalid", ignoreCase = true) -> "Неверный пароль"
-            msg.contains("email address is badly formatted", ignoreCase = true) -> "Некорректный email"
-            msg.contains("already in use", ignoreCase = true) -> "Email уже зарегистрирован"
-            msg.contains("network", ignoreCase = true) -> "Ошибка сети. Проверьте подключение"
-            else -> msg
         }
     }
 

@@ -7,18 +7,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LifecycleOwner
 import com.example.quarter.android.databinding.FragmentBudgetInputBinding
 
 class BudgetInputFragment : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentBudgetInputBinding
+    private var _binding: FragmentBudgetInputBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentBudgetInputBinding.inflate(inflater, container, false)
+        _binding = FragmentBudgetInputBinding.inflate(inflater, container, false)
         binding.root.requestFocus()
         return binding.root
     }
@@ -28,7 +28,7 @@ class BudgetInputFragment : Fragment() {
         var isPlaceholder = true
 
         // Получение актуального кол-ва денег на весь срок
-        dataModel.money.observe(activity as LifecycleOwner) {
+        dataModel.money.observe(viewLifecycleOwner) {
             if (it != 0.0) {
                 binding.howMany.text = it.toString()
                 howMany = it.toString()
@@ -100,6 +100,11 @@ class BudgetInputFragment : Fragment() {
         }
         buttonMetrics(binding.frameForMetrics,
             displayMetricsHeight/1.6, displayMetricsWidth/1.3)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

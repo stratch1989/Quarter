@@ -13,7 +13,8 @@ import java.time.LocalDate
 
 class History : Fragment() {
     private val dataModel: DataModel by activityViewModels()
-    lateinit var binding: FragmentHistoryBinding
+    private var _binding: FragmentHistoryBinding? = null
+    private val binding get() = _binding!!
     private lateinit var historyManager: HistoryManager
     private var viewMode = MODE_LIST
     private var isIncomeMode = false
@@ -22,7 +23,7 @@ class History : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentHistoryBinding.inflate(inflater, container, false)
+        _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         binding.root.requestFocus()
         return binding.root
     }
@@ -278,6 +279,11 @@ class History : Fragment() {
 
     private fun groupByDay(entries: List<HistoryEntry>): Map<String, List<HistoryEntry>> {
         return entries.groupBy { it.date }.toSortedMap(compareByDescending { it })
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

@@ -7,12 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.quarter.android.R
 import com.example.quarter.android.auth.AuthManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -36,6 +36,10 @@ class DataConflictFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            // Блокируем кнопку назад — пользователь должен сделать выбор
+        }
+
         val localInfo = view.findViewById<TextView>(R.id.local_info)
         val cloudInfo = view.findViewById<TextView>(R.id.cloud_info)
 
@@ -50,7 +54,7 @@ class DataConflictFragment : Fragment() {
         // Загружаем облачные данные
         val uid = AuthManager.currentUser?.uid
         if (uid != null) {
-            CoroutineScope(Dispatchers.Main).launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val data = FirestoreSync.loadBudgetFromFirestore(uid)
                 cloudData = data
                 if (data != null) {
