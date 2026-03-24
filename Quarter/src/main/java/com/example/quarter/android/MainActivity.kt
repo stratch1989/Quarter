@@ -1025,10 +1025,18 @@ class MainActivity : FragmentActivity() {
                 hasUnsavedChanges = true
                 fictionalValue = ""
                 value.text = ""
-                result.setTextColor(Color.WHITE)
                 updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
-                updateDayLimitText()
-                binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                if (isAddMode) {
+                    result.setTextColor(Color.parseColor("#4CAF50"))
+                    binding.dayLimit.visibility = android.view.View.VISIBLE
+                    binding.dayLimit.text = "Пополнение"
+                    binding.dayLimit.setTextColor(Color.parseColor("#4CAF50"))
+                    setDayLimitStatusStyle()
+                } else {
+                    result.setTextColor(Color.WHITE)
+                    updateDayLimitText()
+                    binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+                }
             }
         }
 
