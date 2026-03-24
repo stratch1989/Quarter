@@ -1,6 +1,7 @@
 package com.example.quarter.android.data
 
 import android.content.Context
+import android.util.Log
 import com.example.quarter.android.HistoryManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -55,14 +56,21 @@ object FirestoreSync {
         }
 
         val userDoc = db.collection("users").document(uid)
-        userDoc.set(mapOf("budget" to budgetData, "categories" to categories), SetOptions.merge())
-        userDoc.update(
+        val batch = db.batch()
+        batch.set(userDoc, mapOf("budget" to budgetData, "categories" to categories), SetOptions.merge())
+        batch.set(
+            userDoc,
             mapOf(
                 "history" to expenseEntries,
                 "incomeHistory" to incomeEntries,
                 "periodStartTs" to historyManager.getPeriodStartTimestamp()
-            )
+            ),
+            SetOptions.merge()
         )
+        batch.commit()
+            .addOnFailureListener { e ->
+                Log.e("FirestoreSync", "syncLocalToFirestore failed", e)
+            }
     }
 
     /**
@@ -82,6 +90,9 @@ object FirestoreSync {
             )
         )
         db.collection("users").document(uid).set(data, SetOptions.merge())
+            .addOnFailureListener { e ->
+                Log.e("FirestoreSync", "saveBudgetToFirestore failed", e)
+            }
     }
 
     /**
@@ -132,6 +143,9 @@ object FirestoreSync {
             )
         )
         db.collection("users").document(uid).set(profile, SetOptions.merge())
+            .addOnFailureListener { e ->
+                Log.e("FirestoreSync", "createProfile failed", e)
+            }
     }
 
     /**
@@ -158,6 +172,9 @@ object FirestoreSync {
             )
         )
         db.collection("users").document(uid).set(data, SetOptions.merge())
+            .addOnFailureListener { e ->
+                Log.e("FirestoreSync", "updateSubscriptionStatus failed", e)
+            }
     }
 
     /**
