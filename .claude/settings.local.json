@@ -46,7 +46,15 @@
       "Bash(tr '>' '\\\\n')",
       "Bash(printf 'Chapter 1: Описание и исследование предметной области\\\\n')",
       "Bash(printf 'Chapter 2: Проектная часть\\\\n')",
-      "Bash(C:/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe shell:*)"
+      "Bash(C:/Users/ruslan/AppData/Local/Android/Sdk/platform-tools/adb.exe shell:*)",
+      "Bash(xargs wc:*)",
+      "Bash(./gradlew wrapper:*)",
+      "Bash(where java:*)",
+      "Bash(\"C:/Program Files/Android/Android Studio/jbr/bin/java\" -version 2>&1)",
+      "Bash(./gradlew --version)",
+      "Bash(./gradlew help:*)",
+      "Bash(find C:/Users/ruslan/Desktop/Quarter -name *.json -type f)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

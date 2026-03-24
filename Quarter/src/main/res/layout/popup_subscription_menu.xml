@@ -1,16 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/history_popup_bg"
     android:orientation="vertical"
     android:padding="10dp">
 
+    <!-- Отключить (скрыт по умолчанию) -->
     <LinearLayout
-        android:id="@+id/menu_budget"
+        android:id="@+id/menu_sub_disable"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✕  Отключить"
+            android:textColor="#FF5252"
+            android:textSize="17sp" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider_disable"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:background="#3A3A3C"
+        android:visibility="gone" />
+
+    <!-- Ежедневная -->
+    <LinearLayout
+        android:id="@+id/menu_sub_daily"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="24dp"
@@ -19,10 +50,10 @@
         android:focusable="true">
 
         <TextView
-            android:id="@+id/budget_text"
+            android:id="@+id/text_sub_daily"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="💰  Укажите бюджет"
+            android:text="📅  Ежедневная"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -35,11 +66,11 @@
         android:layout_marginEnd="24dp"
         android:background="#3A3A3C" />
 
+    <!-- Еженедельная -->
     <LinearLayout
-        android:id="@+id/menu_date"
+        android:id="@+id/menu_sub_weekly"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="24dp"
@@ -48,10 +79,10 @@
         android:focusable="true">
 
         <TextView
-            android:id="@+id/date_text"
+            android:id="@+id/text_sub_weekly"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📅  Дата"
+            android:text="📆  Еженедельная"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -64,11 +95,11 @@
         android:layout_marginEnd="24dp"
         android:background="#3A3A3C" />
 
+    <!-- Месячная -->
     <LinearLayout
-        android:id="@+id/menu_about"
+        android:id="@+id/menu_sub_monthly"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="24dp"
@@ -77,9 +108,10 @@
         android:focusable="true">
 
         <TextView
+            android:id="@+id/text_sub_monthly"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ℹ️  О проекте"
+            android:text="🗓️  Месячная"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -92,11 +124,11 @@
         android:layout_marginEnd="24dp"
         android:background="#3A3A3C" />
 
+    <!-- Свой интервал -->
     <LinearLayout
-        android:id="@+id/menu_account"
+        android:id="@+id/menu_sub_custom"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="24dp"
@@ -105,10 +137,37 @@
         android:focusable="true">
 
         <TextView
-            android:id="@+id/account_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="👤  Аккаунт"
+            android:text="⚙️  Свой интервал"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:background="#3A3A3C" />
+
+    <!-- Текущие подписки -->
+    <LinearLayout
+        android:id="@+id/menu_sub_list"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📋  Текущие подписки"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 

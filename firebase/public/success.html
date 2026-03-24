@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата успешна — Quarter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0A0A0A;
+            color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: #1C1C1E;
+            border-radius: 20px;
+            padding: 40px 32px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+        }
+        .check {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 15px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .open-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #FF9800;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .open-btn:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="check">✅</div>
+        <h1>Оплата прошла успешно!</h1>
+        <p class="subtitle">
+            Quarter Premium активирован.<br>
+            Вернитесь в приложение для продолжения.
+        </p>
+        <a class="open-btn" href="quarter://payment/success">
+            Открыть Quarter
+        </a>
+    </div>
+
+    <script>
+        // Автоматически пытаемся открыть приложение через 2 секунды
+        setTimeout(function() {
+            window.location.href = 'quarter://payment/success';
+        }, 2000);
+    </script>
+</body>
+</html>

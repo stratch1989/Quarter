@@ -15,6 +15,11 @@ public class DataModel : ViewModel() {
     val saveClick: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
     val clearUndo: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
+    // Auth & Subscription
+    val isPremium: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
+    val isLoggedIn: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
+    val userName: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+
     //два среднесуточных значения для выбора
     val avarageDailyValue: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }
     val avarageDailyValueFirstOption: MutableLiveData<Double> by lazy { MutableLiveData<Double>() }

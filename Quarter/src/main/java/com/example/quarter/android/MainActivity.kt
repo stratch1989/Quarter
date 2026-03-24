@@ -41,6 +41,8 @@ import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import java.util.Calendar
 import android.view.LayoutInflater
+import android.content.Intent
+import android.net.Uri
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
@@ -50,6 +52,17 @@ import android.widget.GridLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import com.example.quarter.android.auth.AuthFragment
+import com.example.quarter.android.auth.AuthManager
+import com.example.quarter.android.billing.PremiumGate
+import com.example.quarter.android.billing.PremiumManager
+import com.example.quarter.android.billing.SubscriptionFragment
+import com.example.quarter.android.data.BudgetData
+import com.example.quarter.android.data.FirestoreSync
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
@@ -69,6 +82,13 @@ class MainActivity : FragmentActivity() {
     private var lastSpendAmount: Double? = null
     private var lastIncomeAmount: Double? = null
     private var isAddMode = false
+
+    // Подписки (регулярные траты)
+    private var activeSubscriptionMode: String? = null  // null, "daily", "weekly", "monthly", "custom"
+    private var customIntervalDays: Int = 2
+    private var customIntervalUnit: String = "days"     // "days", "weeks", "months"
+    private val subscriptions = mutableListOf<SubscriptionEntry>()
+    private var subscriptionPopup: PopupWindow? = null
     private var isBudgetInputMode = false
     private var budgetInputValue = ""
     private var settingsPopup: PopupWindow? = null
@@ -150,12 +170,35 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+        val user = auth.currentUser
+        dataModel.isLoggedIn.value = user != null
+        dataModel.userName.value = user?.email
+    }
+
+    private val isFirebaseAvailable: Boolean
+        get() = AuthManager.isAvailable
+
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         loadData()
+
+        // Firebase Auth state
+        AuthManager.init(this)
+        PremiumGate.init(this)
+        if (isFirebaseAvailable) {
+            AuthManager.addAuthStateListener(authStateListener)
+            handleDeepLink(intent)
+        }
+
+        // Проверяем Premium-статус в фоне
+        CoroutineScope(Dispatchers.Main).launch {
+            val result = PremiumManager(this@MainActivity).checkPremiumStatus()
+            dataModel.isPremium.value = result.isPremium
+        }
 
         val result: TextView = findViewById(R.id.result)
         val lastOperation: TextView = findViewById(R.id.last_operation)
@@ -272,7 +315,7 @@ class MainActivity : FragmentActivity() {
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_settings_menu, null)
             val dpToPx = resources.displayMetrics.density
             val popupWidthPx = (275 * dpToPx).toInt()
-            val popupHeightPx = (204 * dpToPx).toInt()
+            val popupHeightPx = (270 * dpToPx).toInt()
             val popup = PopupWindow(
                 popupView,
                 popupWidthPx,
@@ -377,7 +420,87 @@ class MainActivity : FragmentActivity() {
                     .commit()
             }
 
+            // Аккаунт
+            val accountText = popupView.findViewById<TextView>(R.id.account_text)
+            if (isFirebaseAvailable && AuthManager.isLoggedIn) {
+                accountText.text = "👤  ${AuthManager.currentUser?.email ?: "Аккаунт"}"
+            }
+            popupView.findViewById<LinearLayout>(R.id.menu_account).setOnClickListener {
+                isBudgetInputMode = false
+                budgetInputValue = ""
+                popup.dismiss()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.place_holder, AuthFragment.newInstance())
+                    .addToBackStack(null)
+                    .commit()
+            }
+
             // Правый верхний угол попапа совпадает с правым верхним углом кнопки
+            val xOff = anchor.width - popupWidthPx
+            popup.showAsDropDown(anchor, xOff, -anchor.height)
+        }
+
+        // Кнопка Repeat (подписки)
+        binding.repeatButton.setOnClickListener { anchor ->
+            if (settingsPopup != null) return@setOnClickListener
+            subscriptionPopup?.let { it.dismiss(); subscriptionPopup = null; return@setOnClickListener }
+
+            val popupView = LayoutInflater.from(this).inflate(R.layout.popup_subscription_menu, null)
+            val dpToPx = resources.displayMetrics.density
+            val popupWidthPx = (275 * dpToPx).toInt()
+
+            // Показать "Отключить" если режим активен
+            val disableItem = popupView.findViewById<LinearLayout>(R.id.menu_sub_disable)
+            val disableDivider = popupView.findViewById<View>(R.id.divider_disable)
+            if (activeSubscriptionMode != null) {
+                disableItem.visibility = View.VISIBLE
+                disableDivider.visibility = View.VISIBLE
+            }
+
+            val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+            popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            popup.elevation = 16f
+            subscriptionPopup = popup
+            popup.setOnDismissListener { subscriptionPopup = null }
+
+            fun selectMode(mode: String) {
+                activeSubscriptionMode = mode
+                binding.repeatButton.setImageResource(R.drawable.ic_repeat_active)
+                popup.dismiss()
+            }
+
+            disableItem.setOnClickListener {
+                activeSubscriptionMode = null
+                binding.repeatButton.setImageResource(R.drawable.ic_repeat)
+                popup.dismiss()
+            }
+
+            popupView.findViewById<LinearLayout>(R.id.menu_sub_daily).setOnClickListener { selectMode("daily") }
+            popupView.findViewById<LinearLayout>(R.id.menu_sub_weekly).setOnClickListener { selectMode("weekly") }
+            popupView.findViewById<LinearLayout>(R.id.menu_sub_monthly).setOnClickListener { selectMode("monthly") }
+
+            // Свой интервал
+            popupView.findViewById<LinearLayout>(R.id.menu_sub_custom).setOnClickListener {
+                popup.dismiss()
+                showCustomIntervalPopup(anchor)
+            }
+
+            // Текущие подписки
+            popupView.findViewById<LinearLayout>(R.id.menu_sub_list).setOnClickListener {
+                popup.dismiss()
+                val frag = SubscriptionsListFragment.newInstance()
+                frag.setOnDeleteListener { index ->
+                    if (index in subscriptions.indices) {
+                        subscriptions.removeAt(index)
+                        SubscriptionManager(this).saveSubscriptions(subscriptions)
+                    }
+                }
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.place_holder, frag)
+                    .addToBackStack(null)
+                    .commit()
+            }
+
             val xOff = anchor.width - popupWidthPx
             popup.showAsDropDown(anchor, xOff, -anchor.height)
         }
@@ -872,6 +995,24 @@ class MainActivity : FragmentActivity() {
                     lastIncomeAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     lastOperation.text = "- ${fictionalDigit} ₽$categoryText"
+
+                    // Если включён режим подписки — создаём регулярную трату
+                    if (activeSubscriptionMode != null) {
+                        val intervalDays = SubscriptionManager.intervalDaysFor(
+                            activeSubscriptionMode!!, customIntervalDays, customIntervalUnit
+                        )
+                        subscriptions.add(SubscriptionEntry(
+                            amount = fictionalDigit,
+                            intervalDays = intervalDays,
+                            intervalType = activeSubscriptionMode!!,
+                            category = activeCategory,
+                            lastChargeDate = LocalDate.now().toString(),
+                            createdAt = System.currentTimeMillis()
+                        ))
+                        SubscriptionManager(this).saveSubscriptions(subscriptions)
+                        activeSubscriptionMode = null
+                        binding.repeatButton.setImageResource(R.drawable.ic_repeat)
+                    }
                 }
                 // Сбросить активную категорию
                 if (activeCategory != null) {
@@ -1049,6 +1190,118 @@ class MainActivity : FragmentActivity() {
         popupBudgetText = null
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    private fun showCustomIntervalPopup(anchor: View) {
+        val popupView = LayoutInflater.from(this).inflate(R.layout.popup_custom_interval, null)
+        val dpToPx = resources.displayMetrics.density
+        val popupWidthPx = (275 * dpToPx).toInt()
+        val popupHeightPx = (180 * dpToPx).toInt()
+
+        val popup = PopupWindow(popupView, popupWidthPx, popupHeightPx, true)
+        popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.elevation = 16f
+
+        val numberText = popupView.findViewById<TextView>(R.id.interval_number)
+        val unitText = popupView.findViewById<TextView>(R.id.interval_unit)
+        val units = listOf("дн.", "нед.", "мес.")
+        val unitKeys = listOf("days", "weeks", "months")
+        var currentNumber = customIntervalDays
+        var currentUnitIndex = unitKeys.indexOf(customIntervalUnit).coerceAtLeast(0)
+
+        numberText.text = "$currentNumber"
+        unitText.text = units[currentUnitIndex]
+
+        val handler = android.os.Handler(mainLooper)
+        var repeatRunnable: Runnable? = null
+
+        fun stopRepeat() {
+            repeatRunnable?.let { handler.removeCallbacks(it) }
+            repeatRunnable = null
+        }
+
+        fun startRepeat(action: () -> Unit) {
+            action()
+            repeatRunnable = object : Runnable {
+                override fun run() {
+                    action()
+                    handler.postDelayed(this, 100)
+                }
+            }
+            handler.postDelayed(repeatRunnable!!, 400)
+        }
+
+        // Стрелки числа
+        popupView.findViewById<TextView>(R.id.number_up).setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
+                    if (currentNumber < 31) { currentNumber++; numberText.text = "$currentNumber" }
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
+            }
+            true
+        }
+        popupView.findViewById<TextView>(R.id.number_down).setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
+                    if (currentNumber > 2) { currentNumber--; numberText.text = "$currentNumber" }
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
+            }
+            true
+        }
+
+        // Стрелки единицы
+        popupView.findViewById<TextView>(R.id.unit_up).setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
+                    currentUnitIndex = (currentUnitIndex + 1) % units.size
+                    unitText.text = units[currentUnitIndex]
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
+            }
+            true
+        }
+        popupView.findViewById<TextView>(R.id.unit_down).setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
+                    currentUnitIndex = (currentUnitIndex - 1 + units.size) % units.size
+                    unitText.text = units[currentUnitIndex]
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
+            }
+            true
+        }
+
+        // Кнопка "Готово"
+        popupView.findViewById<TextView>(R.id.btn_done).setOnClickListener {
+            customIntervalDays = currentNumber
+            customIntervalUnit = unitKeys[currentUnitIndex]
+            activeSubscriptionMode = "custom"
+            binding.repeatButton.setImageResource(R.drawable.ic_repeat_active)
+            popup.dismiss()
+        }
+
+        val xOff = anchor.width - popupWidthPx
+        popup.showAsDropDown(anchor, xOff, -anchor.height)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        if (!isFirebaseAvailable) return
+        val data: Uri? = intent?.data
+        if (data?.scheme == "quarter" && data.host == "payment") {
+            // Полная перепроверка Premium-статуса после возврата из оплаты
+            CoroutineScope(Dispatchers.Main).launch {
+                val result = PremiumManager(this@MainActivity).checkPremiumStatus()
+                dataModel.isPremium.value = result.isPremium
+            }
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         isBudgetInputMode = false
@@ -1059,6 +1312,13 @@ class MainActivity : FragmentActivity() {
             isEmojiPickerOpen = false
         }
         saveData()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isFirebaseAvailable) {
+            AuthManager.removeAuthStateListener(authStateListener)
+        }
     }
 
     private fun saveData() {
@@ -1078,7 +1338,24 @@ class MainActivity : FragmentActivity() {
             editor.putString("DATE_FULL", dateFull.toString())
             editor.putString("LAST_DATE", lastDate.toString())
             hasUnsavedChanges = false
+
+            // Firestore sync (fire-and-forget)
+            val uid = if (isFirebaseAvailable) AuthManager.currentUser?.uid else null
+            if (uid != null) {
+                FirestoreSync.saveBudgetToFirestore(uid, BudgetData(
+                    howMany = howMany,
+                    numberOfDays = numberOfDays,
+                    averageDailyValue = avarageDailyValue,
+                    dateFull = dateFull.toString(),
+                    lastDate = lastDate.toString(),
+                    todayLimit = result.toDoubleOrNull() ?: 0.0,
+                    streakCount = dayStreak,
+                    streakLastDate = sharedPreferences.getString("STREAK_LAST_DATE", null)
+                ))
+            }
         }
+        // Сохраняем подписки
+        SubscriptionManager(this).saveSubscriptions(subscriptions)
         editor.apply()
     }
 
@@ -1164,6 +1441,22 @@ class MainActivity : FragmentActivity() {
         val sHowMany = getStringOrFloat(sharedPreferences, "HOW_MANY", "0.0").toDouble()
         dataModel.money.value = sHowMany
         howMany = dataModel.roundMoney(sHowMany)
+
+        // Загружаем подписки и обрабатываем автосписания
+        val subManager = SubscriptionManager(this)
+        subscriptions.clear()
+        subscriptions.addAll(subManager.loadSubscriptions())
+        if (subscriptions.isNotEmpty()) {
+            val historyMgr = HistoryManager(this)
+            val charged = subManager.processCharges(subscriptions, historyMgr)
+            if (charged > 0) {
+                howMany -= charged
+                keyTodayLimit -= charged
+                dataModel.money.value = howMany
+                dataModel.keyTodayLimit.value = keyTodayLimit
+                hasUnsavedChanges = true
+            }
+        }
 
         // новый день
         if (today != lastDate && numberOfDays > 1) {

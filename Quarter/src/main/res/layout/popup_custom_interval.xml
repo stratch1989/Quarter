@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/history_popup_bg"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Свой интервал"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Строка: "Повторять каждые" + число + единица -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Повторять каждые"
+            android:textColor="#888888"
+            android:textSize="14sp"
+            android:layout_marginEnd="12dp" />
+
+        <!-- Блок числа -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginEnd="8dp">
+
+            <!-- Стрелка вверх -->
+            <TextView
+                android:id="@+id/number_up"
+                android:layout_width="44dp"
+                android:layout_height="20dp"
+                android:text="▲"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Число -->
+            <TextView
+                android:id="@+id/interval_number"
+                android:layout_width="44dp"
+                android:layout_height="36dp"
+                android:background="@drawable/category_emoji_bg"
+                android:text="2"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:gravity="center" />
+
+            <!-- Стрелка вниз -->
+            <TextView
+                android:id="@+id/number_down"
+                android:layout_width="44dp"
+                android:layout_height="20dp"
+                android:text="▼"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Блок единицы -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <!-- Стрелка вверх -->
+            <TextView
+                android:id="@+id/unit_up"
+                android:layout_width="64dp"
+                android:layout_height="20dp"
+                android:text="▲"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Единица -->
+            <TextView
+                android:id="@+id/interval_unit"
+                android:layout_width="64dp"
+                android:layout_height="36dp"
+                android:background="@drawable/category_emoji_bg"
+                android:text="дн."
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:gravity="center" />
+
+            <!-- Стрелка вниз -->
+            <TextView
+                android:id="@+id/unit_down"
+                android:layout_width="64dp"
+                android:layout_height="20dp"
+                android:text="▼"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Кнопка Готово -->
+    <TextView
+        android:id="@+id/btn_done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Готово"
+        android:textColor="#FF9800"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="12dp"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>
