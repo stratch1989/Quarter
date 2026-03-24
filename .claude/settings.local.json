@@ -54,7 +54,15 @@
       "Bash(./gradlew --version)",
       "Bash(./gradlew help:*)",
       "Bash(find C:/Users/ruslan/Desktop/Quarter -name *.json -type f)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(find \"C:/Users/ruslan/Desktop/Quarter\" -name \"*.png\" -type f -exec du -h {})",
+      "Bash(xargs cat:*)",
+      "Bash(xmllint --format \"C:/Users/ruslan/Desktop/Quarter/Quarter/src/main/AndroidManifest.xml\")",
+      "Bash(find C:/Users/ruslan/Desktop/Quarter -path */build/generated/source/buildConfig -name BuildConfig.java)",
+      "Bash(xargs basename:*)",
+      "Bash(\"$ANDROID_HOME/build-tools/34.0.0/aapt2\" dump:*)",
+      "Bash(magick \"C:/Users/ruslan/Desktop/Quarter/Quarter/src/main/res/drawable/okey.png\" -resize 144x144 \"C:/Users/ruslan/Desktop/Quarter/Quarter/src/main/res/drawable/okey.png\")",
+      "Bash(./gradlew :Quarter:clean :Quarter:assembleDebug)"
     ]
   }
 }
