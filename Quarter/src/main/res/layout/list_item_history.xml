@@ -4,35 +4,73 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:minHeight="40dp">
 
+    <!-- Emoji в бордере -->
     <TextView
-        android:id="@+id/historyAmount"
+        android:id="@+id/entryEmoji"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/category_emoji_bg"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <!-- Заметка + время (вертикально) -->
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="15sp"
-        android:textColor="@android:color/white" />
+        android:orientation="vertical"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp">
 
+        <TextView
+            android:id="@+id/entryNote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/entryTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#666666"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Сумма — справа -->
     <TextView
-        android:id="@+id/historyDate"
+        android:id="@+id/amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textColor="@android:color/darker_gray"
-        android:layout_marginEnd="8dp" />
+        android:textColor="@android:color/white"
+        android:textSize="15sp" />
 
-    <ImageButton
+    <!-- Кнопка удаления -->
+    <ImageView
         android:id="@+id/deleteButton"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:background="@android:color/transparent"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_delete"
+        android:scaleType="centerInside"
         android:contentDescription="@string/cd_delete"
-        android:padding="2dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_delete" />
+        android:visibility="gone" />
+
+    <!-- Скрытый id для обратной совместимости с HistoryAdapter -->
+    <TextView
+        android:id="@+id/historyDate"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
 
 </LinearLayout>

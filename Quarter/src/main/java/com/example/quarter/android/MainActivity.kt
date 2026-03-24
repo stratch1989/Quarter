@@ -96,6 +96,14 @@ class MainActivity : FragmentActivity() {
     private val selectedEmojis = mutableListOf<String>()
     private var activeCategory: String? = null
     private var activeNote: String? = null
+    private var activeDate: java.time.LocalDate = java.time.LocalDate.now()
+    private var activeTime: String = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+    private var lastOperationHandler: android.os.Handler? = null
+    private var lastOpAmount: Double? = null
+    private var lastOpCategory: String? = null
+    private var lastOpNote: String? = null
+    private var lastOpTime: String? = null
+    private var lastOpWasIncome: Boolean = false
 
     private val categoryEmojis = mutableListOf(
         "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
@@ -240,17 +248,43 @@ class MainActivity : FragmentActivity() {
         val lastOperation: TextView = findViewById(R.id.last_operation)
         val value: TextView = findViewById(R.id.value)
 
+        binding.lastOperation.setOnClickListener {
+            if (lastOpAmount != null) {
+                restoreLastOperation()
+            }
+        }
+
         // Поле заметки
+        var isNoteMode = false
+
         fun showNoteMode() {
-            binding.linearLayout.animate().alpha(0f).setDuration(200).start()
-            binding.categoryField.animate().alpha(0f).setDuration(200).start()
-            binding.value.animate().alpha(0f).setDuration(200).start()
+            isNoteMode = true
+            binding.linearLayout.animate().alpha(0.15f).setDuration(200).start()
+            binding.categoryField.animate().alpha(0.15f).setDuration(200).start()
+            binding.value.animate().alpha(0.15f).setDuration(200).start()
+            binding.result.animate().alpha(0.15f).setDuration(200).start()
+            binding.textView2.animate().alpha(0.15f).setDuration(200).start()
+            binding.dayLimit.animate().alpha(0.15f).setDuration(200).start()
+            binding.history.animate().alpha(0f).setDuration(200).start()
+            binding.streakButton.animate().alpha(0f).setDuration(200).start()
+            binding.repeatButtonFrame.animate().alpha(0f).setDuration(200).start()
+            binding.settings.animate().alpha(0f).setDuration(200).start()
+            binding.dateTimeContainer.animate().alpha(0.15f).setDuration(200).start()
         }
 
         fun hideNoteMode() {
+            isNoteMode = false
             binding.linearLayout.animate().alpha(1f).setDuration(200).start()
             binding.categoryField.animate().alpha(1f).setDuration(200).start()
             binding.value.animate().alpha(1f).setDuration(200).start()
+            binding.result.animate().alpha(1f).setDuration(200).start()
+            binding.textView2.animate().alpha(1f).setDuration(200).start()
+            binding.dayLimit.animate().alpha(1f).setDuration(200).start()
+            binding.history.animate().alpha(1f).setDuration(200).start()
+            binding.streakButton.animate().alpha(1f).setDuration(200).start()
+            binding.repeatButtonFrame.animate().alpha(1f).setDuration(200).start()
+            binding.settings.animate().alpha(1f).setDuration(200).start()
+            binding.dateTimeContainer.animate().alpha(1f).setDuration(200).start()
         }
 
         binding.noteField.setOnFocusChangeListener { _, hasFocus ->
@@ -274,26 +308,28 @@ class MainActivity : FragmentActivity() {
             } else false
         }
 
+        // Дата и время
+        fun updateDateDisplay() {
+            binding.dateFieldText.text = activeDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
+        }
+        fun updateTimeDisplay() {
+            binding.timeFieldText.text = activeTime
+        }
+        updateDateDisplay()
+        updateTimeDisplay()
+
+        binding.dateFieldContainer.setOnClickListener { showDatePickerPopup(it) }
+        binding.timeFieldContainer.setOnClickListener { showTimePickerPopup(it) }
+
         fun updateTextView2(text: String, color: Int) {
             val cs = binding.textView2.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-            val resultAmount = result.text.toString().toDoubleOrNull() ?: 0.0
-            if (text == "/день" && resultAmount <= 999999 && resultAmount >= -999999) {
-                // справа от суммы на baseline
-                cs.startToEnd = R.id.result
-                cs.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
-                cs.topToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
-                cs.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
-                cs.baselineToBaseline = R.id.result
-                binding.textView2.text = "/день"
-            } else {
-                // снизу от суммы
-                cs.startToEnd = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
-                cs.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
-                cs.topToBottom = R.id.result
-                cs.baselineToBaseline = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
-                cs.topMargin = 0
-                binding.textView2.text = text
-            }
+            // Всегда справа от суммы на baseline
+            cs.startToEnd = R.id.result
+            cs.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+            cs.topToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+            cs.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+            cs.baselineToBaseline = R.id.result
+            binding.textView2.text = text
             binding.textView2.setTextColor(color)
             binding.textView2.layoutParams = cs
         }
@@ -1096,23 +1132,37 @@ class MainActivity : FragmentActivity() {
                     dataModel.money.value = howMany
                     dataModel.todayLimit.value = todayLimit
                     result.text = "$todayLimit"
-                    historyManager.addIncomeEntry(fictionalDigit, activeCategory, activeNote)
+                    historyManager.addIncomeEntry(fictionalDigit, activeCategory, activeNote, activeTime)
                     lastIncomeAmount = fictionalDigit
                     lastSpendAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     val noteTextIncome = if (activeNote != null) " · $activeNote" else ""
                     lastOperation.text = "+ ${fictionalDigit}$categoryText$noteTextIncome"
+                    lastOperation.alpha = 1f
+                    lastOpAmount = fictionalDigit
+                    lastOpCategory = activeCategory
+                    lastOpNote = activeNote
+                    lastOpTime = activeTime
+                    lastOpWasIncome = true
+                    scheduleLastOperationFade()
                 } else {
                     val spendResult = dataModel.spend(fictionalDigit, todayLimit, howMany)
                     todayLimit = spendResult.newTodayLimit
                     howMany = spendResult.newBudget
                     result.text = "$todayLimit"
-                    historyManager.addEntry(fictionalDigit, activeCategory, activeNote)
+                    historyManager.addEntry(fictionalDigit, activeCategory, activeNote, activeTime)
                     lastSpendAmount = fictionalDigit
                     lastIncomeAmount = null
                     val categoryText = if (activeCategory != null) " $activeCategory" else ""
                     val noteTextSpend = if (activeNote != null) " · $activeNote" else ""
                     lastOperation.text = "- ${fictionalDigit}$categoryText$noteTextSpend"
+                    lastOperation.alpha = 1f
+                    lastOpAmount = fictionalDigit
+                    lastOpCategory = activeCategory
+                    lastOpNote = activeNote
+                    lastOpTime = activeTime
+                    lastOpWasIncome = false
+                    scheduleLastOperationFade()
 
                     // Если включён режим подписки — создаём регулярную трату
                     if (activeSubscriptionMode != null) {
@@ -1151,6 +1201,10 @@ class MainActivity : FragmentActivity() {
                 value.text = ""
                 activeNote = null
                 binding.noteField.text.clear()
+                activeDate = java.time.LocalDate.now()
+                activeTime = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                binding.dateFieldText.text = activeDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
+                binding.timeFieldText.text = activeTime
                 updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
                 if (isAddMode) {
                     result.setTextColor(Color.parseColor("#4CAF50"))
@@ -1226,6 +1280,18 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // В режиме заметки — блокируем все тачи кроме noteField и системной клавиатуры
+        if (event.action == MotionEvent.ACTION_DOWN && binding.noteField.hasFocus()) {
+            val loc = IntArray(2)
+            binding.noteFieldContainer.getLocationOnScreen(loc)
+            val rect = Rect(loc[0], loc[1], loc[0] + binding.noteFieldContainer.width, loc[1] + binding.noteFieldContainer.height)
+            if (!rect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                binding.noteField.clearFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(binding.noteField.windowToken, 0)
+                return true // поглощаем событие — ничего под пальцем не нажмётся
+            }
+        }
         // Скрытие системной клавиатуры при тапе вне неё
         if (event.action == MotionEvent.ACTION_DOWN && binding.hiddenEmojiInput.hasFocus()) {
             binding.hiddenEmojiInput.clearFocus()
@@ -1316,6 +1382,119 @@ class MainActivity : FragmentActivity() {
         isBudgetInputMode = false
         budgetInputValue = ""
         popupBudgetText = null
+    }
+
+    private fun scheduleLastOperationFade() {
+        lastOperationHandler?.removeCallbacksAndMessages(null)
+        lastOperationHandler = android.os.Handler(mainLooper)
+        lastOperationHandler?.postDelayed({
+            binding.lastOperation.animate().alpha(0f).setDuration(2000).start()
+        }, 6000)
+    }
+
+    private fun restoreLastOperation() {
+        lastOperationHandler?.removeCallbacksAndMessages(null)
+        binding.lastOperation.animate().cancel()
+        binding.lastOperation.alpha = 0f
+        binding.lastOperation.text = ""
+
+        val amount = lastOpAmount ?: return
+
+        // Восстанавливаем поля
+        fictionalValue = amount.let {
+            if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString()
+        }
+        binding.value.text = fictionalValue
+        isAddMode = lastOpWasIncome
+        activeCategory = lastOpCategory
+        activeNote = lastOpNote
+        activeTime = lastOpTime ?: java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+
+        // UI
+        if (activeCategory != null) {
+            binding.activeCategoryIndicator.text = activeCategory
+            binding.activeCategoryIndicator.visibility = View.VISIBLE
+        }
+        if (activeNote != null) {
+            binding.noteField.setText(activeNote)
+        }
+        binding.timeFieldText.text = activeTime
+
+        // Сброс — чтобы повторный клик не работал
+        lastOpAmount = null
+    }
+
+    private fun showDatePickerPopup(anchor: View) {
+        val popupView = LayoutInflater.from(this).inflate(R.layout.popup_date_picker, null)
+        val popup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.elevation = 16f
+
+        binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.setOnClickListener { popup.dismiss() }
+        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
+
+        val dayPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.dayPicker)
+        val monthPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.monthPicker)
+        val yearPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.yearPicker)
+
+        dayPicker.minValue = 1
+        dayPicker.maxValue = activeDate.lengthOfMonth()
+        dayPicker.value = activeDate.dayOfMonth
+
+        val months = arrayOf("янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек")
+        monthPicker.minValue = 1
+        monthPicker.maxValue = 12
+        monthPicker.displayedValues = months
+        monthPicker.value = activeDate.monthValue
+
+        yearPicker.minValue = 2024
+        yearPicker.maxValue = 2030
+        yearPicker.value = activeDate.year
+
+        popupView.findViewById<TextView>(R.id.datePickerDone).setOnClickListener {
+            try {
+                activeDate = java.time.LocalDate.of(yearPicker.value, monthPicker.value, dayPicker.value)
+            } catch (e: Exception) {
+                activeDate = java.time.LocalDate.now()
+            }
+            binding.dateFieldText.text = activeDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
+            popup.dismiss()
+        }
+
+        popup.showAsDropDown(anchor, 0, -anchor.height)
+    }
+
+    private fun showTimePickerPopup(anchor: View) {
+        val popupView = LayoutInflater.from(this).inflate(R.layout.popup_time_picker, null)
+        val popup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.elevation = 16f
+
+        binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.setOnClickListener { popup.dismiss() }
+        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
+
+        val hourPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.hourPicker)
+        val minutePicker = popupView.findViewById<android.widget.NumberPicker>(R.id.minutePicker)
+
+        hourPicker.minValue = 0
+        hourPicker.maxValue = 23
+        hourPicker.value = activeTime.split(":")[0].toIntOrNull() ?: 0
+        hourPicker.setFormatter { String.format("%02d", it) }
+
+        minutePicker.minValue = 0
+        minutePicker.maxValue = 59
+        minutePicker.value = activeTime.split(":")[1].toIntOrNull() ?: 0
+        minutePicker.setFormatter { String.format("%02d", it) }
+
+        popupView.findViewById<TextView>(R.id.timePickerDone).setOnClickListener {
+            activeTime = String.format("%02d:%02d", hourPicker.value, minutePicker.value)
+            binding.timeFieldText.text = activeTime
+            popup.dismiss()
+        }
+
+        popup.showAsDropDown(anchor, 0, -anchor.height)
     }
 
     @SuppressLint("ClickableViewAccessibility")

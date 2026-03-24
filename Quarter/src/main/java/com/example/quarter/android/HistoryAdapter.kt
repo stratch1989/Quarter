@@ -4,7 +4,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.time.LocalDate
@@ -46,9 +46,12 @@ class HistoryAdapter(
     }
 
     class EntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val amount: TextView = itemView.findViewById(R.id.historyAmount)
+        val amount: TextView = itemView.findViewById(R.id.amount)
         val date: TextView = itemView.findViewById(R.id.historyDate)
-        val deleteButton: ImageButton = itemView.findViewById(R.id.deleteButton)
+        val deleteButton: ImageView = itemView.findViewById(R.id.deleteButton)
+        val entryEmoji: TextView? = itemView.findViewById(R.id.entryEmoji)
+        val entryNote: TextView? = itemView.findViewById(R.id.entryNote)
+        val entryTime: TextView? = itemView.findViewById(R.id.entryTime)
     }
 
     class DividerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
@@ -109,13 +112,35 @@ class HistoryAdapter(
             is HistoryItem.Current -> {
                 holder as EntryViewHolder
                 val sign = if (isIncome) "+" else "-"
-                val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                val noteText = if (item.entry.note != null) {
+
+                // Сумма справа
+                holder.amount.text = "$sign ${item.entry.amount}"
+
+                // Emoji в бордере
+                if (item.entry.category != null) {
+                    holder.entryEmoji?.text = item.entry.category
+                    holder.entryEmoji?.visibility = View.VISIBLE
+                } else {
+                    holder.entryEmoji?.visibility = View.GONE
+                }
+
+                // Заметка
+                if (item.entry.note != null) {
                     val truncated = if (item.entry.note.length > 12) item.entry.note.take(12) + "..." else item.entry.note
-                    " · $truncated"
-                } else ""
-                holder.amount.text = "$sign ${item.entry.amount}$cat$noteText"
-                holder.date.text = ""
+                    holder.entryNote?.text = truncated
+                    holder.entryNote?.visibility = View.VISIBLE
+                } else {
+                    holder.entryNote?.visibility = View.GONE
+                }
+
+                // Время
+                if (item.entry.time != null) {
+                    holder.entryTime?.text = item.entry.time
+                    holder.entryTime?.visibility = View.VISIBLE
+                } else {
+                    holder.entryTime?.visibility = View.GONE
+                }
+
                 holder.deleteButton.visibility = if (isEditMode) View.VISIBLE else View.GONE
                 holder.deleteButton.setOnClickListener {
                     val pos = holder.adapterPosition
@@ -170,13 +195,35 @@ class HistoryAdapter(
             is HistoryItem.Old -> {
                 holder as EntryViewHolder
                 val sign = if (isIncome) "+" else "-"
-                val cat = if (item.entry.category != null) " ${item.entry.category}" else ""
-                val noteText = if (item.entry.note != null) {
+
+                // Сумма справа
+                holder.amount.text = "$sign ${item.entry.amount}"
+
+                // Emoji в бордере
+                if (item.entry.category != null) {
+                    holder.entryEmoji?.text = item.entry.category
+                    holder.entryEmoji?.visibility = View.VISIBLE
+                } else {
+                    holder.entryEmoji?.visibility = View.GONE
+                }
+
+                // Заметка
+                if (item.entry.note != null) {
                     val truncated = if (item.entry.note.length > 12) item.entry.note.take(12) + "..." else item.entry.note
-                    " · $truncated"
-                } else ""
-                holder.amount.text = "$sign ${item.entry.amount}$cat$noteText"
-                holder.date.text = ""
+                    holder.entryNote?.text = truncated
+                    holder.entryNote?.visibility = View.VISIBLE
+                } else {
+                    holder.entryNote?.visibility = View.GONE
+                }
+
+                // Время
+                if (item.entry.time != null) {
+                    holder.entryTime?.text = item.entry.time
+                    holder.entryTime?.visibility = View.VISIBLE
+                } else {
+                    holder.entryTime?.visibility = View.GONE
+                }
+
                 holder.deleteButton.visibility = View.GONE
             }
             is HistoryItem.PeriodDivider -> {}

@@ -5,7 +5,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
 
-data class HistoryEntry(val amount: Double, val date: String, val timestamp: Long, val category: String? = null, val note: String? = null)
+data class HistoryEntry(val amount: Double, val date: String, val timestamp: Long, val category: String? = null, val note: String? = null, val time: String? = null)
 
 class HistoryManager(context: Context) {
     private val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
@@ -13,15 +13,15 @@ class HistoryManager(context: Context) {
     private val incomeKey = "INCOME_HISTORY"
     private val periodKey = "PERIOD_START_TS"
 
-    fun addEntry(amount: Double, category: String? = null, note: String? = null) {
+    fun addEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null) {
         val entries = loadEntries().toMutableList()
-        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note))
+        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
         saveEntries(entries, key)
     }
 
-    fun addIncomeEntry(amount: Double, category: String? = null, note: String? = null) {
+    fun addIncomeEntry(amount: Double, category: String? = null, note: String? = null, time: String? = null) {
         val entries = loadIncomeEntries().toMutableList()
-        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note))
+        entries.add(0, HistoryEntry(amount, LocalDate.now().toString(), System.currentTimeMillis(), category, note, time))
         saveEntries(entries, incomeKey)
     }
 
@@ -36,12 +36,14 @@ class HistoryManager(context: Context) {
         for (i in 0 until array.length()) {
             val obj = array.getJSONObject(i)
             val note = if (obj.has("note")) obj.getString("note") else null
+            val time = if (obj.has("time")) obj.getString("time") else null
             list.add(HistoryEntry(
                 obj.getDouble("amount"),
                 obj.getString("date"),
                 obj.optLong("timestamp", 0L),
                 obj.optString("category", null).takeIf { !it.isNullOrEmpty() },
-                note
+                note,
+                time
             ))
         }
         return list
@@ -78,6 +80,7 @@ class HistoryManager(context: Context) {
             obj.put("timestamp", entry.timestamp)
             if (entry.category != null) obj.put("category", entry.category)
             if (entry.note != null) obj.put("note", entry.note)
+            if (entry.time != null) obj.put("time", entry.time)
             array.put(obj)
         }
         prefs.edit().putString(storageKey, array.toString()).apply()
