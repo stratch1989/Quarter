@@ -219,7 +219,7 @@
                 android:padding="32dp"
                 android:src="@drawable/ic_backspace"
                 android:scaleType="fitCenter"
-                android:contentDescription="Удалить" />
+                android:contentDescription="@string/cd_delete" />
 
             <ImageButton
                 android:id="@+id/button_undo"
@@ -230,7 +230,7 @@
                 android:padding="32dp"
                 android:src="@drawable/ic_undo"
                 android:scaleType="fitCenter"
-                android:contentDescription="Отменить" />
+                android:contentDescription="@string/cd_undo" />
 
             <Button
                 android:id="@+id/button_enter"
@@ -384,7 +384,7 @@
         android:src="@drawable/ic_repeat"
         android:scaleType="centerInside"
         android:padding="4dp"
-        android:contentDescription="Подписки"
+        android:contentDescription="@string/cd_subscriptions"
         app:layout_constraintEnd_toStartOf="@id/settings"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -398,7 +398,7 @@
         android:src="@drawable/ic_settings"
         android:scaleType="centerInside"
         android:padding="8dp"
-        android:contentDescription="Настройки"
+        android:contentDescription="@string/cd_settings"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -412,7 +412,7 @@
         android:src="@drawable/ic_history"
         android:scaleType="centerInside"
         android:padding="8dp"
-        android:contentDescription="История"
+        android:contentDescription="@string/cd_history"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -447,7 +447,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:fontFamily="@font/average"
-        android:text="/день"
+        android:text="@string/per_day"
         android:textColor="#888888"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -460,7 +460,7 @@
         android:layout_height="33dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:text="Введите дату и сумму в настройках"
+        android:text="@string/hint_set_date_and_budget"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/result" />
 

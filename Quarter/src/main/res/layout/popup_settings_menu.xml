@@ -22,7 +22,7 @@
             android:id="@+id/budget_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="💰  Укажите бюджет"
+            android:text="@string/menu_budget"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -51,7 +51,7 @@
             android:id="@+id/date_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📅  Дата"
+            android:text="@string/menu_date"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -79,7 +79,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ℹ️  О проекте"
+            android:text="@string/menu_about"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -108,7 +108,7 @@
             android:id="@+id/account_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="👤  Аккаунт"
+            android:text="@string/menu_account"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 

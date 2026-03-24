@@ -44,7 +44,7 @@
                     android:id="@+id/streakTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 день подряд!"
+                    android:text="@string/streak_title_default"
                     android:textColor="@android:color/white"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -58,7 +58,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Заходите каждый день,\nчтобы не потерять серию"
+                    android:text="@string/streak_subtitle"
                     android:textColor="#AAAAAA"
                     android:textSize="14sp" />
 

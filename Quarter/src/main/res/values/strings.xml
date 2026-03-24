@@ -1,2 +1,77 @@
 <resources>
+    <string name="app_name">Quarter</string>
+
+    <!-- activity_main -->
+    <string name="per_day">/день</string>
+    <string name="hint_set_date_and_budget">Введите дату и сумму в настройках</string>
+
+    <!-- contentDescription: кнопки activity_main -->
+    <string name="cd_delete">Удалить</string>
+    <string name="cd_undo">Отменить</string>
+    <string name="cd_subscriptions">Подписки</string>
+    <string name="cd_settings">Настройки</string>
+    <string name="cd_history">История</string>
+
+    <!-- fragment_about -->
+    <string name="about_subtitle">Личный бюджет-трекер</string>
+    <string name="about_version">Версия 1.0</string>
+
+    <!-- fragment_auth -->
+    <string name="auth_title">Вход</string>
+    <string name="auth_hint_password">Пароль</string>
+    <string name="auth_hint_confirm_password">Подтвердите пароль</string>
+    <string name="auth_button_sign_in">Войти</string>
+    <string name="auth_button_google">Войти через Google</string>
+    <string name="auth_toggle_register">Нет аккаунта? Зарегистрироваться</string>
+    <string name="auth_button_sign_out">Выйти из аккаунта</string>
+
+    <!-- fragment_data_conflict -->
+    <string name="conflict_title">Данные найдены в облаке</string>
+    <string name="conflict_subtitle">В вашем аккаунте уже есть сохранённые данные. Что использовать?</string>
+    <string name="conflict_use_local">📱  Данные с устройства</string>
+    <string name="conflict_use_cloud">☁️  Данные из облака</string>
+    <string name="conflict_budget_placeholder">Бюджет: — ₽, дней: —</string>
+
+    <!-- fragment_every_day_question -->
+    <string name="edq_wow">Вау!</string>
+    <string name="edq_saved_yesterday">Вчера вы сэкономили 1059 ₽</string>
+    <string name="edq_decide_what_to_do">Осталось решить, что делать\nс деньгами</string>
+    <string name="edq_option_spend_all">Потратить всё сегодня</string>
+    <string name="edq_option_increase_budget">Увеличить дневной бюджет</string>
+
+    <!-- fragment_history -->
+    <string name="history_title">История трат</string>
+    <string name="history_empty">Траты за текущий период\nпоявятся здесь</string>
+
+    <!-- fragment_streak -->
+    <string name="streak_title_default">1 день подряд!</string>
+    <string name="streak_subtitle">Заходите каждый день,\nчтобы не потерять серию</string>
+
+    <!-- fragment_subscriptions_list -->
+    <string name="subscriptions_title">Текущие подписки</string>
+    <string name="subscriptions_empty">Нет активных подписок</string>
+
+    <!-- list_item_history_divider -->
+    <string name="history_previous_periods">Предыдущие периоды</string>
+
+    <!-- popup_custom_interval -->
+    <string name="custom_interval_title">Свой интервал</string>
+    <string name="custom_interval_repeat_every">Повторять каждые</string>
+    <string name="custom_interval_unit_days">дн.</string>
+    <string name="custom_interval_done">Готово</string>
+
+    <!-- popup_settings_menu -->
+    <string name="menu_budget">💰  Укажите бюджет</string>
+    <string name="menu_date">📅  Дата</string>
+    <string name="menu_about">ℹ️  О проекте</string>
+    <string name="menu_account">👤  Аккаунт</string>
+
+    <!-- popup_subscription_menu -->
+    <string name="sub_menu_disable">✕  Отключить</string>
+    <string name="sub_menu_daily">📅  Ежедневная</string>
+    <string name="sub_menu_weekly">📆  Еженедельная</string>
+    <string name="sub_menu_monthly">🗓️  Месячная</string>
+    <string name="sub_menu_custom">⚙️  Свой интервал</string>
+    <string name="sub_menu_list">📋  Текущие подписки</string>
+
 </resources>

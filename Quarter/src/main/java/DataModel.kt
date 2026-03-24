@@ -29,7 +29,11 @@ public class DataModel : ViewModel() {
 
     // --- Бизнес-логика ---
 
-    fun roundMoney(value: Double): Double = Math.round(value * 100.0) / 100.0
+    fun roundMoney(value: Double): Double {
+        return java.math.BigDecimal(value.toString())
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
 
     fun calculateDailyAverage(totalBudget: Double, days: Long): Double {
         if (days <= 0) return 0.0
@@ -59,7 +63,15 @@ public class DataModel : ViewModel() {
         avarageDailyValueSecondOption.value = secondOption
 
         keyTodayLimitFirstOption.value = roundMoney(currentKeyTodayLimit + firstOption * daysSinceLastDate)
+        // Ограничить дневной лимит суммой оставшегося бюджета
+        if (keyTodayLimitFirstOption.value!! > howMany) {
+            keyTodayLimitFirstOption.value = howMany
+        }
+
         keyTodayLimitSecondOption.value = secondOption
+        if (keyTodayLimitSecondOption.value!! > howMany) {
+            keyTodayLimitSecondOption.value = howMany
+        }
     }
 
     data class SpendResult(val newTodayLimit: Double, val newBudget: Double)

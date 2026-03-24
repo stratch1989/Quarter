@@ -385,7 +385,7 @@ class MainActivity : FragmentActivity() {
                         val days = ChronoUnit.DAYS.between(now, selectedDate)
                         if (days > 0) {
                             if (howMany != 0.0) {
-                                dataModel.keyTodayLimit.value = Math.round((howMany / days) * 100.0) / 100.0
+                                dataModel.keyTodayLimit.value = dataModel.roundMoney(howMany / days)
                             }
                             dataModel.dateFull.value = selectedDate
                             dataModel.dayText.value = selectedDate.format(formatter)
@@ -1327,10 +1327,10 @@ class MainActivity : FragmentActivity() {
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         // Категории сохраняем всегда
-        editor.putString("SELECTED_EMOJIS", selectedEmojis.joinToString(","))
-        editor.putString("CATEGORY_EMOJIS", categoryEmojis.joinToString(","))
-        editor.putString("SELECTED_INCOME_EMOJIS", selectedIncomeEmojis.joinToString(","))
-        editor.putString("INCOME_CATEGORY_EMOJIS", incomeCategoryEmojis.joinToString(","))
+        editor.putString("SELECTED_EMOJIS", selectedEmojis.joinToString("|||"))
+        editor.putString("CATEGORY_EMOJIS", categoryEmojis.joinToString("|||"))
+        editor.putString("SELECTED_INCOME_EMOJIS", selectedIncomeEmojis.joinToString("|||"))
+        editor.putString("INCOME_CATEGORY_EMOJIS", incomeCategoryEmojis.joinToString("|||"))
         if (hasUnsavedChanges) {
             val result: String = todayLimit.toString()
             editor.putString("STRING_KEY", result)
@@ -1398,22 +1398,22 @@ class MainActivity : FragmentActivity() {
         val savedSelected = sharedPreferences.getString("SELECTED_EMOJIS", null)
         if (!savedSelected.isNullOrEmpty()) {
             selectedEmojis.clear()
-            selectedEmojis.addAll(savedSelected.split(","))
+            selectedEmojis.addAll(savedSelected.split("|||"))
         }
         val savedCategories = sharedPreferences.getString("CATEGORY_EMOJIS", null)
         if (!savedCategories.isNullOrEmpty()) {
             categoryEmojis.clear()
-            categoryEmojis.addAll(savedCategories.split(","))
+            categoryEmojis.addAll(savedCategories.split("|||"))
         }
         val savedIncomeSelected = sharedPreferences.getString("SELECTED_INCOME_EMOJIS", null)
         if (!savedIncomeSelected.isNullOrEmpty()) {
             selectedIncomeEmojis.clear()
-            selectedIncomeEmojis.addAll(savedIncomeSelected.split(","))
+            selectedIncomeEmojis.addAll(savedIncomeSelected.split("|||"))
         }
         val savedIncomeCategories = sharedPreferences.getString("INCOME_CATEGORY_EMOJIS", null)
         if (!savedIncomeCategories.isNullOrEmpty()) {
             incomeCategoryEmojis.clear()
-            incomeCategoryEmojis.addAll(savedIncomeCategories.split(","))
+            incomeCategoryEmojis.addAll(savedIncomeCategories.split("|||"))
         }
 
         // Streak

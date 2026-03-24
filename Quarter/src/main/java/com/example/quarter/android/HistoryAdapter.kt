@@ -128,7 +128,9 @@ class HistoryAdapter(
                             items.removeAt(headerPos)
                             notifyItemRemoved(headerPos)
                         } else {
-                            val roundedTotal = Math.round(newTotal * 100.0) / 100.0
+                            val roundedTotal = java.math.BigDecimal(newTotal.toString())
+                                .setScale(2, java.math.RoundingMode.HALF_UP)
+                                .toDouble()
                             when (val header = items[headerPos]) {
                                 is HistoryItem.DayHeader -> items[headerPos] = header.copy(total = roundedTotal)
                                 is HistoryItem.CategoryHeader -> items[headerPos] = header.copy(total = roundedTotal)

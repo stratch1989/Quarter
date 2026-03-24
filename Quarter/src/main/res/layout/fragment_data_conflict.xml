@@ -23,7 +23,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Данные найдены в облаке"
+                android:text="@string/conflict_title"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -32,7 +32,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="В вашем аккаунте уже есть сохранённые данные. Что использовать?"
+                android:text="@string/conflict_subtitle"
                 android:textColor="#AAAAAA"
                 android:textSize="14sp"
                 android:layout_marginBottom="24dp" />
@@ -52,7 +52,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📱  Данные с устройства"
+                    android:text="@string/conflict_use_local"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -61,7 +61,7 @@
                     android:id="@+id/local_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Бюджет: — ₽, дней: —"
+                    android:text="@string/conflict_budget_placeholder"
                     android:textColor="#888888"
                     android:textSize="13sp"
                     android:layout_marginTop="4dp" />
@@ -82,7 +82,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="☁️  Данные из облака"
+                    android:text="@string/conflict_use_cloud"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -91,7 +91,7 @@
                     android:id="@+id/cloud_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Бюджет: — ₽, дней: —"
+                    android:text="@string/conflict_budget_placeholder"
                     android:textColor="#888888"
                     android:textSize="13sp"
                     android:layout_marginTop="4dp" />

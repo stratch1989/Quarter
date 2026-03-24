@@ -31,7 +31,7 @@
                 android:id="@+id/historyTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="История трат"
+                android:text="@string/history_title"
                 android:textColor="@android:color/white"
                 android:textSize="17sp" />
 
@@ -58,7 +58,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="24dp"
                 android:gravity="center"
-                android:text="Траты за текущий период\nпоявятся здесь"
+                android:text="@string/history_empty"
                 android:textColor="@android:color/darker_gray"
                 android:textSize="14sp"
                 android:visibility="gone" />

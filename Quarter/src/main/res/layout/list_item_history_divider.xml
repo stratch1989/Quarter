@@ -15,7 +15,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Предыдущие периоды"
+        android:text="@string/history_previous_periods"
         android:textColor="#666666"
         android:textSize="11sp"
         android:paddingTop="4dp" />

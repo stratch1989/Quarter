@@ -22,7 +22,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="✕  Отключить"
+            android:text="@string/sub_menu_disable"
             android:textColor="#FF5252"
             android:textSize="17sp" />
 
@@ -53,7 +53,7 @@
             android:id="@+id/text_sub_daily"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📅  Ежедневная"
+            android:text="@string/sub_menu_daily"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -82,7 +82,7 @@
             android:id="@+id/text_sub_weekly"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📆  Еженедельная"
+            android:text="@string/sub_menu_weekly"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -111,7 +111,7 @@
             android:id="@+id/text_sub_monthly"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🗓️  Месячная"
+            android:text="@string/sub_menu_monthly"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -139,7 +139,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚙️  Свой интервал"
+            android:text="@string/sub_menu_custom"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
@@ -167,7 +167,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📋  Текущие подписки"
+            android:text="@string/sub_menu_list"
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 

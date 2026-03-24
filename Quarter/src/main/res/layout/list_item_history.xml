@@ -30,7 +30,7 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:background="@android:color/transparent"
-        android:contentDescription="Удалить"
+        android:contentDescription="@string/cd_delete"
         android:padding="2dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_delete" />
