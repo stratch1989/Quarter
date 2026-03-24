@@ -118,6 +118,46 @@ class MainActivity : FragmentActivity() {
     private val selectedIncomeEmojis = mutableListOf<String>()
 
 
+    private fun updateRepeatBadge() {
+        val badge = findViewById<TextView>(R.id.repeat_badge_letter)
+        val center = findViewById<TextView>(R.id.repeat_center_number)
+        if (activeSubscriptionMode == null) {
+            binding.repeatButton.setImageResource(R.drawable.ic_repeat)
+            badge.visibility = View.GONE
+            center.visibility = View.GONE
+            return
+        }
+        binding.repeatButton.setImageResource(R.drawable.ic_repeat_active)
+        when (activeSubscriptionMode) {
+            "daily" -> {
+                badge.text = "D"
+                badge.visibility = View.VISIBLE
+                center.visibility = View.GONE
+            }
+            "weekly" -> {
+                badge.text = "W"
+                badge.visibility = View.VISIBLE
+                center.visibility = View.GONE
+            }
+            "monthly" -> {
+                badge.text = "M"
+                badge.visibility = View.VISIBLE
+                center.visibility = View.GONE
+            }
+            "custom" -> {
+                val letter = when (customIntervalUnit) {
+                    "weeks" -> "W"
+                    "months" -> "M"
+                    else -> "D"
+                }
+                badge.text = letter
+                badge.visibility = View.VISIBLE
+                center.text = customIntervalDays.toString()
+                center.visibility = View.VISIBLE
+            }
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBounceAnimation(view: View, maxScale: Float = 1.20f, shrinkAmount: Float = 0.11f) {
         var pressTime = 0L
@@ -460,13 +500,13 @@ class MainActivity : FragmentActivity() {
 
             fun selectMode(mode: String) {
                 activeSubscriptionMode = mode
-                binding.repeatButton.setImageResource(R.drawable.ic_repeat_active)
+                updateRepeatBadge()
                 popup.dismiss()
             }
 
             disableItem.setOnClickListener {
                 activeSubscriptionMode = null
-                binding.repeatButton.setImageResource(R.drawable.ic_repeat)
+                updateRepeatBadge()
                 popup.dismiss()
             }
 
@@ -702,7 +742,7 @@ class MainActivity : FragmentActivity() {
                 indicator.visibility = View.GONE
             }
             findViewById<HorizontalScrollView>(R.id.category_scroll).post {
-                findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_RIGHT)
+                findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_LEFT)
             }
 
             // Перестроить сетку эмодзи
@@ -1005,7 +1045,7 @@ class MainActivity : FragmentActivity() {
                         ))
                         SubscriptionManager(this).saveSubscriptions(subscriptions)
                         activeSubscriptionMode = null
-                        binding.repeatButton.setImageResource(R.drawable.ic_repeat)
+                        updateRepeatBadge()
                     }
                 }
                 // Сбросить активную категорию
@@ -1279,7 +1319,7 @@ class MainActivity : FragmentActivity() {
             customIntervalDays = currentNumber
             customIntervalUnit = unitKeys[currentUnitIndex]
             activeSubscriptionMode = "custom"
-            binding.repeatButton.setImageResource(R.drawable.ic_repeat_active)
+            updateRepeatBadge()
             popup.dismiss()
         }
 
@@ -1395,25 +1435,28 @@ class MainActivity : FragmentActivity() {
         }
 
         // Категории
+        fun splitEmojis(raw: String): List<String> =
+            if ("|||" in raw) raw.split("|||") else raw.split(",")
+
         val savedSelected = sharedPreferences.getString("SELECTED_EMOJIS", null)
         if (!savedSelected.isNullOrEmpty()) {
             selectedEmojis.clear()
-            selectedEmojis.addAll(savedSelected.split("|||"))
+            selectedEmojis.addAll(splitEmojis(savedSelected))
         }
         val savedCategories = sharedPreferences.getString("CATEGORY_EMOJIS", null)
         if (!savedCategories.isNullOrEmpty()) {
             categoryEmojis.clear()
-            categoryEmojis.addAll(savedCategories.split("|||"))
+            categoryEmojis.addAll(splitEmojis(savedCategories))
         }
         val savedIncomeSelected = sharedPreferences.getString("SELECTED_INCOME_EMOJIS", null)
         if (!savedIncomeSelected.isNullOrEmpty()) {
             selectedIncomeEmojis.clear()
-            selectedIncomeEmojis.addAll(savedIncomeSelected.split("|||"))
+            selectedIncomeEmojis.addAll(splitEmojis(savedIncomeSelected))
         }
         val savedIncomeCategories = sharedPreferences.getString("INCOME_CATEGORY_EMOJIS", null)
         if (!savedIncomeCategories.isNullOrEmpty()) {
             incomeCategoryEmojis.clear()
-            incomeCategoryEmojis.addAll(savedIncomeCategories.split("|||"))
+            incomeCategoryEmojis.addAll(splitEmojis(savedIncomeCategories))
         }
 
         // Streak
