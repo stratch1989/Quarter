@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/testet"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    tools:context=".MainActivity">
+
+    <!-- Guideline делит экран на левую (инфо) и правую (numpad) половины -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.6" />
+
+    <!-- ==================== ЛЕВАЯ ПОЛОВИНА ==================== -->
+
+    <!-- Кнопка истории (левый верхний угол) -->
+    <ImageButton
+        android:id="@+id/history"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/circle_button_bg"
+        android:src="@drawable/ic_history"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        android:contentDescription="@string/cd_history"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/streakButton"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:layout_marginStart="12dp"
+        android:text="🔥"
+        android:textSize="14sp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintStart_toEndOf="@id/history"
+        app:layout_constraintTop_toTopOf="@id/history"
+        app:layout_constraintBottom_toBottomOf="@id/history" />
+
+    <TextView
+        android:id="@+id/streakCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:textColor="#FF9800"
+        android:textSize="9sp"
+        android:layout_marginStart="1dp"
+        app:layout_constraintStart_toEndOf="@id/streakButton"
+        app:layout_constraintTop_toTopOf="@id/streakButton"
+        app:layout_constraintBottom_toBottomOf="@id/streakButton" />
+
+    <!-- repeat_button_frame: справа от streakCount, слева от settings -->
+    <FrameLayout
+        android:id="@+id/repeat_button_frame"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintEnd_toStartOf="@id/settings"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/repeat_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_repeat"
+            android:scaleType="centerInside"
+            android:padding="4dp"
+            android:contentDescription="@string/cd_subscriptions" />
+
+        <TextView
+            android:id="@+id/repeat_center_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="#FF9800"
+            android:textSize="6sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/repeat_badge_letter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:textColor="#FF9800"
+            android:textSize="7sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- settings: между repeat и category_field -->
+    <ImageButton
+        android:id="@+id/settings"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/circle_button_bg"
+        android:src="@drawable/ic_settings"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        android:contentDescription="@string/cd_settings"
+        app:layout_constraintEnd_toStartOf="@id/category_field"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- result: marginTop 48dp чтобы не перекрывать кнопки истории/огонька -->
+    <TextView
+        android:id="@+id/result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:fontFamily="@font/bebas_neue"
+        android:text="0"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display4"
+        android:textColor="@android:color/background_light"
+        android:textSize="70sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/average"
+        android:text="@string/per_day"
+        android:textColor="#888888"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@+id/result"
+        app:layout_constraintBaseline_toBaselineOf="@+id/result" />
+
+    <TextView
+        android:id="@+id/day_limit"
+        android:layout_width="268dp"
+        android:layout_height="33dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/hint_set_date_and_budget"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/result" />
+
+    <FrameLayout
+        android:id="@+id/noteFieldContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/note_field_fill"
+        android:foreground="@drawable/note_field_border"
+        android:clipToOutline="true"
+        app:layout_constraintTop_toBottomOf="@id/day_limit"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="10dp"
+            android:paddingEnd="4dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_note"
+                android:scaleType="fitCenter"
+                android:importantForAccessibility="no" />
+
+            <EditText
+                android:id="@+id/noteField"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:minWidth="80dp"
+                android:hint="Заметка"
+                android:textColorHint="#666666"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@android:color/transparent"
+                android:inputType="text"
+                android:maxLength="50"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                android:importantForAutofill="no"
+                android:paddingStart="6dp"
+                android:paddingEnd="10dp"
+                android:gravity="center_vertical" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/last_operation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:textColor="#888888"
+        android:textSize="13sp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@id/noteFieldContainer"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Дата и время — над category_field -->
+    <LinearLayout
+        android:id="@+id/dateTimeContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Поле даты -->
+        <FrameLayout
+            android:id="@+id/dateFieldContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/note_field_fill"
+            android:foreground="@drawable/note_field_border"
+            android:clipToOutline="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="10dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_calendar"
+                    android:scaleType="fitCenter"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/dateFieldText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="#AAAAAA"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Поле времени -->
+        <FrameLayout
+            android:id="@+id/timeFieldContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/note_field_fill"
+            android:foreground="@drawable/note_field_border"
+            android:clipToOutline="true"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="10dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_clock"
+                    android:scaleType="fitCenter"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/timeFieldText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="#AAAAAA"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- category_field: вертикальный слой левее numpad -->
+    <FrameLayout
+        android:id="@+id/category_field"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/category_field_fill"
+        android:foreground="@drawable/category_field_border"
+        android:clipToOutline="true"
+        app:layout_constraintTop_toTopOf="@id/linearLayout"
+        app:layout_constraintBottom_toBottomOf="@id/linearLayout"
+        app:layout_constraintEnd_toStartOf="@id/linearLayout">
+
+        <ScrollView
+            android:id="@+id/category_scroll"
+            android:saveEnabled="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/category_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp">
+
+                <!-- Кнопка + и эмодзи добавляются программно -->
+
+            </LinearLayout>
+        </ScrollView>
+
+    </FrameLayout>
+
+    <!-- value: привязан к category_field и guideline_center -->
+    <TextView
+        android:id="@+id/value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
+        android:text="0"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display4"
+        android:textColor="@android:color/background_light"
+        android:textSize="60sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/category_field" />
+
+    <TextView
+        android:id="@+id/active_category_indicator"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:visibility="gone"
+        android:background="@drawable/category_emoji_bg"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/value"
+        app:layout_constraintEnd_toStartOf="@+id/value" />
+
+    <!-- ==================== ПРАВАЯ ПОЛОВИНА (numpad) ==================== -->
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button7"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="7"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button8"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="8"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button9"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="9"
+                    android:textSize="20sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button4"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="4"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button5"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="5"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button6"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="6"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button1"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="1"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button2"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="2"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button3"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:text="3"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button_plus_minus"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:gravity="center"
+                    android:padding="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:text="⁺∕-"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button0"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:text="0"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/button_point"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_margin="0dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/dark_grey_button_inset"
+                    android:padding="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:text="."
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/button_del"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_margin="0dp"
+                android:background="@drawable/orange_button_inset"
+                android:padding="20dp"
+                android:src="@drawable/ic_backspace"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/cd_delete" />
+
+            <ImageButton
+                android:id="@+id/button_undo"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_margin="0dp"
+                android:background="@drawable/orange_button_inset"
+                android:padding="20dp"
+                android:src="@drawable/ic_undo"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/cd_undo" />
+
+            <Button
+                android:id="@+id/button_enter"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_margin="0dp"
+                android:layout_weight="2"
+                android:background="@drawable/enter_button_inset"
+                android:padding="0dp"
+                android:text="↵"
+                android:textSize="65sp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- emoji_picker_overlay: поверх numpad (правая половина) -->
+    <FrameLayout
+        android:id="@+id/emoji_picker_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/emoji_picker_fill"
+        android:foreground="@drawable/emoji_picker_border"
+        android:clipToOutline="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="@+id/linearLayout"
+        app:layout_constraintStart_toStartOf="@+id/linearLayout"
+        app:layout_constraintTop_toTopOf="@+id/linearLayout">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:padding="12dp"
+            android:clipToPadding="false">
+
+            <GridLayout
+                android:id="@+id/emoji_grid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:columnCount="6"
+                android:useDefaultMargins="true" />
+
+        </ScrollView>
+
+    </FrameLayout>
+
+    <!-- ==================== OVERLAY ЭЛЕМЕНТЫ (match_parent) ==================== -->
+
+    <View
+        android:id="@+id/dim_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:alpha="0"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/dim_overlay_numpad"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:alpha="0"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/hidden_emoji_input"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:alpha="0"
+        android:inputType="text"
+        android:importantForAutofill="no"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:background="@android:color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/popupOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:visibility="gone"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/place_holder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

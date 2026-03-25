@@ -94,6 +94,7 @@ class History : Fragment() {
     private fun switchType(income: Boolean) {
         if (isIncomeMode == income) return
         isIncomeMode = income
+        binding.categoryBackButton.visibility = View.GONE
         updateTypeButtons()
         refreshView()
     }
@@ -101,6 +102,7 @@ class History : Fragment() {
     private fun switchMode(mode: Int) {
         if (viewMode == mode) return
         viewMode = mode
+        binding.categoryBackButton.visibility = View.GONE
         updateModeButtons()
         refreshView()
     }
@@ -318,6 +320,7 @@ class History : Fragment() {
         }
 
         binding.historyTitle.text = categoryName
+        binding.editButton.visibility = View.GONE
         binding.categoryBackButton.visibility = View.VISIBLE
         binding.emptyText.visibility = View.GONE
         binding.historyRecyclerView.visibility = View.VISIBLE
@@ -329,6 +332,7 @@ class History : Fragment() {
         // Клик на кнопку назад — вернуться к списку категорий
         binding.categoryBackButton.setOnClickListener {
             binding.categoryBackButton.visibility = View.GONE
+            binding.editButton.visibility = View.VISIBLE
             refreshView()
         }
     }

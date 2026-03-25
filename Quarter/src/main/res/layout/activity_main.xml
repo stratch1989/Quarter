@@ -382,6 +382,7 @@
 
         <HorizontalScrollView
             android:id="@+id/category_scroll"
+            android:saveEnabled="false"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scrollbars="none"
@@ -559,10 +560,10 @@
         android:text="1"
         android:textColor="#FF9800"
         android:textSize="9sp"
-        android:layout_marginStart="1dp"
+        android:layout_marginStart="-4dp"
+        android:layout_marginTop="2dp"
         app:layout_constraintStart_toEndOf="@id/streakButton"
-        app:layout_constraintTop_toTopOf="@id/streakButton"
-        app:layout_constraintBottom_toBottomOf="@id/streakButton" />
+        app:layout_constraintTop_toTopOf="@id/streakButton" />
 
     <TextView
         android:id="@+id/textView2"

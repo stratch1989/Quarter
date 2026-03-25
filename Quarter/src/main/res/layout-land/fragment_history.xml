@@ -32,11 +32,11 @@
             android:textColor="@android:color/white"
             android:textSize="17sp" />
 
-        <!-- Основной блок попапа 280x280 -->
+        <!-- Основной блок попапа 250x250 -->
         <FrameLayout
             android:id="@+id/frameForMetrics"
-            android:layout_width="280dp"
-            android:layout_height="280dp"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
             android:background="@drawable/history_popup_bg"
             android:clipToOutline="true">
 
@@ -103,15 +103,14 @@
 
     </LinearLayout>
 
-    <!-- Кнопки режимов: вертикально справа от попапа -->
-    <!-- marginStart = 16dp (отступ контента) + 280dp (ширина попапа) + 4dp (gap) = 300dp -->
+    <!-- Кнопки режимов: правый нижний угол -->
     <LinearLayout
         android:id="@+id/modeToggle"
         android:layout_width="42dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|start"
-        android:layout_marginStart="300dp"
-        android:layout_marginTop="172dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/category_emoji_bg"
         android:clipToOutline="true"
         android:orientation="vertical">
@@ -163,15 +162,14 @@
 
     </LinearLayout>
 
-    <!-- Кнопки −/+ снизу от попапа -->
-    <!-- marginTop = 4dp (marginTop контента) + ~40dp (заголовок) + 8dp (gap) + 280dp (попап) + 4dp (gap) = 336dp -->
+    <!-- Кнопки −/+ правый нижний угол, левее режимов -->
     <LinearLayout
         android:id="@+id/typeToggle"
         android:layout_width="wrap_content"
         android:layout_height="42dp"
-        android:layout_gravity="top|start"
-        android:layout_marginStart="180dp"
-        android:layout_marginTop="340dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="70dp"
+        android:layout_marginBottom="16dp"
         android:background="@drawable/category_emoji_bg"
         android:clipToOutline="true"
         android:orientation="horizontal">
@@ -205,12 +203,13 @@
     </LinearLayout>
 
     <!-- Кнопка редактирования (карандаш) — правый верхний угол -->
+    <!-- marginStart = 16dp (отступ контента) + 250dp (ширина попапа) - 36dp (ширина кнопки) - 2dp = 228dp -->
     <ImageButton
         android:id="@+id/editButton"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_gravity="top|start"
-        android:layout_marginStart="258dp"
+        android:layout_marginStart="228dp"
         android:layout_marginTop="4dp"
         android:background="@drawable/circle_button_bg"
         android:contentDescription="@string/cd_edit"
@@ -225,7 +224,7 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_gravity="top|start"
-        android:layout_marginStart="258dp"
+        android:layout_marginStart="228dp"
         android:layout_marginTop="4dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/cd_edit"
@@ -239,7 +238,7 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_gravity="top|start"
-        android:layout_marginStart="258dp"
+        android:layout_marginStart="228dp"
         android:layout_marginTop="4dp"
         android:background="@drawable/circle_button_bg"
         android:src="@drawable/ic_arrow_back"

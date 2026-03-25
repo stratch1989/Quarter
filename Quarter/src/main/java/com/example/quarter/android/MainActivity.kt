@@ -745,8 +745,10 @@ class MainActivity : FragmentActivity() {
             // Перестроить строку выбранных категорий
             categoryContainer.removeAllViews()
             val dp = resources.displayMetrics.density
-            val btnSize = (38 * dp).toInt()
-            val gap = (6 * dp).toInt()
+            val isLandscapeMode = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val catBtnMetrics = if (isLandscapeMode) resources.displayMetrics.heightPixels / 4.3 else resources.displayMetrics.widthPixels / 4.3
+            val btnSize = if (isLandscapeMode) (catBtnMetrics * 0.4).toInt() else (38 * dp).toInt()
+            val gap = if (isLandscapeMode) (catBtnMetrics * 0.08).toInt() else (6 * dp).toInt()
             val indicator = findViewById<TextView>(R.id.active_category_indicator)
             val currentSelected = if (isAddMode) selectedIncomeEmojis else selectedEmojis
             val currentEmojis = if (isAddMode) incomeCategoryEmojis else categoryEmojis
@@ -754,7 +756,7 @@ class MainActivity : FragmentActivity() {
             val addBtn = TextView(this).apply {
                 id = R.id.category_add_btn
                 layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
-                    marginEnd = gap
+                    if (isLandscapeMode) bottomMargin = gap else marginEnd = gap
                 }
                 gravity = android.view.Gravity.CENTER
                 text = "+"
@@ -768,7 +770,7 @@ class MainActivity : FragmentActivity() {
                 val isActive = emoji == activeCategory
                 val container = FrameLayout(this).apply {
                     layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply {
-                        marginEnd = gap
+                        if (isLandscapeMode) bottomMargin = gap else marginEnd = gap
                     }
                     background = resources.getDrawable(
                         if (isActive) R.drawable.category_emoji_active_bg else R.drawable.category_emoji_bg,
@@ -880,8 +882,13 @@ class MainActivity : FragmentActivity() {
             }
             // Индикатор отключён
             indicator.visibility = View.GONE
-            findViewById<HorizontalScrollView>(R.id.category_scroll).post {
-                findViewById<HorizontalScrollView>(R.id.category_scroll).fullScroll(View.FOCUS_LEFT)
+            findViewById<ViewGroup>(R.id.category_scroll).post {
+                val scrollView = findViewById<ViewGroup>(R.id.category_scroll)
+                if (scrollView is HorizontalScrollView) {
+                    scrollView.fullScroll(View.FOCUS_LEFT)
+                } else if (scrollView is android.widget.ScrollView) {
+                    scrollView.fullScroll(View.FOCUS_UP)
+                }
             }
 
             // Перестроить сетку эмодзи
@@ -981,7 +988,8 @@ class MainActivity : FragmentActivity() {
             false // не перехватываем — скролл работает как обычно
         }
 
-        val displayMetrics = resources.displayMetrics.widthPixels/4.3
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val displayMetrics = if (isLandscape) resources.displayMetrics.heightPixels / 4.3 else resources.displayMetrics.widthPixels / 4.3
 
         // Изменения размеров кнопок
         fun buttonMetrics(button: View): Unit {
@@ -989,6 +997,11 @@ class MainActivity : FragmentActivity() {
             layoutParams.width = displayMetrics.toInt()
             layoutParams.height = displayMetrics.toInt()
             button.layoutParams = layoutParams
+            // Для иконок (del/undo) — пропорциональный padding
+            if (button is ImageButton) {
+                val pad = (displayMetrics * 0.33).toInt()
+                button.setPadding(pad, pad, pad, pad)
+            }
         }
 
         // Превью при вводе цифр
@@ -1689,6 +1702,12 @@ class MainActivity : FragmentActivity() {
                 dataModel.isPremium.value = result.isPremium
             }
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Пересоздаём Activity чтобы загрузить правильный layout (portrait/landscape)
+        recreate()
     }
 
     override fun onPause() {
