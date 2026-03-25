@@ -114,6 +114,7 @@ class MainActivity : FragmentActivity() {
     private val selectedEmojis = mutableListOf<String>()
     private var activeCategory: String? = null
     private var activeNote: String? = null
+    private var noteManuallyEdited = false
     private var activeDate: java.time.LocalDate = java.time.LocalDate.now()
     private var activeTime: String = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
     private var lastOperationHandler: android.os.Handler? = null
@@ -316,20 +317,44 @@ class MainActivity : FragmentActivity() {
             binding.dateTimeContainer.animate().alpha(1f).setDuration(200).start()
         }
 
+        // Показать/скрыть крестик очистки заметки
+        fun updateNoteClearButton() {
+            val hasText = binding.noteField.text.isNotEmpty()
+            binding.noteClearButton.visibility = if (hasText) View.VISIBLE else View.GONE
+        }
+
+        binding.noteField.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) { updateNoteClearButton() }
+        })
+
+        binding.noteClearButton.setOnClickListener {
+            binding.noteField.text.clear()
+            activeNote = null
+            noteManuallyEdited = false
+            updateNoteClearButton()
+        }
+
         binding.noteField.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 showNoteMode()
             } else {
                 val text = binding.noteField.text.toString().trim()
                 activeNote = if (text.isEmpty()) null else text
+                if (text.isNotEmpty()) noteManuallyEdited = true
+                if (text.isEmpty()) noteManuallyEdited = false
                 hideNoteMode()
             }
+            updateNoteClearButton()
         }
 
         binding.noteField.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
                 val text = binding.noteField.text.toString().trim()
                 activeNote = if (text.isEmpty()) null else text
+                if (text.isNotEmpty()) noteManuallyEdited = true
+                if (text.isEmpty()) noteManuallyEdited = false
                 binding.noteField.clearFocus()
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                 imm.hideSoftInputFromWindow(binding.noteField.windowToken, 0)
@@ -493,6 +518,25 @@ class MainActivity : FragmentActivity() {
 
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_settings_menu, null)
             val screenWidth = resources.displayMetrics.widthPixels
+            val dp = resources.displayMetrics.density
+            val scale = (screenWidth / dp) / 360f // масштаб относительно 360dp экрана
+            // Адаптивные размеры текста и элементов
+            fun scaleSettingsItems(parent: android.view.ViewGroup) {
+                for (i in 0 until parent.childCount) {
+                    val child = parent.getChildAt(i)
+                    if (child is TextView) child.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f * scale.coerceIn(0.75f, 1.2f))
+                    if (child is android.widget.ImageView) {
+                        child.layoutParams.width = (20 * dp * scale.coerceIn(0.75f, 1.2f)).toInt()
+                        child.layoutParams.height = (20 * dp * scale.coerceIn(0.75f, 1.2f)).toInt()
+                    }
+                    if (child is LinearLayout) {
+                        child.layoutParams.height = (56 * dp * scale.coerceIn(0.75f, 1.2f)).toInt()
+                        val pad = (20 * dp * scale.coerceIn(0.75f, 1.2f)).toInt()
+                        child.setPadding(pad, 0, pad, 0)
+                    }
+                }
+            }
+            scaleSettingsItems(popupView as android.view.ViewGroup)
             val popupWidthPx = (screenWidth * 0.70).toInt()
             val popup = PopupWindow(
                 popupView,
@@ -626,6 +670,25 @@ class MainActivity : FragmentActivity() {
 
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_subscription_menu, null)
             val screenWidth = resources.displayMetrics.widthPixels
+            val dpSub = resources.displayMetrics.density
+            val scaleSub = ((screenWidth / dpSub) / 360f).coerceIn(0.75f, 1.2f)
+            // Адаптивные размеры
+            fun scaleSubItems(parent: android.view.ViewGroup) {
+                for (i in 0 until parent.childCount) {
+                    val child = parent.getChildAt(i)
+                    if (child is TextView) child.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f * scaleSub)
+                    if (child is android.widget.ImageView) {
+                        child.layoutParams.width = (20 * dpSub * scaleSub).toInt()
+                        child.layoutParams.height = (20 * dpSub * scaleSub).toInt()
+                    }
+                    if (child is LinearLayout) {
+                        child.layoutParams.height = (48 * dpSub * scaleSub).toInt()
+                        val pad = (20 * dpSub * scaleSub).toInt()
+                        child.setPadding(pad, 0, pad, 0)
+                    }
+                }
+            }
+            scaleSubItems(popupView as android.view.ViewGroup)
             val popupWidthPx = (screenWidth * 0.65).toInt()
 
             // Показать "Отключить" если режим активен
@@ -766,15 +829,17 @@ class MainActivity : FragmentActivity() {
                     selected.add(0, text)
                 }
                 activeCategory = text
-                // Автозаполнение заметки по категории
-                val mapInput = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
-                val savedNoteInput = mapInput[text]
-                if (savedNoteInput != null) {
-                    activeNote = savedNoteInput
-                    binding.noteField.setText(savedNoteInput)
-                } else {
-                    activeNote = null
-                    binding.noteField.setText("")
+                // Автозаполнение заметки по категории (только если пользователь не вводил вручную)
+                if (!noteManuallyEdited) {
+                    val mapInput = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                    val savedNoteInput = mapInput[text]
+                    if (savedNoteInput != null) {
+                        activeNote = savedNoteInput
+                        binding.noteField.setText(savedNoteInput)
+                    } else {
+                        activeNote = null
+                        binding.noteField.setText("")
+                    }
                 }
                 rebuildAll()
                 handling = false
@@ -867,15 +932,17 @@ class MainActivity : FragmentActivity() {
                             indicator.visibility = View.GONE
                         } else {
                             activeCategory = emoji
-                            // Автозаполнение заметки по категории
-                            val map = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
-                            val savedNote = map[emoji]
-                            if (savedNote != null) {
-                                activeNote = savedNote
-                                binding.noteField.setText(savedNote)
-                            } else {
-                                activeNote = null
-                                binding.noteField.setText("")
+                            // Автозаполнение заметки по категории (только если пользователь не вводил вручную)
+                            if (!noteManuallyEdited) {
+                                val map = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                                val savedNote = map[emoji]
+                                if (savedNote != null) {
+                                    activeNote = savedNote
+                                    binding.noteField.setText(savedNote)
+                                } else {
+                                    activeNote = null
+                                    binding.noteField.setText("")
+                                }
                             }
                             // indicator отключён
                         }
@@ -999,15 +1066,17 @@ class MainActivity : FragmentActivity() {
                                 if (!longPressed) {
                                     currentSelected.add(0, emoji)
                                     activeCategory = emoji
-                                    // Автозаполнение заметки по категории
-                                    val mapPicker = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
-                                    val savedNotePicker = mapPicker[emoji]
-                                    if (savedNotePicker != null) {
-                                        activeNote = savedNotePicker
-                                        binding.noteField.setText(savedNotePicker)
-                                    } else {
-                                        activeNote = null
-                                        binding.noteField.setText("")
+                                    // Автозаполнение заметки по категории (только если пользователь не вводил вручную)
+                                    if (!noteManuallyEdited) {
+                                        val mapPicker = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                                        val savedNotePicker = mapPicker[emoji]
+                                        if (savedNotePicker != null) {
+                                            activeNote = savedNotePicker
+                                            binding.noteField.setText(savedNotePicker)
+                                        } else {
+                                            activeNote = null
+                                            binding.noteField.setText("")
+                                        }
                                     }
                                     rebuildAll()
                                 }
@@ -1457,6 +1526,7 @@ class MainActivity : FragmentActivity() {
                 fictionalValue = ""
                 value.text = ""
                 activeNote = null
+                noteManuallyEdited = false
                 binding.noteField.text.clear()
                 activeDate = java.time.LocalDate.now()
                 activeTime = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
@@ -1695,6 +1765,20 @@ class MainActivity : FragmentActivity() {
 
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_date_picker, null)
         val screenWidth = resources.displayMetrics.widthPixels
+        val dpDate = resources.displayMetrics.density
+        val scaleDate = ((screenWidth / dpDate) / 360f).coerceIn(0.7f, 1.2f)
+        // Адаптивные размеры внутренних элементов
+        fun scalePickerTexts(parent: android.view.ViewGroup) {
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChildAt(i)
+                if (child is TextView) {
+                    val baseSp = child.textSize / dpDate
+                    child.setTextSize(TypedValue.COMPLEX_UNIT_SP, baseSp * scaleDate)
+                }
+                if (child is android.view.ViewGroup) scalePickerTexts(child)
+            }
+        }
+        scalePickerTexts(popupView as android.view.ViewGroup)
         val popupWidthPx = (screenWidth * 0.54).toInt()
 
         val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
@@ -1862,6 +1946,19 @@ class MainActivity : FragmentActivity() {
 
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_time_picker, null)
         val screenWidth = resources.displayMetrics.widthPixels
+        val dpTime = resources.displayMetrics.density
+        val scaleTime = ((screenWidth / dpTime) / 360f).coerceIn(0.7f, 1.2f)
+        fun scaleTimeTexts(parent: android.view.ViewGroup) {
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChildAt(i)
+                if (child is TextView) {
+                    val baseSp = child.textSize / dpTime
+                    child.setTextSize(TypedValue.COMPLEX_UNIT_SP, baseSp * scaleTime)
+                }
+                if (child is android.view.ViewGroup) scaleTimeTexts(child)
+            }
+        }
+        scaleTimeTexts(popupView as android.view.ViewGroup)
         val popupWidthPx = (screenWidth * 0.41).toInt()
 
         val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
@@ -1981,6 +2078,19 @@ class MainActivity : FragmentActivity() {
     private fun showCustomIntervalPopup(anchor: View) {
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_custom_interval, null)
         val screenWidth = resources.displayMetrics.widthPixels
+        val dpInterval = resources.displayMetrics.density
+        val scaleInterval = ((screenWidth / dpInterval) / 360f).coerceIn(0.7f, 1.2f)
+        fun scaleIntervalTexts(parent: android.view.ViewGroup) {
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChildAt(i)
+                if (child is TextView) {
+                    val baseSp = child.textSize / dpInterval
+                    child.setTextSize(TypedValue.COMPLEX_UNIT_SP, baseSp * scaleInterval)
+                }
+                if (child is android.view.ViewGroup) scaleIntervalTexts(child)
+            }
+        }
+        scaleIntervalTexts(popupView as android.view.ViewGroup)
         val popupWidthPx = (screenWidth * 0.72).toInt()
 
         val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
