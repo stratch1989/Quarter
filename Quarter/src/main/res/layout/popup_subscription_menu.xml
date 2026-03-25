@@ -13,11 +13,17 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_disable_5"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -32,8 +38,8 @@
         android:id="@+id/divider_disable"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:background="#3A3A3C"
         android:visibility="gone" />
 
@@ -44,10 +50,16 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_daily_cal1"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:id="@+id/text_sub_daily"
@@ -62,8 +74,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:background="#3A3A3C" />
 
     <!-- Еженедельная -->
@@ -73,10 +85,16 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_weekly_cal7"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:id="@+id/text_sub_weekly"
@@ -91,8 +109,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:background="#3A3A3C" />
 
     <!-- Месячная -->
@@ -102,10 +120,16 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_monthly_5"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:id="@+id/text_sub_monthly"
@@ -120,8 +144,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:background="#3A3A3C" />
 
     <!-- Свой интервал -->
@@ -131,10 +155,16 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_custom_5"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -148,8 +178,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:background="#3A3A3C" />
 
     <!-- Текущие подписки -->
@@ -159,10 +189,16 @@
         android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_sublist_2"
+            android:layout_marginEnd="12dp" />
 
         <TextView
             android:layout_width="wrap_content"

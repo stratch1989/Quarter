@@ -29,8 +29,10 @@ import com.example.quarter.android.databinding.ActivityMainBinding
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
@@ -44,6 +46,7 @@ import android.view.LayoutInflater
 import android.content.Intent
 import android.net.Uri
 import android.view.MotionEvent
+import android.view.VelocityTracker
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.EditText
@@ -61,12 +64,17 @@ import com.example.quarter.android.data.FirestoreSync
 import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import android.util.TypedValue
+import org.json.JSONObject
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
     lateinit var binding: ActivityMainBinding
     private val dataModel: DataModel by viewModels()
     private var fictionalValue = ""
+    /** Единый базовый юнит для масштабирования UI.
+     *  Portrait: screenWidth / 4.3, Landscape: screenHeight / 4.3 */
+    private var baseUnit: Float = 0f
 
     var todayLimit = 0.0
     var avarageDailyValue = 0.0
@@ -87,12 +95,22 @@ class MainActivity : FragmentActivity() {
     private var customIntervalUnit: String = "days"     // "days", "weeks", "months"
     private val subscriptions = mutableListOf<SubscriptionEntry>()
     private var subscriptionPopup: PopupWindow? = null
+    private var datePickerPopup: PopupWindow? = null
+    private var timePickerPopup: PopupWindow? = null
     private var isBudgetInputMode = false
     private var budgetInputValue = ""
     private var settingsPopup: PopupWindow? = null
     private var popupBudgetText: TextView? = null
     private var dayStreak = 1
     private var isEmojiPickerOpen = false
+
+    // Guided Numpad onboarding (первый запуск)
+    private var isFirstSetup = false
+    private var setupStep = 0 // 0 = неактивен, 1 = ввод бюджета, 2 = выбор даты
+    private var setupInputValue = ""
+    private var cursorAnimator: ObjectAnimator? = null
+    private var setupDateCancelCount = 0
+    private var setupBackCallback: androidx.activity.OnBackPressedCallback? = null
     private val selectedEmojis = mutableListOf<String>()
     private var activeCategory: String? = null
     private var activeNote: String? = null
@@ -109,6 +127,10 @@ class MainActivity : FragmentActivity() {
     private var editingEntry: HistoryEntry? = null
     private var editingWasIncome: Boolean = false
     private var rebuildCategoryUI: (() -> Unit)? = null
+
+    // Маппинг категория → последняя заметка (автозаполнение)
+    private val categoryNotesMap = mutableMapOf<String, String>()
+    private val incomeCategoryNotesMap = mutableMapOf<String, String>()
 
     private val categoryEmojis = mutableListOf(
         "🍔", "🍕", "🍞", "☕", "🥛", "🍎", "🥩", "🍣",
@@ -341,26 +363,28 @@ class MainActivity : FragmentActivity() {
             binding.textView2.layoutParams = cs
         }
 
-        // Автоуменьшение шрифта для больших чисел
+        // Автоуменьшение шрифта для больших чисел (от baseUnit)
         result.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
                 val len = s?.length ?: 0
-                result.textSize = when {
-                    len <= 7 -> 70f
-                    len == 8 -> 60f
-                    len == 9 -> 50f
-                    len == 10 -> 42f
-                    else -> 36f
+                val factor = when {
+                    len <= 7 -> 0.7f
+                    len == 8 -> 0.6f
+                    len == 9 -> 0.5f
+                    len == 10 -> 0.42f
+                    else -> 0.36f
                 }
-                binding.textView2.textSize = when {
-                    len <= 7 -> 24f
-                    len == 8 -> 20f
-                    len == 9 -> 17f
-                    len == 10 -> 14f
-                    else -> 12f
+                result.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * factor)
+                val factor2 = when {
+                    len <= 7 -> 0.24f
+                    len == 8 -> 0.20f
+                    len == 9 -> 0.17f
+                    len == 10 -> 0.14f
+                    else -> 0.12f
                 }
+                binding.textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * factor2)
             }
         })
 
@@ -369,21 +393,22 @@ class MainActivity : FragmentActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
                 val len = s?.length ?: 0
-                value.textSize = when {
-                    len <= 7 -> 60f
-                    len == 8 -> 50f
-                    len == 9 -> 42f
-                    len == 10 -> 36f
-                    else -> 30f
+                val factor = when {
+                    len <= 7 -> 0.6f
+                    len == 8 -> 0.5f
+                    len == 9 -> 0.42f
+                    len == 10 -> 0.36f
+                    else -> 0.30f
                 }
+                value.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * factor)
             }
         })
 
-        val defaultDayLimitMarginTop = (16 * resources.displayMetrics.density).toInt()
-        val statusDayLimitMarginTop = (-4 * resources.displayMetrics.density).toInt()
+        val defaultDayLimitMarginTop = (baseUnit * 0.16f).toInt()
+        val statusDayLimitMarginTop = (baseUnit * -0.04f).toInt()
 
         fun resetDayLimitStyle() {
-            binding.dayLimit.textSize = 14f
+            binding.dayLimit.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.14f)
             binding.dayLimit.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.NORMAL)
             binding.dayLimit.setTextColor(Color.parseColor("#888888"))
             (binding.dayLimit.layoutParams as? androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)?.let {
@@ -393,7 +418,7 @@ class MainActivity : FragmentActivity() {
         }
 
         fun setDayLimitStatusStyle() {
-            binding.dayLimit.textSize = 24f
+            binding.dayLimit.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.24f)
             binding.dayLimit.setTypeface(binding.dayLimit.typeface, android.graphics.Typeface.BOLD)
             (binding.dayLimit.layoutParams as? androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)?.let {
                 it.topMargin = statusDayLimitMarginTop
@@ -420,7 +445,7 @@ class MainActivity : FragmentActivity() {
         dataModel.money.observe(this) {
             howMany = dataModel.roundMoney(it)
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
-            updateDayLimitText()
+            if (!isFirstSetup) updateDayLimitText()
             hasUnsavedChanges = true
         }
 
@@ -429,21 +454,23 @@ class MainActivity : FragmentActivity() {
             numberOfDays = ChronoUnit.DAYS.between(today, dateFull)
             dataModel.numberOfDays.value = numberOfDays
             avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
-            updateDayLimitText()
+            if (!isFirstSetup) {
+                updateDayLimitText()
 
-            if (howMany != 0.0) {
-                todayLimit = 0.0
-                todayLimit += Math.floor(avarageDailyValue)
-                if (keyTodayLimit != 0.0) {
-                    todayLimit = keyTodayLimit
-                    keyTodayLimit = 0.0
+                if (howMany != 0.0) {
+                    todayLimit = 0.0
+                    todayLimit += Math.floor(avarageDailyValue)
+                    if (keyTodayLimit != 0.0) {
+                        todayLimit = keyTodayLimit
+                        keyTodayLimit = 0.0
+                    }
+                    binding.result.text = todayLimit.toString()
+                    lastDate = today
                 }
-                binding.result.text = todayLimit.toString()
-                lastDate = today
+                lastSpendAmount = null
+                lastIncomeAmount = null
+                binding.lastOperation.text = ""
             }
-            lastSpendAmount = null
-            lastIncomeAmount = null
-            binding.lastOperation.text = ""
             hasUnsavedChanges = true
         }
 
@@ -454,23 +481,23 @@ class MainActivity : FragmentActivity() {
 
         dataModel.todayLimit.observe(this) {
             todayLimit = it
-            binding.result.text = todayLimit.toString()
+            if (!isFirstSetup) binding.result.text = todayLimit.toString()
             hasUnsavedChanges = true
         }
 
         // Попап-меню в стиле Apple
         binding.settings.setOnClickListener { anchor ->
+            if (isFirstSetup) return@setOnClickListener
             // Если попап уже открыт — закрываем
             settingsPopup?.let { it.dismiss(); return@setOnClickListener }
 
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_settings_menu, null)
-            val dpToPx = resources.displayMetrics.density
-            val popupWidthPx = (275 * dpToPx).toInt()
-            val popupHeightPx = (270 * dpToPx).toInt()
+            val screenWidth = resources.displayMetrics.widthPixels
+            val popupWidthPx = (screenWidth * 0.70).toInt()
             val popup = PopupWindow(
                 popupView,
                 popupWidthPx,
-                popupHeightPx,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
                 false // не фокусируемый — numpad работает под попапом
             )
             popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -500,13 +527,13 @@ class MainActivity : FragmentActivity() {
             // Бюджет
             popupBudgetText = popupView.findViewById(R.id.budget_text)
             if (howMany != 0.0) {
-                popupBudgetText?.text = "💰  ${dataModel.roundMoney(howMany)}"
+                popupBudgetText?.text = "${dataModel.roundMoney(howMany)}"
             }
 
             popupView.findViewById<LinearLayout>(R.id.menu_budget).setOnClickListener {
                 isBudgetInputMode = true
                 budgetInputValue = ""
-                popupBudgetText?.text = "💰  _"
+                popupBudgetText?.text = "_"
                 popupBudgetText?.setTextColor(Color.parseColor("#FF9800"))
                 // Плавно убираем затемнение с клавиатуры
                 binding.dimOverlayNumpad.animate().alpha(0f).setDuration(300).withEndAction {
@@ -518,7 +545,7 @@ class MainActivity : FragmentActivity() {
             val dateText = popupView.findViewById<TextView>(R.id.date_text)
             val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
             if (numberOfDays > 0) {
-                val dateStr = "📅  По ${dateFull.format(formatter)}"
+                val dateStr = "По ${dateFull.format(formatter)}"
                 val daysStr = " ($numberOfDays дн.)"
                 val spannable = android.text.SpannableString(dateStr + daysStr)
                 spannable.setSpan(android.text.style.RelativeSizeSpan(0.7f), dateStr.length, spannable.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -574,7 +601,7 @@ class MainActivity : FragmentActivity() {
             // Аккаунт
             val accountText = popupView.findViewById<TextView>(R.id.account_text)
             if (isFirebaseAvailable && AuthManager.isLoggedIn) {
-                accountText.text = "👤  ${AuthManager.currentUser?.email ?: "Аккаунт"}"
+                accountText.text = "${AuthManager.currentUser?.email ?: "Аккаунт"}"
             }
             popupView.findViewById<LinearLayout>(R.id.menu_account).setOnClickListener {
                 isBudgetInputMode = false
@@ -593,12 +620,13 @@ class MainActivity : FragmentActivity() {
 
         // Кнопка Repeat (подписки)
         binding.repeatButton.setOnClickListener { anchor ->
+            if (isFirstSetup) return@setOnClickListener
             if (settingsPopup != null) return@setOnClickListener
             subscriptionPopup?.let { it.dismiss(); subscriptionPopup = null; return@setOnClickListener }
 
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_subscription_menu, null)
-            val dpToPx = resources.displayMetrics.density
-            val popupWidthPx = (275 * dpToPx).toInt()
+            val screenWidth = resources.displayMetrics.widthPixels
+            val popupWidthPx = (screenWidth * 0.65).toInt()
 
             // Показать "Отключить" если режим активен
             val disableItem = popupView.findViewById<LinearLayout>(R.id.menu_sub_disable)
@@ -662,6 +690,7 @@ class MainActivity : FragmentActivity() {
 
         // Фрагмент History
         binding.history.setOnClickListener {
+            if (isFirstSetup) return@setOnClickListener
             if (settingsPopup != null) return@setOnClickListener
             val historyFragment = History.newInstance()
             historyFragment.onEntryClick = { entry, wasIncome ->
@@ -696,6 +725,7 @@ class MainActivity : FragmentActivity() {
 
         // Streak popup
         binding.streakButton.setOnClickListener {
+            if (isFirstSetup) return@setOnClickListener
             if (settingsPopup != null) return@setOnClickListener
             supportFragmentManager
                 .beginTransaction()
@@ -736,6 +766,16 @@ class MainActivity : FragmentActivity() {
                     selected.add(0, text)
                 }
                 activeCategory = text
+                // Автозаполнение заметки по категории
+                val mapInput = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                val savedNoteInput = mapInput[text]
+                if (savedNoteInput != null) {
+                    activeNote = savedNoteInput
+                    binding.noteField.setText(savedNoteInput)
+                } else {
+                    activeNote = null
+                    binding.noteField.setText("")
+                }
                 rebuildAll()
                 handling = false
             }
@@ -744,11 +784,10 @@ class MainActivity : FragmentActivity() {
         rebuildAll = {
             // Перестроить строку выбранных категорий
             categoryContainer.removeAllViews()
-            val dp = resources.displayMetrics.density
             val isLandscapeMode = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
             val catBtnMetrics = if (isLandscapeMode) resources.displayMetrics.heightPixels / 4.3 else resources.displayMetrics.widthPixels / 4.3
-            val btnSize = if (isLandscapeMode) (catBtnMetrics * 0.4).toInt() else (38 * dp).toInt()
-            val gap = if (isLandscapeMode) (catBtnMetrics * 0.08).toInt() else (6 * dp).toInt()
+            val btnSize = (catBtnMetrics * 0.4).toInt()
+            val gap = (catBtnMetrics * 0.08).toInt()
             val indicator = findViewById<TextView>(R.id.active_category_indicator)
             val currentSelected = if (isAddMode) selectedIncomeEmojis else selectedEmojis
             val currentEmojis = if (isAddMode) incomeCategoryEmojis else categoryEmojis
@@ -761,7 +800,7 @@ class MainActivity : FragmentActivity() {
                 gravity = android.view.Gravity.CENTER
                 text = "+"
                 setTextColor(Color.parseColor("#555555"))
-                textSize = 16f
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.16f)
                 background = resources.getDrawable(R.drawable.category_add_button_bg, theme)
                 setOnClickListener { toggleEmojiPicker() }
             }
@@ -785,7 +824,7 @@ class MainActivity : FragmentActivity() {
                         FrameLayout.LayoutParams.MATCH_PARENT
                     )
                     text = emoji
-                    textSize = 16f
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.16f)
                     gravity = android.view.Gravity.CENTER
                 }
                 container.addView(tv)
@@ -799,14 +838,14 @@ class MainActivity : FragmentActivity() {
                         setBackgroundColor(Color.argb(120, 0, 0, 0))
                     }
                     container.addView(dim)
-                    val xSize = (12 * dp).toInt()
+                    val xSize = (baseUnit * 0.12f).toInt()
                     val xMark = TextView(this).apply {
                         layoutParams = FrameLayout.LayoutParams(xSize, xSize).apply {
                             gravity = android.view.Gravity.TOP or android.view.Gravity.END
                         }
                         text = "×"
                         setTextColor(Color.WHITE)
-                        textSize = 7f
+                        setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.07f)
                         gravity = android.view.Gravity.CENTER
                         background = android.graphics.drawable.GradientDrawable().apply {
                             shape = android.graphics.drawable.GradientDrawable.OVAL
@@ -828,6 +867,16 @@ class MainActivity : FragmentActivity() {
                             indicator.visibility = View.GONE
                         } else {
                             activeCategory = emoji
+                            // Автозаполнение заметки по категории
+                            val map = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                            val savedNote = map[emoji]
+                            if (savedNote != null) {
+                                activeNote = savedNote
+                                binding.noteField.setText(savedNote)
+                            } else {
+                                activeNote = null
+                                binding.noteField.setText("")
+                            }
                             // indicator отключён
                         }
                     }
@@ -894,8 +943,8 @@ class MainActivity : FragmentActivity() {
             // Перестроить сетку эмодзи
             emojiGrid.removeAllViews()
             // Кнопка клавиатуры — первый элемент
-            val kbSize = (48 * dp).toInt()
-            val kbPad = (10 * dp).toInt()
+            val kbSize = (baseUnit * 0.48f).toInt()
+            val kbPad = (baseUnit * 0.10f).toInt()
             val kbBtn = ImageButton(this).apply {
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = kbSize
@@ -921,8 +970,8 @@ class MainActivity : FragmentActivity() {
                 @SuppressLint("ClickableViewAccessibility")
                 val tv = TextView(this).apply {
                     text = emoji
-                    textSize = 26f
-                    val size = (48 * dp).toInt()
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.26f)
+                    val size = (baseUnit * 0.48f).toInt()
                     layoutParams = GridLayout.LayoutParams().apply {
                         width = size
                         height = size
@@ -933,6 +982,10 @@ class MainActivity : FragmentActivity() {
                         longPressed = true
                         currentEmojis.remove(emoji)
                         currentSelected.remove(emoji)
+                        // Удаляем маппинг заметки для удалённой категории
+                        val mapDel = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                        mapDel.remove(emoji)
+                        saveCategoryNotesMap()
                         rebuildAll()
                     }
                     setOnTouchListener { _, event ->
@@ -946,6 +999,16 @@ class MainActivity : FragmentActivity() {
                                 if (!longPressed) {
                                     currentSelected.add(0, emoji)
                                     activeCategory = emoji
+                                    // Автозаполнение заметки по категории
+                                    val mapPicker = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                                    val savedNotePicker = mapPicker[emoji]
+                                    if (savedNotePicker != null) {
+                                        activeNote = savedNotePicker
+                                        binding.noteField.setText(savedNotePicker)
+                                    } else {
+                                        activeNote = null
+                                        binding.noteField.setText("")
+                                    }
                                     rebuildAll()
                                 }
                             }
@@ -959,6 +1022,10 @@ class MainActivity : FragmentActivity() {
                 emojiGrid.addView(tv)
             }
         }
+
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val displayMetrics = if (isLandscape) resources.displayMetrics.heightPixels / 4.3 else resources.displayMetrics.widthPixels / 4.3
+        baseUnit = displayMetrics.toFloat()
 
         rebuildAllRef = rebuildAll
         rebuildAll()
@@ -988,8 +1055,43 @@ class MainActivity : FragmentActivity() {
             false // не перехватываем — скролл работает как обычно
         }
 
-        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-        val displayMetrics = if (isLandscape) resources.displayMetrics.heightPixels / 4.3 else resources.displayMetrics.widthPixels / 4.3
+        // Установка адаптивных размеров текста от baseUnit
+        binding.result.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.7f)
+        binding.value.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.6f)
+        binding.textView2.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.24f)
+        binding.lastOperation.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.14f)
+
+        // Адаптивные размеры полей
+        binding.noteFieldContainer.layoutParams.height = (baseUnit * 0.36f).toInt()
+        binding.noteField.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.13f)
+        if (!isLandscape) {
+            binding.categoryField.layoutParams.height = (baseUnit * 0.56f).toInt()
+        }
+        // Дата-время
+        binding.dateTimeContainer.layoutParams.height = (baseUnit * 0.3f).toInt()
+        binding.dateFieldText.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.12f)
+        binding.timeFieldText.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.12f)
+
+        // Адаптивные размеры иконок в верхнем баре
+        val iconBtnSize = (baseUnit * 0.36f).toInt()
+        listOf(binding.settings, binding.history).forEach { btn ->
+            btn.layoutParams.width = iconBtnSize
+            btn.layoutParams.height = iconBtnSize
+            val iconPad = (baseUnit * 0.08f).toInt()
+            btn.setPadding(iconPad, iconPad, iconPad, iconPad)
+        }
+        binding.streakButton.layoutParams.width = iconBtnSize
+        binding.streakButton.layoutParams.height = iconBtnSize
+        binding.streakButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.14f)
+        binding.streakCount.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.09f)
+        binding.repeatButtonFrame.layoutParams.width = iconBtnSize
+        binding.repeatButtonFrame.layoutParams.height = iconBtnSize
+
+        // Отступ result от верха
+        (binding.result.layoutParams as? androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)?.let {
+            it.topMargin = (baseUnit * 0.44f).toInt()
+            binding.result.layoutParams = it
+        }
 
         // Изменения размеров кнопок
         fun buttonMetrics(button: View): Unit {
@@ -1001,6 +1103,10 @@ class MainActivity : FragmentActivity() {
             if (button is ImageButton) {
                 val pad = (displayMetrics * 0.33).toInt()
                 button.setPadding(pad, pad, pad, pad)
+            }
+            // Пропорциональный размер текста для цифровых кнопок
+            if (button is Button) {
+                button.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.35f)
             }
         }
 
@@ -1065,6 +1171,24 @@ class MainActivity : FragmentActivity() {
 
         // Обработка нажатия на цифры
         fun buttonBinding(variable: String): Unit {
+            // Setup mode: ввод бюджета через нампад
+            if (isFirstSetup && setupStep == 1) {
+                if ((variable == "." && setupInputValue.contains("."))
+                    || (variable == "0" && setupInputValue.isEmpty())
+                    || setupInputValue.replace(".", "").length >= 8) return
+                // Остановить мигание курсора при первом нажатии
+                cursorAnimator?.cancel()
+                cursorAnimator = null
+                binding.result.alpha = 1f
+                setupInputValue += variable
+                binding.result.text = setupInputValue
+                // Подсказка "Нажмите ↵" под основной
+                binding.dayLimit.text = "Укажите бюджет\nНажмите ↵"
+                return
+            }
+            // Setup mode шаг 2: нампад заблокирован
+            if (isFirstSetup && setupStep == 2) return
+
             // Попап открыт, но не режим бюджета — закрываем попап
             if (settingsPopup != null && !isBudgetInputMode) {
                 settingsPopup?.dismiss()
@@ -1075,7 +1199,7 @@ class MainActivity : FragmentActivity() {
                     || (variable == "0" && budgetInputValue.isEmpty())
                     || budgetInputValue.replace(".", "").length >= 8) return
                 budgetInputValue += variable
-                popupBudgetText?.text = "💰  $budgetInputValue"
+                popupBudgetText?.text = "$budgetInputValue"
                 return
             }
             if ((variable == "." && fictionalValue.contains("."))
@@ -1107,6 +1231,8 @@ class MainActivity : FragmentActivity() {
             button.setOnClickListener {buttonBinding(buttonText)}
         }
         buttonMetrics(buttonEnter)
+        // Увеличенный шрифт для ↵ на enter-кнопке
+        buttonEnter.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.65f)
         buttonMetrics(butDelete)
         buttonMetrics(butUndo)
 
@@ -1119,6 +1245,28 @@ class MainActivity : FragmentActivity() {
 
         // Обработка кнопки удалить
         butDelete.setOnClickListener {
+            // Setup mode: удаление символа
+            if (isFirstSetup && setupStep == 1) {
+                if (setupInputValue.isNotEmpty()) {
+                    setupInputValue = setupInputValue.dropLast(1)
+                    if (setupInputValue.isEmpty()) {
+                        binding.result.text = "_"
+                        binding.dayLimit.text = "Укажите бюджет"
+                        // Возобновить мигание курсора
+                        cursorAnimator?.cancel()
+                        cursorAnimator = ObjectAnimator.ofFloat(binding.result, "alpha", 1f, 0.3f).apply {
+                            duration = 500
+                            repeatCount = ObjectAnimator.INFINITE
+                            repeatMode = ObjectAnimator.REVERSE
+                            start()
+                        }
+                    } else {
+                        binding.result.text = setupInputValue
+                    }
+                }
+                return@setOnClickListener
+            }
+            if (isFirstSetup && setupStep == 2) return@setOnClickListener
             if (settingsPopup != null && !isBudgetInputMode) {
                 settingsPopup?.dismiss()
                 return@setOnClickListener
@@ -1126,7 +1274,7 @@ class MainActivity : FragmentActivity() {
             if (isBudgetInputMode) {
                 if (budgetInputValue.isNotEmpty()) {
                     budgetInputValue = budgetInputValue.dropLast(1)
-                    popupBudgetText?.text = if (budgetInputValue.isEmpty()) "💰  _" else "💰  $budgetInputValue"
+                    popupBudgetText?.text = if (budgetInputValue.isEmpty()) "_" else "$budgetInputValue"
                 }
                 return@setOnClickListener
             }
@@ -1137,9 +1285,24 @@ class MainActivity : FragmentActivity() {
             }
         }
         butDelete.setOnLongClickListener {
+            // Setup mode: очистить весь ввод
+            if (isFirstSetup && setupStep == 1) {
+                setupInputValue = ""
+                binding.result.text = "_"
+                binding.dayLimit.text = "Укажите бюджет"
+                cursorAnimator?.cancel()
+                cursorAnimator = ObjectAnimator.ofFloat(binding.result, "alpha", 1f, 0.3f).apply {
+                    duration = 500
+                    repeatCount = ObjectAnimator.INFINITE
+                    repeatMode = ObjectAnimator.REVERSE
+                    start()
+                }
+                return@setOnLongClickListener true
+            }
+            if (isFirstSetup && setupStep == 2) return@setOnLongClickListener true
             if (isBudgetInputMode) {
                 budgetInputValue = ""
-                popupBudgetText?.text = "💰  _"
+                popupBudgetText?.text = "_"
                 return@setOnLongClickListener true
             }
             if (fictionalValue.isNotEmpty()) {
@@ -1153,6 +1316,37 @@ class MainActivity : FragmentActivity() {
         // Обработка кнопки enter
         val historyManager = HistoryManager(this)
         buttonEnter.setOnClickListener {
+            // Setup mode: подтверждение бюджета
+            if (isFirstSetup && setupStep == 1) {
+                val budgetValue = setupInputValue.toDoubleOrNull()
+                if (budgetValue == null || budgetValue <= 0.0) {
+                    // Подсказка мигает красным на 300ms, возврат к оранжевому
+                    binding.dayLimit.setTextColor(Color.RED)
+                    binding.root.postDelayed({
+                        binding.dayLimit.setTextColor(Color.parseColor("#FF9800"))
+                    }, 300)
+                    return@setOnClickListener
+                }
+                // Haptic feedback
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    binding.root.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+                }
+                // Сохранить бюджет
+                howMany = dataModel.roundMoney(budgetValue)
+                dataModel.money.value = howMany
+                hasUnsavedChanges = true
+                saveData()
+                // Остановить мигание
+                cursorAnimator?.cancel()
+                cursorAnimator = null
+                binding.result.alpha = 1f
+                // Перейти к шагу 2
+                enterSetupStep2()
+                return@setOnClickListener
+            }
+            // Setup mode шаг 2: нампад заблокирован
+            if (isFirstSetup && setupStep == 2) return@setOnClickListener
+
             if (settingsPopup != null && !isBudgetInputMode) {
                 settingsPopup?.dismiss()
                 return@setOnClickListener
@@ -1239,6 +1433,12 @@ class MainActivity : FragmentActivity() {
                         updateRepeatBadge()
                     }
                 }
+                // Сохранить маппинг категория → заметка
+                if (activeCategory != null && !activeNote.isNullOrEmpty()) {
+                    val map = if (isAddMode) incomeCategoryNotesMap else categoryNotesMap
+                    map[activeCategory!!] = activeNote!!
+                    saveCategoryNotesMap()
+                }
                 // Сбросить активную категорию
                 if (activeCategory != null) {
                     activeCategory = null
@@ -1279,6 +1479,7 @@ class MainActivity : FragmentActivity() {
 
         // Обработка кнопки отмены последней операции
         butUndo.setOnClickListener {
+            if (isFirstSetup) return@setOnClickListener
             if (lastIncomeAmount != null) {
                 val amount = lastIncomeAmount!!
                 todayLimit = dataModel.roundMoney(todayLimit - amount)
@@ -1307,6 +1508,7 @@ class MainActivity : FragmentActivity() {
         // Обработка кнопки +/-
         buttonMetrics(butPlusMinus)
         butPlusMinus.setOnClickListener {
+            if (isFirstSetup) return@setOnClickListener
             isAddMode = !isAddMode
             activeCategory = null
             updateTextView2("/день", if (isAddMode) Color.parseColor("#4CAF50") else Color.parseColor("#888888"))
@@ -1486,44 +1688,163 @@ class MainActivity : FragmentActivity() {
         lastOpEntry = null
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun showDatePickerPopup(anchor: View) {
+        // Закрыть предыдущий попап если открыт
+        datePickerPopup?.dismiss()
+
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_date_picker, null)
-        val popup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        val screenWidth = resources.displayMetrics.widthPixels
+        val popupWidthPx = (screenWidth * 0.54).toInt()
+
+        val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.isClippingEnabled = false
         popup.elevation = 16f
+        datePickerPopup = popup
 
         binding.popupOverlay.alpha = 0f
         binding.popupOverlay.visibility = View.VISIBLE
         binding.popupOverlay.animate().alpha(1f).setDuration(200).start()
         binding.popupOverlay.setOnClickListener { popup.dismiss() }
         popup.setOnDismissListener {
+            datePickerPopup = null
             binding.popupOverlay.animate().alpha(0f).setDuration(200).withEndAction {
                 binding.popupOverlay.visibility = View.GONE
             }.start()
         }
-        popup.animationStyle = android.R.style.Animation_Dialog
-
-        val dayPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.dayPicker)
-        val monthPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.monthPicker)
-        val yearPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.yearPicker)
-
-        dayPicker.minValue = 1
-        dayPicker.maxValue = activeDate.lengthOfMonth()
-        dayPicker.value = activeDate.dayOfMonth
 
         val months = arrayOf("янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек")
-        monthPicker.minValue = 1
-        monthPicker.maxValue = 12
-        monthPicker.displayedValues = months
-        monthPicker.value = activeDate.monthValue
+        var currentDay = activeDate.dayOfMonth
+        var currentMonth = activeDate.monthValue
+        var currentYear = activeDate.year
 
-        yearPicker.minValue = 2024
-        yearPicker.maxValue = 2030
-        yearPicker.value = activeDate.year
+        val dayText = popupView.findViewById<TextView>(R.id.day_value)
+        val dayPrev = popupView.findViewById<TextView>(R.id.day_prev)
+        val dayNext = popupView.findViewById<TextView>(R.id.day_next)
+        val dayDrum = popupView.findViewById<LinearLayout>(R.id.day_drum)
+        val monthText = popupView.findViewById<TextView>(R.id.month_value)
+        val monthPrev = popupView.findViewById<TextView>(R.id.month_prev)
+        val monthNext = popupView.findViewById<TextView>(R.id.month_next)
+        val monthDrum = popupView.findViewById<LinearLayout>(R.id.month_drum)
+        val yearText = popupView.findViewById<TextView>(R.id.year_value)
+        val yearPrev = popupView.findViewById<TextView>(R.id.year_prev)
+        val yearNext = popupView.findViewById<TextView>(R.id.year_next)
+        val yearDrum = popupView.findViewById<LinearLayout>(R.id.year_drum)
 
-        popupView.findViewById<TextView>(R.id.datePickerDone).setOnClickListener {
+        fun maxDay(): Int {
+            return try { java.time.YearMonth.of(currentYear, currentMonth).lengthOfMonth() } catch (e: Exception) { 31 }
+        }
+
+        fun updateDayDrum() {
+            val max = maxDay()
+            if (currentDay > max) currentDay = max
+            dayText.text = "$currentDay"
+            val prev = if (currentDay > 1) currentDay - 1 else max
+            val next = if (currentDay < max) currentDay + 1 else 1
+            dayPrev.text = "$prev"
+            dayNext.text = "$next"
+        }
+
+        fun updateMonthDrum() {
+            monthText.text = months[currentMonth - 1]
+            monthPrev.text = months[(currentMonth - 2 + 12) % 12]
+            monthNext.text = months[currentMonth % 12]
+        }
+
+        fun updateYearDrum() {
+            yearText.text = "$currentYear"
+            yearPrev.text = if (currentYear > 2024) "${currentYear - 1}" else ""
+            yearNext.text = if (currentYear < 2030) "${currentYear + 1}" else ""
+        }
+
+        updateDayDrum(); updateMonthDrum(); updateYearDrum()
+
+        fun animateDrum(drum: LinearLayout, up: Boolean, onEnd: () -> Unit) {
+            val shift = drum.getChildAt(1).height.toFloat() * if (up) -1 else 1
+            drum.animate().translationY(shift).setDuration(120).withEndAction {
+                drum.translationY = 0f; onEnd()
+            }.start()
+        }
+
+        // Барабан-лента: палец тянет, инерция при отпускании
+        fun setupDrumScroll(drum: LinearLayout, stepUp: () -> Unit, stepDown: () -> Unit) {
+            var vt: VelocityTracker? = null
+            var lastY = 0f
+            var accumulated = 0f
+            var flingAnim: ValueAnimator? = null
+
+            drum.setOnTouchListener { _, event ->
+                val itemH = drum.getChildAt(1).height.toFloat()
+                if (itemH <= 0f) return@setOnTouchListener false
+
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        flingAnim?.cancel()
+                        vt = VelocityTracker.obtain(); vt?.addMovement(event)
+                        lastY = event.y; accumulated = 0f; true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        vt?.addMovement(event)
+                        accumulated += event.y - lastY; lastY = event.y
+                        while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                        while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                        drum.translationY = accumulated; true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        vt?.addMovement(event); vt?.computeCurrentVelocity(1000)
+                        val vy = vt?.yVelocity ?: 0f; vt?.recycle(); vt = null
+
+                        if (Math.abs(vy) > 300f) {
+                            val totalPx = vy * 0.28f
+                            val dur = (Math.abs(vy) / 2.5f).toLong().coerceIn(150, 1200)
+                            flingAnim = ValueAnimator.ofFloat(0f, totalPx).apply {
+                                duration = dur; interpolator = DecelerateInterpolator(2.5f)
+                                var prev = 0f
+                                addUpdateListener { anim ->
+                                    val cur = anim.animatedValue as Float
+                                    accumulated += cur - prev; prev = cur
+                                    while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                                    while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                                    drum.translationY = accumulated
+                                }
+                                addListener(object : AnimatorListenerAdapter() {
+                                    override fun onAnimationEnd(a: android.animation.Animator) {
+                                        drum.animate().translationY(0f).setDuration(80).start()
+                                    }
+                                })
+                                start()
+                            }
+                        } else {
+                            drum.animate().translationY(0f).setDuration(80).start()
+                        }; true
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        vt?.recycle(); vt = null
+                        drum.animate().translationY(0f).setDuration(80).start(); true
+                    }
+                    else -> true
+                }
+            }
+        }
+
+        setupDrumScroll(dayDrum,
+            { val max = maxDay(); currentDay = if (currentDay < max) currentDay + 1 else 1; updateDayDrum() },
+            { val max = maxDay(); currentDay = if (currentDay > 1) currentDay - 1 else max; updateDayDrum() }
+        )
+        setupDrumScroll(monthDrum,
+            { currentMonth = if (currentMonth < 12) currentMonth + 1 else 1; updateMonthDrum(); updateDayDrum() },
+            { currentMonth = if (currentMonth > 1) currentMonth - 1 else 12; updateMonthDrum(); updateDayDrum() }
+        )
+        setupDrumScroll(yearDrum,
+            { if (currentYear < 2030) { currentYear++; updateYearDrum(); updateDayDrum() } },
+            { if (currentYear > 2024) { currentYear--; updateYearDrum(); updateDayDrum() } }
+        )
+
+        // Кнопка подтверждения
+        popupView.findViewById<ImageButton>(R.id.btn_date_done).setOnClickListener {
             try {
-                activeDate = java.time.LocalDate.of(yearPicker.value, monthPicker.value, dayPicker.value)
+                activeDate = java.time.LocalDate.of(currentYear, currentMonth, currentDay)
             } catch (e: Exception) {
                 activeDate = java.time.LocalDate.now()
             }
@@ -1534,38 +1855,121 @@ class MainActivity : FragmentActivity() {
         popup.showAsDropDown(anchor, 0, -anchor.height)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun showTimePickerPopup(anchor: View) {
+        // Закрыть предыдущий попап если открыт
+        timePickerPopup?.dismiss()
+
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_time_picker, null)
-        val popup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        val screenWidth = resources.displayMetrics.widthPixels
+        val popupWidthPx = (screenWidth * 0.41).toInt()
+
+        val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.isClippingEnabled = false
         popup.elevation = 16f
+        timePickerPopup = popup
 
         binding.popupOverlay.alpha = 0f
         binding.popupOverlay.visibility = View.VISIBLE
         binding.popupOverlay.animate().alpha(1f).setDuration(200).start()
         binding.popupOverlay.setOnClickListener { popup.dismiss() }
         popup.setOnDismissListener {
+            timePickerPopup = null
             binding.popupOverlay.animate().alpha(0f).setDuration(200).withEndAction {
                 binding.popupOverlay.visibility = View.GONE
             }.start()
         }
-        popup.animationStyle = android.R.style.Animation_Dialog
 
-        val hourPicker = popupView.findViewById<android.widget.NumberPicker>(R.id.hourPicker)
-        val minutePicker = popupView.findViewById<android.widget.NumberPicker>(R.id.minutePicker)
+        var currentHour = activeTime.split(":")[0].toIntOrNull() ?: 0
+        var currentMinute = activeTime.split(":")[1].toIntOrNull() ?: 0
 
-        hourPicker.minValue = 0
-        hourPicker.maxValue = 23
-        hourPicker.value = activeTime.split(":")[0].toIntOrNull() ?: 0
-        hourPicker.setFormatter { String.format("%02d", it) }
+        val hourText = popupView.findViewById<TextView>(R.id.hour_value)
+        val hourPrev = popupView.findViewById<TextView>(R.id.hour_prev)
+        val hourNext = popupView.findViewById<TextView>(R.id.hour_next)
+        val hourDrum = popupView.findViewById<LinearLayout>(R.id.hour_drum)
+        val minuteText = popupView.findViewById<TextView>(R.id.minute_value)
+        val minutePrev = popupView.findViewById<TextView>(R.id.minute_prev)
+        val minuteNext = popupView.findViewById<TextView>(R.id.minute_next)
+        val minuteDrum = popupView.findViewById<LinearLayout>(R.id.minute_drum)
 
-        minutePicker.minValue = 0
-        minutePicker.maxValue = 59
-        minutePicker.value = activeTime.split(":")[1].toIntOrNull() ?: 0
-        minutePicker.setFormatter { String.format("%02d", it) }
+        fun updateHourDrum() {
+            hourText.text = String.format("%02d", currentHour)
+            hourPrev.text = String.format("%02d", (currentHour - 1 + 24) % 24)
+            hourNext.text = String.format("%02d", (currentHour + 1) % 24)
+        }
+        fun updateMinuteDrum() {
+            minuteText.text = String.format("%02d", currentMinute)
+            minutePrev.text = String.format("%02d", (currentMinute - 1 + 60) % 60)
+            minuteNext.text = String.format("%02d", (currentMinute + 1) % 60)
+        }
 
-        popupView.findViewById<TextView>(R.id.timePickerDone).setOnClickListener {
-            activeTime = String.format("%02d:%02d", hourPicker.value, minutePicker.value)
+        updateHourDrum(); updateMinuteDrum()
+
+        fun animateDrumTime(drum: LinearLayout, up: Boolean, onEnd: () -> Unit) {
+            val shift = drum.getChildAt(1).height.toFloat() * if (up) -1 else 1
+            drum.animate().translationY(shift).setDuration(120).withEndAction {
+                drum.translationY = 0f; onEnd()
+            }.start()
+        }
+
+        // Барабан-лента
+        fun setupTimeDrumScroll(drum: LinearLayout, stepUp: () -> Unit, stepDown: () -> Unit) {
+            var vt: VelocityTracker? = null
+            var lastY = 0f; var accumulated = 0f; var flingAnim: ValueAnimator? = null
+            drum.setOnTouchListener { _, event ->
+                val itemH = drum.getChildAt(1).height.toFloat()
+                if (itemH <= 0f) return@setOnTouchListener false
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        flingAnim?.cancel(); vt = VelocityTracker.obtain(); vt?.addMovement(event)
+                        lastY = event.y; accumulated = 0f; true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        vt?.addMovement(event); accumulated += event.y - lastY; lastY = event.y
+                        while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                        while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                        drum.translationY = accumulated; true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        vt?.addMovement(event); vt?.computeCurrentVelocity(1000)
+                        val vy = vt?.yVelocity ?: 0f; vt?.recycle(); vt = null
+                        if (Math.abs(vy) > 300f) {
+                            val totalPx = vy * 0.28f
+                            flingAnim = ValueAnimator.ofFloat(0f, totalPx).apply {
+                                duration = (Math.abs(vy) / 2.5f).toLong().coerceIn(150, 1200)
+                                interpolator = DecelerateInterpolator(2.5f)
+                                var prev = 0f
+                                addUpdateListener { anim ->
+                                    val cur = anim.animatedValue as Float; accumulated += cur - prev; prev = cur
+                                    while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                                    while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                                    drum.translationY = accumulated
+                                }
+                                addListener(object : AnimatorListenerAdapter() {
+                                    override fun onAnimationEnd(a: android.animation.Animator) { drum.animate().translationY(0f).setDuration(80).start() }
+                                })
+                                start()
+                            }
+                        } else { drum.animate().translationY(0f).setDuration(80).start() }; true
+                    }
+                    MotionEvent.ACTION_CANCEL -> { vt?.recycle(); vt = null; drum.animate().translationY(0f).setDuration(80).start(); true }
+                    else -> true
+                }
+            }
+        }
+        setupTimeDrumScroll(hourDrum,
+            { currentHour = (currentHour + 1) % 24; updateHourDrum() },
+            { currentHour = (currentHour - 1 + 24) % 24; updateHourDrum() }
+        )
+        setupTimeDrumScroll(minuteDrum,
+            { currentMinute = (currentMinute + 1) % 60; updateMinuteDrum() },
+            { currentMinute = (currentMinute - 1 + 60) % 60; updateMinuteDrum() }
+        )
+
+        // Кнопка подтверждения
+        popupView.findViewById<ImageButton>(R.id.btn_time_done).setOnClickListener {
+            activeTime = String.format("%02d:%02d", currentHour, currentMinute)
             binding.timeFieldText.text = activeTime
             popup.dismiss()
         }
@@ -1576,101 +1980,114 @@ class MainActivity : FragmentActivity() {
     @SuppressLint("ClickableViewAccessibility")
     private fun showCustomIntervalPopup(anchor: View) {
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_custom_interval, null)
-        val dpToPx = resources.displayMetrics.density
-        val popupWidthPx = (280 * dpToPx).toInt()
+        val screenWidth = resources.displayMetrics.widthPixels
+        val popupWidthPx = (screenWidth * 0.72).toInt()
 
         val popup = PopupWindow(popupView, popupWidthPx, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popup.isClippingEnabled = false
         popup.elevation = 16f
+        binding.popupOverlay.alpha = 0f
         binding.popupOverlay.visibility = View.VISIBLE
+        binding.popupOverlay.animate().alpha(1f).setDuration(200).start()
         binding.popupOverlay.setOnClickListener { popup.dismiss() }
-        popup.setOnDismissListener { binding.popupOverlay.visibility = View.GONE }
+        popup.setOnDismissListener {
+            binding.popupOverlay.animate().alpha(0f).setDuration(200).withEndAction {
+                binding.popupOverlay.visibility = View.GONE
+            }.start()
+        }
 
         val numberText = popupView.findViewById<TextView>(R.id.interval_number)
+        val numberPrev = popupView.findViewById<TextView>(R.id.number_prev)
+        val numberNext = popupView.findViewById<TextView>(R.id.number_next)
         val unitText = popupView.findViewById<TextView>(R.id.interval_unit)
+        val unitPrev = popupView.findViewById<TextView>(R.id.unit_prev)
+        val unitNext = popupView.findViewById<TextView>(R.id.unit_next)
+        val numberDrum = popupView.findViewById<LinearLayout>(R.id.number_drum)
+        val unitDrum = popupView.findViewById<LinearLayout>(R.id.unit_drum)
         val units = listOf("дн.", "нед.", "мес.")
         val unitKeys = listOf("days", "weeks", "months")
         var currentNumber = customIntervalDays
         var currentUnitIndex = unitKeys.indexOf(customIntervalUnit).coerceAtLeast(0)
 
-        numberText.text = "$currentNumber"
-        unitText.text = units[currentUnitIndex]
-
-        val handler = android.os.Handler(mainLooper)
-        var repeatRunnable: Runnable? = null
-
-        fun stopRepeat() {
-            repeatRunnable?.let { handler.removeCallbacks(it) }
-            repeatRunnable = null
+        fun updateNumberDrum() {
+            numberText.text = "$currentNumber"
+            numberPrev.text = if (currentNumber > 1) "${currentNumber - 1}" else ""
+            numberNext.text = if (currentNumber < 31) "${currentNumber + 1}" else ""
         }
 
-        fun startRepeat(action: () -> Unit) {
-            action()
-            repeatRunnable = object : Runnable {
-                override fun run() {
-                    action()
-                    handler.postDelayed(this, 100)
-                }
-            }
-            handler.postDelayed(repeatRunnable!!, 400)
-        }
-
-        // Стрелки числа
-        popupView.findViewById<TextView>(R.id.number_up).setOnClickListener {
-            if (currentNumber < 31) { currentNumber++; numberText.text = "$currentNumber" }
-        }
-        popupView.findViewById<TextView>(R.id.number_up).setOnTouchListener { _, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
-                    if (currentNumber < 31) { currentNumber++; numberText.text = "$currentNumber" }
-                }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
-            }
-            true
-        }
-        popupView.findViewById<TextView>(R.id.number_down).setOnClickListener {
-            if (currentNumber > 1) { currentNumber--; numberText.text = "$currentNumber" }
-        }
-        popupView.findViewById<TextView>(R.id.number_down).setOnTouchListener { _, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
-                    if (currentNumber > 1) { currentNumber--; numberText.text = "$currentNumber" }
-                }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
-            }
-            true
-        }
-
-        // Стрелки единицы
-        popupView.findViewById<TextView>(R.id.unit_up).setOnClickListener {
-            currentUnitIndex = (currentUnitIndex + 1) % units.size
+        fun updateUnitDrum() {
             unitText.text = units[currentUnitIndex]
+            unitPrev.text = units[(currentUnitIndex - 1 + units.size) % units.size]
+            unitNext.text = units[(currentUnitIndex + 1) % units.size]
         }
-        popupView.findViewById<TextView>(R.id.unit_up).setOnTouchListener { _, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
-                    currentUnitIndex = (currentUnitIndex + 1) % units.size
-                    unitText.text = units[currentUnitIndex]
+
+        updateNumberDrum()
+        updateUnitDrum()
+
+        // Анимация прокрутки барабана
+        fun animateDrum(drum: LinearLayout, directionUp: Boolean, onEnd: () -> Unit) {
+            val shift = drum.getChildAt(1).height.toFloat() * if (directionUp) -1 else 1
+            drum.animate().translationY(shift).setDuration(120)
+                .withEndAction {
+                    drum.translationY = 0f
+                    onEnd()
+                }.start()
+        }
+
+        // Барабан-лента
+        fun setupIntervalDrumScroll(drum: LinearLayout, stepUp: () -> Unit, stepDown: () -> Unit) {
+            var vt: VelocityTracker? = null
+            var lastY = 0f; var accumulated = 0f; var flingAnim: ValueAnimator? = null
+            drum.setOnTouchListener { _, event ->
+                val itemH = drum.getChildAt(1).height.toFloat()
+                if (itemH <= 0f) return@setOnTouchListener false
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        flingAnim?.cancel(); vt = VelocityTracker.obtain(); vt?.addMovement(event)
+                        lastY = event.y; accumulated = 0f; true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        vt?.addMovement(event); accumulated += event.y - lastY; lastY = event.y
+                        while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                        while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                        drum.translationY = accumulated; true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        vt?.addMovement(event); vt?.computeCurrentVelocity(1000)
+                        val vy = vt?.yVelocity ?: 0f; vt?.recycle(); vt = null
+                        if (Math.abs(vy) > 300f) {
+                            val totalPx = vy * 0.28f
+                            flingAnim = ValueAnimator.ofFloat(0f, totalPx).apply {
+                                duration = (Math.abs(vy) / 2.5f).toLong().coerceIn(150, 1200)
+                                interpolator = DecelerateInterpolator(2.5f)
+                                var prev = 0f
+                                addUpdateListener { anim ->
+                                    val cur = anim.animatedValue as Float; accumulated += cur - prev; prev = cur
+                                    while (accumulated > itemH / 2f) { accumulated -= itemH; stepDown() }
+                                    while (accumulated < -itemH / 2f) { accumulated += itemH; stepUp() }
+                                    drum.translationY = accumulated
+                                }
+                                addListener(object : AnimatorListenerAdapter() {
+                                    override fun onAnimationEnd(a: android.animation.Animator) { drum.animate().translationY(0f).setDuration(80).start() }
+                                })
+                                start()
+                            }
+                        } else { drum.animate().translationY(0f).setDuration(80).start() }; true
+                    }
+                    MotionEvent.ACTION_CANCEL -> { vt?.recycle(); vt = null; drum.animate().translationY(0f).setDuration(80).start(); true }
+                    else -> true
                 }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
             }
-            true
         }
-        popupView.findViewById<TextView>(R.id.unit_down).setOnClickListener {
-            currentUnitIndex = (currentUnitIndex - 1 + units.size) % units.size
-            unitText.text = units[currentUnitIndex]
-        }
-        popupView.findViewById<TextView>(R.id.unit_down).setOnTouchListener { _, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> startRepeat {
-                    currentUnitIndex = (currentUnitIndex - 1 + units.size) % units.size
-                    unitText.text = units[currentUnitIndex]
-                }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> stopRepeat()
-            }
-            true
-        }
+        setupIntervalDrumScroll(numberDrum,
+            { if (currentNumber < 31) { currentNumber++; updateNumberDrum() } },
+            { if (currentNumber > 1) { currentNumber--; updateNumberDrum() } }
+        )
+        setupIntervalDrumScroll(unitDrum,
+            { currentUnitIndex = (currentUnitIndex + 1) % units.size; updateUnitDrum() },
+            { currentUnitIndex = (currentUnitIndex - 1 + units.size) % units.size; updateUnitDrum() }
+        )
 
         // Кнопка подтверждения
         popupView.findViewById<ImageButton>(R.id.btn_done).setOnClickListener {
@@ -1715,6 +2132,9 @@ class MainActivity : FragmentActivity() {
         isBudgetInputMode = false
         budgetInputValue = ""
         settingsPopup?.dismiss()
+        datePickerPopup?.dismiss()
+        timePickerPopup?.dismiss()
+        subscriptionPopup?.dismiss()
         if (isEmojiPickerOpen) {
             binding.emojiPickerOverlay.visibility = View.GONE
             isEmojiPickerOpen = false
@@ -1727,6 +2147,13 @@ class MainActivity : FragmentActivity() {
         if (isFirebaseAvailable) {
             AuthManager.removeAuthStateListener(authStateListener)
         }
+    }
+
+    private fun saveCategoryNotesMap() {
+        val prefs = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE).edit()
+        prefs.putString("CATEGORY_NOTES_MAP", JSONObject(categoryNotesMap as Map<*, *>).toString())
+        prefs.putString("INCOME_CATEGORY_NOTES_MAP", JSONObject(incomeCategoryNotesMap as Map<*, *>).toString())
+        prefs.apply()
     }
 
     private fun saveData() {
@@ -1825,6 +2252,28 @@ class MainActivity : FragmentActivity() {
             incomeCategoryEmojis.addAll(splitEmojis(savedIncomeCategories))
         }
 
+        // Маппинг категория → заметка
+        val catNotesJson = sharedPreferences.getString("CATEGORY_NOTES_MAP", null)
+        if (!catNotesJson.isNullOrEmpty()) {
+            try {
+                categoryNotesMap.clear()
+                val jo = JSONObject(catNotesJson)
+                jo.keys().forEach { k -> categoryNotesMap[k] = jo.getString(k) }
+            } catch (_: Exception) {
+                categoryNotesMap.clear()
+            }
+        }
+        val incomeCatNotesJson = sharedPreferences.getString("INCOME_CATEGORY_NOTES_MAP", null)
+        if (!incomeCatNotesJson.isNullOrEmpty()) {
+            try {
+                incomeCategoryNotesMap.clear()
+                val jo = JSONObject(incomeCatNotesJson)
+                jo.keys().forEach { k -> incomeCategoryNotesMap[k] = jo.getString(k) }
+            } catch (_: Exception) {
+                incomeCategoryNotesMap.clear()
+            }
+        }
+
         // Streak
         val streakLastDate = sharedPreferences.getString("STREAK_LAST_DATE", null)
         dayStreak = sharedPreferences.getInt("DAY_STREAK", 0)
@@ -1869,6 +2318,17 @@ class MainActivity : FragmentActivity() {
             }
         }
 
+        // Guided Numpad onboarding: первый запуск
+        if (howMany == 0.0 && numberOfDays <= 0) {
+            // Полный setup: бюджет + дата
+            binding.root.post { enterSetupMode(step = 1) }
+            return
+        } else if (howMany > 0.0 && numberOfDays <= 0) {
+            // Бюджет есть, даты нет — только DatePicker
+            binding.root.post { enterSetupMode(step = 2) }
+            return
+        }
+
         // новый день
         if (today != lastDate && numberOfDays > 1) {
             val days: Long = ChronoUnit.DAYS.between(lastDate, today)
@@ -1880,6 +2340,247 @@ class MainActivity : FragmentActivity() {
                 .addToBackStack(null)
                 .commit()
         }
+    }
+
+    // ─── Guided Numpad onboarding ───
+
+    /**
+     * Активирует setup mode.
+     * step=1: ввод бюджета, step=2: выбор даты (бюджет уже есть)
+     */
+    private fun enterSetupMode(step: Int) {
+        isFirstSetup = true
+        setupStep = step
+        setupInputValue = ""
+        setupDateCancelCount = 0
+
+        // Блокировка кнопки Back
+        setupBackCallback = object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Ничего — блокируем выход во время setup
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, setupBackCallback!!)
+
+        if (step == 1) {
+            enterSetupStep1()
+        } else {
+            enterSetupStep2()
+        }
+    }
+
+    /** Шаг 1: ввод бюджета через нампад */
+    private fun enterSetupStep1() {
+        setupStep = 1
+        setupInputValue = ""
+
+        // Затемнить элементы (alpha 0.15)
+        listOf(
+            binding.history, binding.streakButton, binding.streakCount,
+            binding.repeatButtonFrame, binding.settings,
+            binding.categoryField, binding.categoryScroll
+        ).forEach { it.alpha = 0.15f }
+
+        // Скрыть элементы (alpha 0)
+        listOf(
+            binding.value, binding.textView2,
+            binding.noteFieldContainer, binding.dateTimeContainer,
+            binding.lastOperation
+        ).forEach { it.alpha = 0f }
+
+        // Подсказка day_limit
+        binding.dayLimit.visibility = View.VISIBLE
+        binding.dayLimit.text = "Укажите бюджет"
+        binding.dayLimit.setTextColor(Color.parseColor("#FF9800"))
+        binding.dayLimit.setTypeface(binding.dayLimit.typeface, android.graphics.Typeface.BOLD)
+        binding.dayLimit.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.20f)
+
+        // result: мигающий курсор
+        binding.result.text = "_"
+        binding.result.setTextColor(Color.WHITE)
+        cursorAnimator = ObjectAnimator.ofFloat(binding.result, "alpha", 1f, 0.3f).apply {
+            duration = 500
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.REVERSE
+            start()
+        }
+
+        // Нампад активен (alpha 1.0)
+        binding.linearLayout.alpha = 1f
+
+        // +/- заблокирован
+        findViewById<Button>(R.id.button_plus_minus).isEnabled = false
+        findViewById<Button>(R.id.button_plus_minus).alpha = 0.3f
+    }
+
+    /** Шаг 2: выбор даты (бюджет уже введён) */
+    private fun enterSetupStep2() {
+        setupStep = 2
+        setupDateCancelCount = 0
+
+        // Затемнить всё кроме подсказки и result
+        listOf(
+            binding.history, binding.streakButton, binding.streakCount,
+            binding.repeatButtonFrame, binding.settings,
+            binding.categoryField, binding.categoryScroll
+        ).forEach { it.alpha = 0.15f }
+
+        listOf(
+            binding.value, binding.textView2,
+            binding.noteFieldContainer, binding.dateTimeContainer,
+            binding.lastOperation
+        ).forEach { it.alpha = 0f }
+
+        // Нампад затемнён
+        binding.linearLayout.alpha = 0.15f
+
+        // Подсказка
+        binding.dayLimit.visibility = View.VISIBLE
+        binding.dayLimit.text = "До какого числа?"
+        binding.dayLimit.setTextColor(Color.parseColor("#FF9800"))
+        binding.dayLimit.setTypeface(binding.dayLimit.typeface, android.graphics.Typeface.BOLD)
+        binding.dayLimit.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.20f)
+
+        // result: показать введённый бюджет
+        binding.result.text = howMany.let {
+            if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString()
+        }
+        binding.result.alpha = 1f
+        binding.result.setTextColor(Color.WHITE)
+
+        // Через 200ms показать DatePickerDialog
+        binding.root.postDelayed({ showSetupDatePicker() }, 200)
+    }
+
+    /** Показывает DatePickerDialog для setup mode */
+    private fun showSetupDatePicker() {
+        if (!isFirstSetup || setupStep != 2) return
+
+        val now = LocalDate.now()
+        val initDate = now.plusDays(7)
+        val formatter = DateTimeFormatter.ofPattern("dd MMMM", Locale("ru"))
+
+        val picker = DatePickerDialog(
+            this,
+            R.style.DarkDatePickerTheme,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                val days = ChronoUnit.DAYS.between(now, selectedDate)
+                if (days > 0) {
+                    // Haptic feedback
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                        binding.root.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+                    }
+
+                    // Сохранить дату
+                    numberOfDays = days
+                    dateFull = selectedDate
+                    avarageDailyValue = dataModel.calculateDailyAverage(howMany, numberOfDays)
+                    keyTodayLimit = dataModel.roundMoney(Math.floor(avarageDailyValue))
+                    todayLimit = keyTodayLimit
+                    lastDate = now
+
+                    dataModel.dateFull.value = selectedDate
+                    dataModel.dayText.value = selectedDate.format(formatter)
+                    dataModel.dayNumber.value = days.toInt()
+                    dataModel.lastDate.value = now
+                    dataModel.numberOfDays.value = numberOfDays
+                    dataModel.avarageDailyValue.value = avarageDailyValue
+                    dataModel.keyTodayLimit.value = keyTodayLimit
+                    dataModel.todayLimit.value = todayLimit
+                    dataModel.money.value = howMany
+
+                    HistoryManager(this).updatePeriodStart()
+
+                    hasUnsavedChanges = true
+                    saveData()
+
+                    // Завершить setup
+                    completeSetup()
+                }
+            },
+            initDate.year,
+            initDate.monthValue - 1,
+            initDate.dayOfMonth
+        )
+
+        val tomorrow = Calendar.getInstance()
+        tomorrow.add(Calendar.DAY_OF_YEAR, 1)
+        picker.datePicker.minDate = tomorrow.timeInMillis
+
+        picker.setOnCancelListener {
+            setupDateCancelCount++
+            if (setupDateCancelCount >= 2) {
+                // После 2 отмен — кликабельный текст
+                binding.dayLimit.text = "Нажмите чтобы выбрать дату"
+                binding.dayLimit.setOnClickListener {
+                    binding.dayLimit.setOnClickListener(null)
+                    showSetupDatePicker()
+                }
+            } else {
+                // Показать снова через 500ms
+                binding.root.postDelayed({ showSetupDatePicker() }, 500)
+            }
+        }
+
+        picker.show()
+    }
+
+    /** Анимация завершения setup mode */
+    private fun completeSetup() {
+        isFirstSetup = false
+        setupStep = 0
+
+        val duration = 400L
+        val interpolator = DecelerateInterpolator()
+
+        // Все затемнённые элементы → alpha 1.0
+        listOf(
+            binding.history, binding.streakButton, binding.streakCount,
+            binding.repeatButtonFrame, binding.settings,
+            binding.categoryField, binding.categoryScroll,
+            binding.linearLayout
+        ).forEach {
+            it.animate().alpha(1f).setDuration(duration).setInterpolator(interpolator).start()
+        }
+
+        // Скрытые элементы → alpha 1.0
+        listOf(
+            binding.value, binding.textView2,
+            binding.noteFieldContainer, binding.dateTimeContainer
+        ).forEach {
+            it.animate().alpha(1f).setDuration(duration).setInterpolator(interpolator).start()
+        }
+
+        // result → показать рассчитанный todayLimit
+        binding.result.text = todayLimit.toString()
+        binding.result.setTextColor(Color.WHITE)
+        binding.result.alpha = 1f
+
+        // value → "0"
+        binding.value.text = "0"
+
+        // textView2 → "/день"
+        binding.textView2.text = getString(R.string.per_day)
+        binding.textView2.setTextColor(Color.parseColor("#888888"))
+
+        // day_limit → GONE (бюджет и дата настроены)
+        binding.dayLimit.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.14f)
+        binding.dayLimit.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.NORMAL)
+        binding.dayLimit.setTextColor(Color.parseColor("#888888"))
+        binding.dayLimit.visibility = View.GONE
+
+        // Разблокировать +/-
+        findViewById<Button>(R.id.button_plus_minus).isEnabled = true
+        findViewById<Button>(R.id.button_plus_minus).alpha = 1f
+
+        // Убрать OnBackPressedCallback
+        setupBackCallback?.remove()
+        setupBackCallback = null
+
+        // lastOperation сброс
+        binding.lastOperation.text = ""
+        binding.lastOperation.alpha = 0f
     }
 
     fun onFragmentClosed() {

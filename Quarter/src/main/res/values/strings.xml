@@ -63,10 +63,10 @@
     <string name="custom_interval_done">Готово</string>
 
     <!-- popup_settings_menu -->
-    <string name="menu_budget">💰  Укажите бюджет</string>
-    <string name="menu_date">📅  Дата</string>
-    <string name="menu_about">ℹ️  О проекте</string>
-    <string name="menu_account">👤  Аккаунт</string>
+    <string name="menu_budget">Укажите бюджет</string>
+    <string name="menu_date">Дата</string>
+    <string name="menu_about">О проекте</string>
+    <string name="menu_account">Аккаунт</string>
 
     <!-- popup_subscription_menu -->
     <string name="sub_menu_disable">Отключить</string>

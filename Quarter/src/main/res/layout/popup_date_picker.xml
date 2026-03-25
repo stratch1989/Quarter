@@ -2,59 +2,182 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/history_popup_bg"
     android:orientation="vertical"
-    android:padding="16dp"
     android:gravity="center_horizontal">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Дата"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp" />
-
+    <!-- Заголовок с кнопкой okey в одном ряду -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:background="@drawable/history_popup_bg"
+        android:paddingStart="20dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:layout_marginBottom="8dp">
 
-        <NumberPicker
-            android:id="@+id/dayPicker"
-            android:layout_width="60dp"
-            android:layout_height="120dp"
-            android:theme="@style/DarkDatePickerTheme" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Дата"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-        <NumberPicker
-            android:id="@+id/monthPicker"
-            android:layout_width="80dp"
-            android:layout_height="120dp"
-            android:layout_marginStart="8dp"
-            android:theme="@style/DarkDatePickerTheme" />
-
-        <NumberPicker
-            android:id="@+id/yearPicker"
-            android:layout_width="80dp"
-            android:layout_height="120dp"
-            android:layout_marginStart="8dp"
-            android:theme="@style/DarkDatePickerTheme" />
+        <ImageButton
+            android:id="@+id/btn_date_done"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/okey"
+            android:scaleType="fitCenter"
+            android:contentDescription="Готово" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/datePickerDone"
-        android:layout_width="wrap_content"
+    <!-- Контент — день / месяц / год — барабаны -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Готово"
-        android:textColor="#FF9800"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginTop="12dp"
-        android:padding="8dp"
-        android:clickable="true"
-        android:focusable="true" />
+        android:background="@drawable/history_popup_bg"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <!-- Барабан дня -->
+        <LinearLayout
+            android:id="@+id/day_drum"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginEnd="8dp"
+            android:clipToPadding="false"
+            android:clipChildren="false">
+
+            <TextView
+                android:id="@+id/day_prev"
+                android:layout_width="48dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/day_value"
+                android:layout_width="48dp"
+                android:layout_height="36dp"
+                android:background="@drawable/category_emoji_bg"
+                android:text="25"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/day_next"
+                android:layout_width="48dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Барабан месяца -->
+        <LinearLayout
+            android:id="@+id/month_drum"
+            android:layout_width="56dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginEnd="8dp"
+            android:clipToPadding="false"
+            android:clipChildren="false">
+
+            <TextView
+                android:id="@+id/month_prev"
+                android:layout_width="56dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/month_value"
+                android:layout_width="56dp"
+                android:layout_height="36dp"
+                android:background="@drawable/category_emoji_bg"
+                android:text="апр"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/month_next"
+                android:layout_width="56dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Барабан года -->
+        <LinearLayout
+            android:id="@+id/year_drum"
+            android:layout_width="56dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:clipToPadding="false"
+            android:clipChildren="false">
+
+            <TextView
+                android:id="@+id/year_prev"
+                android:layout_width="56dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/year_value"
+                android:layout_width="56dp"
+                android:layout_height="36dp"
+                android:background="@drawable/category_emoji_bg"
+                android:text="2026"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/year_next"
+                android:layout_width="56dp"
+                android:layout_height="26dp"
+                android:textColor="#555555"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

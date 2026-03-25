@@ -2,6 +2,8 @@ package com.example.quarter.android
 
 import DataModel
 import android.os.Bundle
+import android.util.TypedValue
+import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -42,6 +44,87 @@ class History : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Адаптивные размеры от baseUnit
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val screenWidth = resources.displayMetrics.widthPixels
+        val screenHeight = resources.displayMetrics.heightPixels
+        val baseUnit = (if (isLandscape) screenHeight / 4.3 else screenWidth / 4.3).toFloat()
+        val dp = resources.displayMetrics.density
+
+        // Размер попапа: ~65% ширины экрана (portrait) или ~40% (landscape)
+        val popupSize = if (isLandscape) (screenHeight * 0.60f).toInt() else (screenWidth * 0.72f).toInt()
+        val popupMarginStart = (16 * dp).toInt()
+        val popupMarginTop = (4 * dp).toInt()
+
+        // frameForMetrics
+        val popupHeight = (popupSize * 1.4f).toInt()
+        (binding.frameForMetrics.layoutParams as? android.widget.LinearLayout.LayoutParams)?.let {
+            it.width = popupSize
+            it.height = popupHeight
+            binding.frameForMetrics.layoutParams = it
+        }
+
+        // Заголовок текст
+        binding.historyTitle.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.17f)
+        val titlePadH = (baseUnit * 0.2f).toInt()
+        val titlePadV = (baseUnit * 0.1f).toInt()
+        binding.historyTitle.setPadding(titlePadH, titlePadV, titlePadH, titlePadV)
+
+        // periodTotal, emptyText
+        binding.periodTotal.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.13f)
+        binding.emptyText.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.14f)
+
+        // Оценим высоту заголовка для позиционирования
+        val titleHeight = (titlePadV * 2 + baseUnit * 0.17f + 8 * dp).toInt()
+
+        // modeToggle — справа от попапа
+        (binding.modeToggle.layoutParams as? FrameLayout.LayoutParams)?.let {
+            it.marginStart = popupMarginStart + popupSize + (4 * dp).toInt()
+            it.topMargin = popupMarginTop + titleHeight + (popupHeight * 0.4f).toInt()
+            it.width = (baseUnit * 0.42f).toInt()
+            binding.modeToggle.layoutParams = it
+        }
+        val modeItemHeight = (baseUnit * 0.46f).toInt()
+        binding.listModeButton.layoutParams.height = modeItemHeight
+        binding.listModeButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.20f)
+        binding.categoryFilterButton.layoutParams.height = modeItemHeight
+        binding.chartModeButton.layoutParams.height = modeItemHeight
+        binding.chartModeButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.26f)
+
+        // typeToggle — снизу от попапа
+        (binding.typeToggle.layoutParams as? FrameLayout.LayoutParams)?.let {
+            it.marginStart = popupMarginStart + (popupSize * 0.6f).toInt()
+            it.topMargin = popupMarginTop + titleHeight + popupHeight + (12 * dp).toInt()
+            it.height = (baseUnit * 0.42f).toInt()
+            binding.typeToggle.layoutParams = it
+        }
+        val typeItemWidth = (baseUnit * 0.5f).toInt()
+        binding.expenseButton.layoutParams.width = typeItemWidth
+        binding.expenseButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.22f)
+        binding.incomeButton.layoutParams.width = typeItemWidth
+        binding.incomeButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseUnit * 0.22f)
+
+        // Кнопки edit/confirm/back — диаметр = высота заголовка
+        binding.historyTitle.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val actionBtnSize = binding.historyTitle.measuredHeight
+        val actionBtnMarginStart = popupMarginStart + popupSize - actionBtnSize - (2 * dp).toInt()
+        listOf(binding.editButton, binding.confirmButton, binding.categoryBackButton).forEach { btn ->
+            (btn.layoutParams as? FrameLayout.LayoutParams)?.let {
+                it.width = actionBtnSize
+                it.height = actionBtnSize
+                it.marginStart = actionBtnMarginStart
+                it.topMargin = popupMarginTop
+                btn.layoutParams = it
+            }
+        }
+
+        // Padding внутри попапа
+        val popupPadding = (baseUnit * 0.24f).toInt()
+        (binding.frameForMetrics.getChildAt(0) as? android.widget.LinearLayout)?.setPadding(popupPadding, popupPadding, popupPadding, popupPadding)
+
         // Анимация появления
         binding.clickableBackground.alpha = 0f
         binding.frameForMetrics.alpha = 0f
